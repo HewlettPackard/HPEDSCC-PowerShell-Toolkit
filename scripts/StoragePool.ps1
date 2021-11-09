@@ -65,30 +65,40 @@ function Get-DSCCStoragePool
 [CmdletBinding()]
 param(  [parameter(mandatory)]                                              [string]    $StorageSystemId, 
                                                                             [string]    $StoragePoolId,
-        [parameter(mandatory)][validateset('device-type1','device-type2')]  [string]    $DeviceType,
                                                                             [switch]    $WhatIf
      )
 process
-    {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $StorageSystemId + '/storage-pools'
-        if ( $StoragePoolId )
-            {   $MyUri + $MyUri + '/' + $StoragePoolId 
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -StorageSystemId $StorageSystemId )
+        write-verbose "Dectected the DeviceType is $DeviceType"
+        if ( $DeviceType )
+            {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $StorageSystemId + '/storage-pools'
+                if ( $StoragePoolId )
+                    {   $MyUri + $MyUri + '/' + $StoragePoolId 
+                    }
+                if ( $WhatIf )
+                        {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
+                        }   
+                    else 
+                        {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
+                        }
+                if ( ($SysColOnly).items ) 
+                        {   $SysColOnly = ($SysColOnly).items 
+                        }
+                if ( $StoragePoolId )
+                        {   Write-host "The results of the complete collection have been limited to just the supplied ID"
+                            return ( $SysColOnly | where-object { $_.id -eq $StoragePoolId } )
+                        } 
+                    else 
+                        {   return $SysColOnly
+                        }
+    
             }
-        if ( $WhatIf )
-                {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
-                }   
             else 
-                {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
-                }
-        if ( ($SysColOnly).items ) 
-                {   $SysColOnly = ($SysColOnly).items 
-                }
-        if ( $StoragePoolId )
-                {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                    return ( $SysColOnly | where-object { $_.id -eq $StoragePoolId } )
-                } 
-            else 
-                {   return $SysColOnly
-                }
+            {   write-warning "The StorageSystemId Presented cannot be found."
+                return
+                
+            }
+        
     }       
 }   
 function Get-DSCCStoragePoolVolume
@@ -214,22 +224,31 @@ param(  [parameter(mandatory)]  [string]    $StorageSystemId,
                                 [switch]    $WhatIf
      )
 process
-    {   $MyURI = $BaseURI + 'storage-systems/device-type1/' + $StorageSystemId + '/storage-pools/' + $StoragePoolId + '/volumes'
-        if ( $VolumeId )
-            {   $MyUri + $MyUri + '/' + $VolumeId 
-            }
-        if ( $WhatIf )
-                {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
-                }   
-            else 
-                {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -StorageSystemId $StorageSystemId )
+        write-verbose "Dectected the DeviceType is $DeviceType"
+        if ( $DeviceType -eq 'Device-Type2')
+                {   Write-Warning "This command only operates against Device-Type1 Storage Devices."
+                    return 
                 }
-        if ( $VolumeId )
-                {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                    return ( (($SysColOnly).volumes).items | where-object { $_.id -eq $VolumeId } )
-                } 
             else 
-                {   return ( (($SysColOnly).volumes).items )
+                {   $MyURI = $BaseURI + 'storage-systems/device-type1/' + $StorageSystemId + '/storage-pools/' + $StoragePoolId + '/volumes'
+                    if ( $VolumeId )
+                            {   $MyUri + $MyUri + '/' + $VolumeId 
+                            }
+                    if ( $WhatIf )
+                            {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
+                            }   
+                        else 
+                            {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
+                            }
+                    if ( $VolumeId )
+                            {   Write-host "The results of the complete collection have been limited to just the supplied ID"
+                                return ( (($SysColOnly).volumes).items | where-object { $_.id -eq $VolumeId } )
+                            } 
+                        else 
+                            {   return ( (($SysColOnly).volumes).items )
+                            }
                 }
+
     }       
 }   

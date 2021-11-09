@@ -107,6 +107,27 @@ Process{
         }
 }
  
+function Find-DSCCDeviceTypeFromStorageSystemID
+{
+[CmdletBinding()]
+    param ( [Parameter(Mandatory)]
+            [string]    $StorageSystemId,         
+
+            [switch]    $WhatIf 
+          )
+    $ReturnResult = ''
+    if ( ( Get-DSCCStorageSystem -StorageSystemId $StorageSystemId -DeviceType Device-Type1 ) )
+            { return 'Device-Type1'
+            } 
+        else 
+            {   if ( ( Get-DSCCStorageSystem -StorageSystemId $StorageSystemId -DeviceType Device-Type2 ) )
+                        {   return 'Device-Type2'
+                        }
+                    else 
+                        {   return
+                        }
+}
+}
 function Invoke-RestMethodWhatIf
 {   Param(  $Uri,
             $Method,
@@ -126,3 +147,4 @@ function Invoke-RestMethodWhatIf
     write-host "The Body of this call will be:"
     write-host -foregroundcolor green ($Body | ConvertTo-JSON | Out-String)
 }
+

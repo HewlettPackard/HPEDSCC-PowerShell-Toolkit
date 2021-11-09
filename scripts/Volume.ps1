@@ -97,7 +97,7 @@ function Get-DSCCVolume
     The Body of this call will be:
         "No Body"
 .EXAMPLE
-    PS:> Get-DSCCStoragePoolVolume -StorageSystemId 2M202205GG -StoragePoolId 3ff8fa3d971f16948fd9cff800775b9d -devicetype device-type1 | format-table
+    PS:> Get-DSCCDOMStoragePoolVolume -StorageSystemId 2M202205GG -StoragePoolId 3ff8fa3d971f16948fd9cff800775b9d -devicetype device-type1 | format-table
 
     id                               systemId   displayname              domain name      healthState usedCapacity volumeId 
     --                               --------   -----------              ------ ----      ----------- ------------ -----
@@ -115,13 +115,14 @@ function Get-DSCCVolume
 .LINK
 #>   
 [CmdletBinding()]
-param(                                                                      [string]    $StorageSystemId, 
-                                                                            [string]    $VolumeId,
-        [parameter(mandatory)][validateset('device-type1','device-type2')]  [string]    $DeviceType,
-                                                                            [switch]    $WhatIf
+param(  [string]    $StorageSystemId, 
+        [string]    $VolumeId,
+        [switch]    $WhatIf
      )
 process
-    {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/'
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -StorageSystemId $StorageSystemId )
+        write-verbose "Dectected the DeviceType is $DeviceType"
+        $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/'
         if ( $StorageSystemId )
             {   $MyURI = $MyURI + $StorageSystemId + '/'
             } 
@@ -137,11 +138,15 @@ process
                 }
         if ( ($SysColOnly).items ) { $SysColOnly = ($SysColOnly).items }
         if ( $VolumeId )
-                {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                    return ( (($SysColOnly)) | where-object { $_.id -eq $VolumeId } )
+                {   return ( (($SysColOnly)) | where-object { $_.id -eq $VolumeId } )
                 } 
             else 
                 {   return ( (($SysColOnly)) )
                 }
+        clear-variable $StorageSystemId
+        clear-variable $VolumeId
+        clear-variable $DeviceType
+        clear-variable $MyURI
+        clear-variable $SysColOnly
     }       
 }   

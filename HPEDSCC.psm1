@@ -44,4 +44,6 @@ Export-ModuleMember -Function           Connect-DSCC,
     Get-DSCCCapacityHistory,
     Get-DSCCCapacity,
 
-    Get-DSCCCertificate
+    Get-DSCCCertificate,
+    
+    Find-DSCCDeviceTypeFromStorageSystemID

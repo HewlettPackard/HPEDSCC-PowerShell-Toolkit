@@ -117,8 +117,7 @@ process
                 }
         if ( ($SysColOnly).items )  {   $SysColOnly = ($SysColOnly).items }
         if ( $StorageSystemId )
-                {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                    return ( $SysColOnly | where-object { $_.id -eq $StorageSystemId } )
+                {   return ( $SysColOnly | where-object { $_.id -eq $StorageSystemId } )
                 } 
             else 
                 {   return $SysColOnly

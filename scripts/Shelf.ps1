@@ -23,32 +23,39 @@ function Get-DSCCShelf
 [CmdletBinding()]
 param(  [parameter(mandatory)]                                              [string]    $StorageSystemId, 
                                                                             [string]    $ShelfId,
-        [parameter(mandatory)][validateset('device-type1','device-type2')]  [string]    $DeviceType,
                                                                             [switch]    $WhatIf
      )
 process
-    {   $ShelfWord = '/shelves'
-        if ( $DeviceType -eq 'device-type1')
-            {   $ShelfWord = '/enclosures'
-            }
-        $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $StorageSystemId + $ShelfWord
-        if ( $ShelfId )
-            {   $MyUri + $MyUri + '/' + $ShelfId 
-            }
-        if ( $WhatIf )
+    { $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -StorageSystemId $StorageSystemId )
+      write-verbose "Dectected the DeviceType is $DeviceType"
+      if ( $DeviceType )
+        {   $ShelfWord = '/shelves'
+            if ( $DeviceType -eq 'device-type1')
+                {   $ShelfWord = '/enclosures'
+                }
+            $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $StorageSystemId + $ShelfWord
+            if ( $ShelfId )
+                {   $MyUri + $MyUri + '/' + $ShelfId 
+                }
+            if ( $WhatIf )
                 {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
                 }   
-            else 
+              else 
                 {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
                 }
-        if ( ($SysColOnly).items ) { $SysColOnly = ($SysColOnly).items }
-        if ( $ShelfId )
-                {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                    return ( ($SysColOnly) | where-object { $_.id -eq $ShelfId } )
-                } 
-            else 
-                {   return ( ($SysColOnly) )
-                }
+            if ( ($SysColOnly).items ) { $SysColOnly = ($SysColOnly).items }
+            if ( $ShelfId )
+                    {   Write-host "The results of the complete collection have been limited to just the supplied ID"
+                        return ( ($SysColOnly) | where-object { $_.id -eq $ShelfId } )
+                    } 
+                else 
+                    {   return ( ($SysColOnly) )
+                    }
+        }
+       else 
+        {   write-warning "The StorageSystemID presented was not detected."
+            return  
+        }
     }       
 }
 function Invoke-DSCCShelfLocate
