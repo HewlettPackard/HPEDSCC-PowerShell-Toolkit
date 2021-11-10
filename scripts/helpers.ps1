@@ -111,17 +111,17 @@ function Find-DSCCDeviceTypeFromStorageSystemID
 {
 [CmdletBinding()]
     param ( [Parameter(Mandatory)]
-            [string]    $StorageSystemId,         
+            [string]    $SystemId,         
 
             [switch]    $WhatIf 
           )
     $ReturnResult = ''
-    if ( ( Get-DSCCStorageSystem -StorageSystemId $StorageSystemId -DeviceType Device-Type1 ) )
-            { return 'Device-Type1'
+    if ( ( Get-DSCCStorageSystem -SystemId $SystemId -DeviceType Device-Type1 ) )
+            { return 'device-type1'
             } 
         else 
-            {   if ( ( Get-DSCCStorageSystem -StorageSystemId $StorageSystemId -DeviceType Device-Type2 ) )
-                        {   return 'Device-Type2'
+            {   if ( ( Get-DSCCStorageSystem -SystemId $SystemId -DeviceType Device-Type2 ) )
+                        {   return 'device-type2'
                         }
                     else 
                         {   return

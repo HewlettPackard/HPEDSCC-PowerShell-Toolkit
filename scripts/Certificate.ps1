@@ -44,31 +44,27 @@ function Get-DSCCCertificate
     26eff476fdf58cc3c2b93b0a07f74b6a /api/v3/certificates/26eff476fdf58cc3c2b93b0a07f74b6a 2M202205GF Certificate HPE_3PAR A630-2M202205GF         HPE_3PAR A630-2M2022...
 #>
 [CmdletBinding(DefaultParameterSetName='Default')]
-param(  [Parameter(ParameterSetName='ByCertificateId')]
-[Parameter(Mandatory=$true,ParameterSetName='Default')]     [string]   $SystemID,
-        [Parameter(ParameterSetName='ByCertificateId')]     [string]   $CertificateID,
-        [Parameter(ParameterSetName='Default')]             [string]   $select,
-        [Parameter(ParameterSetName='Default')]             [string]   $limit,
-        [Parameter(ParameterSetName='Default')]             [int]      $offset,
-        [Parameter(ParameterSetName='ByCertificateId')]
-        [Parameter(ParameterSetName='Default')]             [switch]   $whatIf
+param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
+                                                                                        [string]   $SystemId,
+                                                                                        [string]   $CertificateID,
+                                                                                        [switch]   $whatIf
         )
 process
-    {   $MyURI = $BaseUri + 'storage-systems/device-type1/' + $SystemID + '/certificates'
-        $MyBody=@{}
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+        write-verbose "Dectected the DeviceType is $DeviceType"
+        $MyURI = $BaseUri + 'storage-systems/' + $DeviceType + '/' + $SystemID + '/certificates'
         if ( $CertificateID )
                 {   $MyURI = $MyURI + '/' + $CertificateId
                 }   
-            else 
-                {   if ( $select )          { $MyBody += @{ select = $select } } 
-                    if ( $limit  )          { $MyBody += @{ limit = $limit } } 
-                    if ( $offset )          { $MyBody += @{ offset = $offset } } 
-                }
         if ( $WhatIf )
-                {   $collect = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders -body $MyBody -method 'Get'
+                {   $collect = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders -method 'Get'
                 }
             else 
-                {   $collect = invoke-restmethod -uri $MyURI -Headers $MyHeaders -body $MyBody -method 'Get' 
+                {   try {   $collect = invoke-restmethod -uri $MyURI -Headers $MyHeaders -method 'Get'
+                        }
+                    catch { write-warning "No Certificates for system with SystemID $SystemID found."
+
+                        }
                 }
         if ( ($Collect).items )
                 {   $Collect = ($Collect).items

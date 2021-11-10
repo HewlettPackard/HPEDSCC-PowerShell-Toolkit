@@ -115,35 +115,40 @@ function Get-DSCCVolume
 .LINK
 #>   
 [CmdletBinding()]
-param(  [string]    $StorageSystemId, 
-        [string]    $VolumeId,
-        [switch]    $WhatIf
+param(  [Parameter(ValueFromPipeLineByPropertyName=$true )][Alias('id')]    [string]    $SystemId, 
+                                                                            [string]    $VolumeId,
+                                                                            [switch]    $WhatIf
      )
 process
-    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -StorageSystemId $StorageSystemId )
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         write-verbose "Dectected the DeviceType is $DeviceType"
         $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/'
-        if ( $StorageSystemId )
-            {   $MyURI = $MyURI + $StorageSystemId + '/'
+        if ( $SystemId )
+            {   $MyURI = $MyURI + $SystemId + '/'
             } 
         $MyURI = $MyURI + 'volumes'
-        if ( $VolumeId )
-            {   $MyURI = $MyURI + '/' + $VolumeId 
-            }
         if ( $WhatIf )
                 {   $SysColOnly = invoke-restmethodWhatIf -uri $MyURI -headers $MyHeaders -method Get
                 }   
             else 
                 {   $SysColOnly = invoke-restmethod -uri $MyURI -headers $MyHeaders -method Get
                 }
-        if ( ($SysColOnly).items ) { $SysColOnly = ($SysColOnly).items }
+        if ( ($SysColOnly).items ) 
+                { $SysColOnly = ($SysColOnly).items 
+                }
+            else 
+                {   if ( ($SysColOnly).Total -eq 0 )
+                    {   Write-Warning "No Items Detected on system with ID $SystemId."
+                        $SysColOnly = ''
+                    }
+            }
         if ( $VolumeId )
                 {   return ( (($SysColOnly)) | where-object { $_.id -eq $VolumeId } )
                 } 
             else 
-                {   return ( (($SysColOnly)) )
+                {   return $SysColOnly
                 }
-        clear-variable $StorageSystemId
+        clear-variable $SystemId
         clear-variable $VolumeId
         clear-variable $DeviceType
         clear-variable $MyURI

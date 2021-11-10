@@ -26,34 +26,31 @@ function Get-DSCCController
 .LINK
 #>   
 [CmdletBinding()]
-param(                                                                      [string]    $StorageSystemId, 
+param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
+                                                                            [string]    $SystemId,
                                                                             [string]    $ControllerId,
-        [parameter(mandatory)][validateset('device-type1','device-type2')]  [string]    $DeviceType,
                                                                             [switch]    $WhatIf
      )
 process
-    {   $ControllerWord = '/controllers'
-        if ($DeviceType -eq 'device-type1') 
-                {   $ControllerWord='/nodes'
-                }
-        $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $StorageSystemId + $ControllerWord
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+        switch($DeviceType)
+                {   'Device-Type1'  { $ControllerWord = '/nodes'        }
+                    'Device-Type2'  { $ControllerWord = '/controllers'  }
+                }    
+        $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + $ControllerWord
         if ( $ControllerId )
-            {   $MyURI = $MyURI + '/' + $ControllerId 
-            }
+                {   $MyURI = $MyURI + '/' + $ControllerId 
+                }
         if ( $WhatIf )
                 {   $SysColOnly = invoke-restmethodWhatIf -uri $MyURI -headers $MyHeaders -method Get
                 }   
             else 
                 {   $SysColOnly = invoke-restmethod -uri $MyURI -headers $MyHeaders -method Get
                 }
-        if ( ($SysColOnly).items ) { $SysColOnly = ($SysColOnly).items }
-        if ( $ControllerId )
-                {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                    return ( (($SysColOnly)) | where-object { $_.id -eq $ControllerId } )
-                } 
-            else 
-                {   return ( (($SysColOnly)) )
+        if ( ($SysColOnly).items ) 
+                {   $SysColOnly = ($SysColOnly).items 
                 }
+        return ( (($SysColOnly)) )
     }       
 } 
 function Get-DSCCControllerSubComponent
@@ -84,7 +81,8 @@ function Get-DSCCControllerSubComponent
 .LINK
 #>   
 [CmdletBinding()]
-param(                                                                      [string]    $StorageSystemId, 
+param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
+                                                                            [string]    $SystemId,
                                                                             [string]    $NodeId,
         [parameter(mandatory)][validateset('cards','cpus','drives','mcus','mems','powers','batteries')]
                                                                             [string]    $SubComponent,
@@ -92,7 +90,16 @@ param(                                                                      [str
                                                                             [switch]    $WhatIf
      )
 process
-    {   $MyURI = $BaseURI + 'storage-systems/device-type1/' + $StorageSystemId + '/nodes/' + $NodeId + '/node-' + $SubComponent
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+        switch($DeviceType)
+                {   'Device-Type1'  { $ControllerWord = 'nodes'        }
+                    'Device-Type2'  { $ControllerWord = 'controllers'  }
+                }    
+        $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + $ControllerWord
+        if ( $ControllerId )
+                {   $MyURI = $MyURI + '/' + $ControllerId 
+                }
+        $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/' + $ControllerWord + '/' + $NodeId + '/node-' + $SubComponent
         if ( $WhatIf )
                 {   $SysColOnly = invoke-restmethodWhatIf -uri $MyURI -headers $MyHeaders -method Get
                 }   

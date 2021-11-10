@@ -63,18 +63,16 @@ function Get-DSCCStoragePool
 .LINK
 #>   
 [CmdletBinding()]
-param(  [parameter(mandatory)]                                              [string]    $StorageSystemId, 
-                                                                            [string]    $StoragePoolId,
+param(  [parameter(mandatory,ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
+                                                                            [string]    $SystemId, 
+                                                                            [string]    $PoolId,
                                                                             [switch]    $WhatIf
      )
 process
-    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -StorageSystemId $StorageSystemId )
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         write-verbose "Dectected the DeviceType is $DeviceType"
         if ( $DeviceType )
-            {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $StorageSystemId + '/storage-pools'
-                if ( $StoragePoolId )
-                    {   $MyUri + $MyUri + '/' + $StoragePoolId 
-                    }
+            {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/storage-pools'
                 if ( $WhatIf )
                         {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
                         }   
@@ -83,15 +81,20 @@ process
                         }
                 if ( ($SysColOnly).items ) 
                         {   $SysColOnly = ($SysColOnly).items 
+                        } 
+                    else 
+                        {   if ( ($SysColOnly).total -eq 0 ) 
+                                {   Write-warning "The System with SystemID $SystemId has no Pool defined."
+                                    $SysColOnly = ''
+                                }
                         }
-                if ( $StoragePoolId )
-                        {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                            return ( $SysColOnly | where-object { $_.id -eq $StoragePoolId } )
+
+                if ( $PoolId )
+                        {   return ( $SysColOnly | where-object { $_.id -eq $PoolId } )
                         } 
                     else 
                         {   return $SysColOnly
                         }
-    
             }
             else 
             {   write-warning "The StorageSystemId Presented cannot be found."
@@ -218,23 +221,20 @@ function Get-DSCCStoragePoolVolume
 .LINK
 #>   
 [CmdletBinding()]
-param(  [parameter(mandatory)]  [string]    $StorageSystemId, 
-                                [string]    $StoragePoolId,
-                                [string]    $VolumeId,
-                                [switch]    $WhatIf
+param(  [parameter(mandatory,ValueFromPipeLineByPropertyName=$true )][Alias('id')]  [string]    $SystemId, 
+                                                                                    [string]    $PoolId,
+                                                                                    [string]    $VolumeId,
+                                                                                    [switch]    $WhatIf
      )
 process
-    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -StorageSystemId $StorageSystemId )
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         write-verbose "Dectected the DeviceType is $DeviceType"
         if ( $DeviceType -eq 'Device-Type2')
                 {   Write-Warning "This command only operates against Device-Type1 Storage Devices."
                     return 
                 }
             else 
-                {   $MyURI = $BaseURI + 'storage-systems/device-type1/' + $StorageSystemId + '/storage-pools/' + $StoragePoolId + '/volumes'
-                    if ( $VolumeId )
-                            {   $MyUri + $MyUri + '/' + $VolumeId 
-                            }
+                {   $MyURI = $BaseURI + 'storage-systems/device-type1/' + $SystemId + '/storage-pools/' + $PoolId + '/volumes'
                     if ( $WhatIf )
                             {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
                             }   

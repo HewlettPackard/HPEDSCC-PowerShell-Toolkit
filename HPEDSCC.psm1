@@ -10,6 +10,7 @@
 . $PSScriptRoot\scripts\Event.ps1
 . $PSScriptRoot\scripts\HostService.ps1
 . $PSScriptRoot\scripts\Mail.ps1
+. $PSScriptRoot\scripts\Port.ps1
 . $PSScriptRoot\scripts\Shelf.ps1
 . $PSScriptRoot\scripts\StoragePool.ps1
 . $PSScriptRoot\scripts\StorageSystem.ps1
@@ -30,11 +31,13 @@ Export-ModuleMember -Function           Connect-DSCC,
     
     Get-DSCCController,           Get-DSCCControllerSubComponent,   Invoke-DSCCControllerLocatePCBM,
     
-    Get-DSCCEvent,
+    Get-DSCCEvent,                
 
     Get-DSCCMail,                 Remove-DSCCMail,                  Set-DSCCMail,                 New-DSCCMail,
 
     Get-DSCCComponentPerfStats,
+
+    Get-DSCCPort,
 
     Get-DSCCDisk,                 Get-DSCCShelf,                    Invoke-DSCCShelfLocate,
 
@@ -45,5 +48,5 @@ Export-ModuleMember -Function           Connect-DSCC,
     Get-DSCCCapacity,
 
     Get-DSCCCertificate,
-    
+
     Find-DSCCDeviceTypeFromStorageSystemID

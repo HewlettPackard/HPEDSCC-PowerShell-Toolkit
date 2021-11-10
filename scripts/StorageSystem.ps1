@@ -103,7 +103,7 @@ function Get-DSCCStorageSystem
 .LINK
 #>   
 [CmdletBinding()]
-param(                                                                      [string]    $StorageSystemId, 
+param(                                                                      [string]    $SystemId, 
         [parameter(mandatory)][validateset('device-type1','device-type2')]  [string]    $DeviceType,
                                                                             [switch]    $WhatIf
      )
@@ -115,9 +115,17 @@ process
             else 
                 {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
                 }
-        if ( ($SysColOnly).items )  {   $SysColOnly = ($SysColOnly).items }
-        if ( $StorageSystemId )
-                {   return ( $SysColOnly | where-object { $_.id -eq $StorageSystemId } )
+        if ( ($SysColOnly).items )  
+                {   $SysColOnly = ($SysColOnly).items 
+                }   
+            else 
+                {   if ( ($SysColOnly).total -eq 0 )
+                        {   write-warning "No Items Returned"
+                            $SysColOnly=''
+                        }
+                }
+        if ( $SystemId )
+                {   return ( $SysColOnly | where-object { $_.id -eq $SystemId } )
                 } 
             else 
                 {   return $SysColOnly

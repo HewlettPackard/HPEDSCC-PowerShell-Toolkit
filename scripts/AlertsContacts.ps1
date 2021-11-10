@@ -42,31 +42,30 @@ function Get-DSCCAlertOrContact
         }
     ]
 #>   
-[CmdletBinding(DefaultParameterSetName='Default')]
-param(  [Parameter(Mandatory=$true,ParameterSetName='Default')] 
-        [Parameter(Mandatory=$true,ParameterSetName='ById')]        [string]    $SystemID,
-        [Parameter(ParameterSetName='Default')]                     [int32]     $limit,
-        [Parameter(ParameterSetName='Default')]                     [int32]     $offset,
-        [Parameter(ParameterSetName='ById')]                        [string]    $Id,
-        [Parameter(ParameterSetName='Default')] 
-        [Parameter(ParameterSetName='ById')]                        [switch]    $whatIf
+[CmdletBinding()]
+param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
+                                                                                [string]    $SystemId,
+                                                                                [string]    $AlertId,
+                                                                                [switch]    $whatIf
         
      )
 process
-    {   $MyBody = @{}
-        if ( $limit )   { $MyBody += @{ limit  = $limit  }  }
-        if ( $offset )  { $MyBody += @{ offset = $offset }  }   
-        $MyURI = $BaseURI + 'storage-systems/device-type1/' + $SystemID + '/alert-contacts'
-        if ( $Id ) 
-                {   $MyURI = $MyURI + '/' + $Id 
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+        write-verbose "Dectected the DeviceType is $DeviceType"
+        $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/alert-contacts'
+        if ( $AlertId ) 
+                {   $MyURI = $MyURI + '/' + $AlertId 
                 }
         if ( $WhatIf )
-                {   $FullObjSet = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders -body $MyBody -method 'Get'
+                {   $FullObjSet = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders  -method 'Get'
                 }
             else
-                {   $FullObjSet = Invoke-RestMethod -uri $MyURI -Headers $MyHeaders -body $MyBody -method 'Get' 
-                }
-        return  $FullObjSet   
+                {   try {   $FullObjSet = Invoke-RestMethod -uri $MyURI -Headers $MyHeaders  -method 'Get' 
+                        }   
+                    catch { write-warning "The call for alerts to system ID $SystemId returned nothing."
+                        }
+            }
+        return $FullObjSet   
     }       
 }   
 

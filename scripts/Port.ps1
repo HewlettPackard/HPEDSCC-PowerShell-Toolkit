@@ -1,14 +1,14 @@
-function Get-DSCCDisk
+function Get-DSCCPort
 {
 <#
 .SYNOPSIS
-    Returns the HPE DSSC DOM Disks for a specific storage system     
+    
 .DESCRIPTION
-    Returns the HPE DSSC DOM Disks for a specific storage system 
-.PARAMETER StorageSystemID
-    A single Storage System ID is specified and required, the pools defined will be returned unless a specific Disk ID is requested.
-.PARAMETER DiskID
-    If a single Storage System Disk ID is specified, only that Disk will be returned.
+    
+.PARAMETER SystemID
+    
+.PARAMETER PortID
+   
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
@@ -21,14 +21,14 @@ function Get-DSCCDisk
 [CmdletBinding()]
 param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
                                                                             [string]    $SystemId,
-                                                                            [string]    $DiskId,
+                                                                            [string]    $PortId,
                                                                             [switch]    $WhatIf
      )
 process
     {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         write-verbose "Dectected the DeviceType is $DeviceType"
         if ( $DeviceType )
-            {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/disks'
+            {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/ports'
                 try {   if ( $WhatIf )
                                 {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
                                 }   
@@ -40,12 +40,12 @@ process
                     }
                 if ( ($SysColOnly).items ) { $SysColOnly = ($SysColOnly).items }
                 if (  ($SysColOnly).total -eq 0 )
-                    {   Write-Warning "The Call to SystemID $SystemId returned no Disk Records."
+                    {   Write-Warning "The Call to SystemID $SystemId returned no port Records."
                         $SysColOnly = ''
                     }
                 if ( $DiskId )
                         {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                            return ( ($SysColOnly) | where-object { $_.id -eq $DiskId } )
+                            return ( ($SysColOnly) | where-object { $_.id -eq $PortId } )
                         } 
                     else 
                         {   return $SysColOnly
