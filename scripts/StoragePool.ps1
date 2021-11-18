@@ -222,7 +222,7 @@ function Get-DSCCStoragePoolVolume
 #>   
 [CmdletBinding()]
 param(  [parameter(mandatory,ValueFromPipeLineByPropertyName=$true )][Alias('id')]  [string]    $SystemId, 
-                                                                                    [string]    $PoolId,
+        [parameter(mandatory)]                                                      [string]    $PoolId,
                                                                                     [string]    $VolumeId,
                                                                                     [switch]    $WhatIf
      )
@@ -234,7 +234,7 @@ process
                     return 
                 }
             else 
-                {   $MyURI = $BaseURI + 'storage-systems/device-type1/' + $SystemId + '/storage-pools/' + $PoolId + '/volumes'
+                {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/storage-pools/' + $PoolId + '/volumes'
                     if ( $WhatIf )
                             {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
                             }   

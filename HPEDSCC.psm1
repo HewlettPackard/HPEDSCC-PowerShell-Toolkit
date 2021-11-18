@@ -50,3 +50,5 @@ Export-ModuleMember -Function           Connect-DSCC,
     Get-DSCCCertificate,
 
     Find-DSCCDeviceTypeFromStorageSystemID
+
+. $PSScriptRoot\scripts\SetAlias.ps1 

@@ -2,21 +2,17 @@ function Get-DSCCAlertOrContact
 {
 <#
 .SYNOPSIS
-    Returns the HPE DSSC DOM Alerts and Contact Information    
+    Returns the DSCC Alerts and Contact Information    
 .DESCRIPTION
     Returns the HPE Data Services Cloud Console Data Operations Manager Alerts and Contact information;
 .PARAMETER systemID
     The required system ID to query for the alerts
-.PARAMETER limit
-    Limits the number of responses
-.PARAMETER offset
-    The offset of the first item in the collection to return
-.PARAMETER id
-    Will limit the data returned to a single event identified by ID
+.PARAMETER Alertid
+    If multiple alerts exist, Will limit the data returned to a single event identified by ID
 .PARAMETER WhatIf
     This option shows you the command that will be sent to the DSCC, will include the URI being sent to, the Header, Method, and the Body of the message.
 .EXAMPLE
-    PS:> Get-DSCCAlertOrContact
+    PS:> Get-DSCCAlertOrContact -SystemId 2M2042059T
     [   {   "company": "HPE",
             "companyCode": "HPE",
             "consoleUri": "data-ops-manager/storage-systems/device-type1/SGH014XGSP/settings/system-settings",
@@ -41,34 +37,53 @@ function Get-DSCCAlertOrContact
             "type": "alert-contacts"
         }
     ]
+.EXAMPLE
+    PS:> # The following command will detect any outstanding Alerts on all arrays of device-type1
+    PS:> Get-DSCCStorageSystem -DeviceType device-type1 | Get-DSCCAlertOrContact
+    
+    WARNING: The call for alerts to system ID 2M2042059T returned nothing.
+    WARNING: The call for alerts to system ID 2M202205GG returned nothing.
+    WARNING: The call for alerts to system ID 2M2042059X returned nothing.
 #>   
 [CmdletBinding()]
 param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
                                                                                 [string]    $SystemId,
                                                                                 [string]    $AlertId,
                                                                                 [switch]    $whatIf
-        
      )
 process
     {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         write-verbose "Dectected the DeviceType is $DeviceType"
-        $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/alert-contacts'
-        if ( $AlertId ) 
-                {   $MyURI = $MyURI + '/' + $AlertId 
+        if ( $DeviceType -eq 'device-type1' )
+                {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/alert-contacts'
+                    if ( $AlertId ) 
+                            {   $MyURI = $MyURI + '/' + $AlertId 
+                            }
+                    if ( $WhatIf )
+                            {   $FullObjSet = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders  -method 'Get'
+                            }
+                        else
+                            {   try     {   $FullObjSet = Invoke-RestMethod -uri $MyURI -Headers $MyHeaders  -method 'Get' 
+                                        }   
+                                catch   { write-warning "The call for alerts to system ID $SystemId returned nothing."
+                                        }
+                            }
+                    return $FullObjSet
                 }
-        if ( $WhatIf )
-                {   $FullObjSet = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders  -method 'Get'
+            else 
+                {   if ( -not $DeviveType ) 
+                            {   Write-Warning "This command only works against System with Device-Type 1."
+                            }
+                        else 
+                            {   Write-Warning "No Valid Storage Systemd Detected using System ID $SystemId."
+                    
+                            }
+                    return 
+                
                 }
-            else
-                {   try {   $FullObjSet = Invoke-RestMethod -uri $MyURI -Headers $MyHeaders  -method 'Get' 
-                        }   
-                    catch { write-warning "The call for alerts to system ID $SystemId returned nothing."
-                        }
-            }
-        return $FullObjSet   
+           
     }       
 }   
-
 function Remove-DSCCAlertOrContact
 {
 <#
@@ -111,20 +126,39 @@ function Remove-DSCCAlertOrContact
 #>   
 [CmdletBinding()]
 param(  [Parameter(Mandatory)]  [string]    $systemId,
-        [Parameter(Mandatory)]  [string]    $Id,
+        [Parameter(Mandatory)]  [string]    $AlertId,
                                 [switch]    $WhatIf
      )
 process
-    {   $MyURI = $BaseURI + 'storage-systems/' + $systemID + '/alert-contacts/' + $id
-        if ( $Whatif )
-                {   return Invoke-RestMethodWhatIf -uri $MyUri -method 'Delete' -headers $MyHeaders
-                } 
-            else 
-                {   return Invoke-RestMethod -uri $MyUri -method 'Delete' -headers $MyHeaders
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+        write-verbose "Dectected the DeviceType is $DeviceType"
+        if ( $DeviceType -eq 'device-type1' )
+                {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/alert-contacts/' + $AlertId
+                    if ( $WhatIf )
+                            {   $FullObjSet = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders  -method 'Delete'
+                            }
+                        else
+                            {   try     {   $FullObjSet = Invoke-RestMethod -uri $MyURI -Headers $MyHeaders  -method 'Delete' 
+                                        }   
+                                catch   { write-warning "The call for alerts to system ID $SystemId returned nothing."
+                                        }
+                            }
+                    return $FullObjSet
                 }
+            else 
+                {   if ( -not $DeviveType ) 
+                            {   Write-Warning "This command only works against System with Device-Type 1."
+                            }
+                        else 
+                            {   Write-Warning "No Valid Storage Systemd Detected using System ID $SystemId."
+                    
+                            }
+                    return 
+                
+                }
+           
     }       
-} 
-
+}   
 function New-DSCCAlertContact
 {
 <#
@@ -205,7 +239,8 @@ function New-DSCCAlertContact
     }
 #>   
 [CmdletBinding()]
-param(  [Parameter(Mandatory)]  [string]    $SystemID,
+param(   [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
+                                [string]    $SystemId,
                                 [string]    $company,
                                 [string]    $companyCode,
                                 [string]    $country,
@@ -224,31 +259,48 @@ param(  [Parameter(Mandatory)]  [string]    $SystemID,
                                 [switch]    $whatIf
     )
 process
-    {   $MyURI = $BaseURI + 'storage-systems/device-type1/' + $systemID + '/alert-contacts'
-        $MyBody=@{}
-        if ( $company )             { $MyBody += @{ company = $company } } 
-        if ( $companyCode )         { $MyBody += @{ companyCode = $companyCode } } 
-        if ( $country )             { $MyBody += @{ country = $country } } 
-        if ( $fax )                 { $MyBody += @{ fax = $fax } } 
-        if ( $firstName )           { $MyBody += @{ firstName = $firstName } } 
-        if ( $includeSvcAlerts )    { $MyBody += @{ includeSvcAlerts = $includeSvcAlerts } } 
-        if ( $lastName )            { $MyBody += @{ lastName = $lastName } } 
-        if ( $notificationServices ){ $MyBody += @{ notificationServices = $notificationServices } } 
-        if ( $preferredLanguages )  { $MyBody += @{ preferredLanguages = $preferredLanguages } } 
-        if ( $primaryEmail )        { $MyBody += @{ primaryEmail = $primaryEmail } } 
-        if ( $primaryPhone )        { $MyBody += @{ primaryPhone = $primaryPhone } } 
-        if ( $receiveEmail )        { $MyBody += @{ receiveEmail = $receiveEmail } } 
-        if ( $secondaryEmail )      { $MyBody += @{ secondaryEmail = $secondaryEmail } } 
-        if ( $secondaryPhone )      { $MyBody += @{ secondaryPhone = $secondaryPhone } } 
-        if ( $whatIf )    
-                {   return invoke-restmethodWhatIf -Uri $MyURI -Headers $MyHeaders -Method 'Put' -Body $MyBody 
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+        write-verbose "Dectected the DeviceType is $DeviceType"
+        if ( $DeviceType -eq 'device-type1' )
+                {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/alert-contacts'
+                    $MyBody=@{}
+                    if ( $company )             { $MyBody += @{ company = $company } } 
+                    if ( $companyCode )         { $MyBody += @{ companyCode = $companyCode } } 
+                    if ( $country )             { $MyBody += @{ country = $country } } 
+                    if ( $fax )                 { $MyBody += @{ fax = $fax } } 
+                    if ( $firstName )           { $MyBody += @{ firstName = $firstName } } 
+                    if ( $includeSvcAlerts )    { $MyBody += @{ includeSvcAlerts = $includeSvcAlerts } } 
+                    if ( $lastName )            { $MyBody += @{ lastName = $lastName } } 
+                    if ( $notificationServices ){ $MyBody += @{ notificationServices = $notificationServices } } 
+                    if ( $preferredLanguages )  { $MyBody += @{ preferredLanguages = $preferredLanguages } } 
+                    if ( $primaryEmail )        { $MyBody += @{ primaryEmail = $primaryEmail } } 
+                    if ( $primaryPhone )        { $MyBody += @{ primaryPhone = $primaryPhone } } 
+                    if ( $receiveEmail )        { $MyBody += @{ receiveEmail = $receiveEmail } } 
+                    if ( $secondaryEmail )      { $MyBody += @{ secondaryEmail = $secondaryEmail } } 
+                    if ( $secondaryPhone )      { $MyBody += @{ secondaryPhone = $secondaryPhone } } 
+                    if ( $WhatIf )
+                            {   $FullObjSet = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders  -Method Post
+                            }
+                        else
+                            {   try     {   $FullObjSet = Invoke-RestMethod -uri $MyURI -Headers $MyHeaders  -method Post 
+                                        }   
+                                catch   { $_
+                                          write-warning "The call for alerts to system ID $SystemId returned nothing."
+                                        }
+                            }
+                    return $FullObjSet
                 }
             else 
-                {   return invoke-restmethodWhat -Uri $MyURI -Hearders $MyHeaders -Method 'Put' -Body $MyBody        
+                {   if ( -not $DeviveType ) 
+                            {   Write-Warning "This command only works against System with Device-Type 1."
+                            }
+                        else 
+                            {   Write-Warning "No Valid Storage Systemd Detected using System ID $SystemId."
+                            }
+                    return 
                 }
-    }       
-}   
-
+    }
+}  
 function Set-DSCCAlertContact
 {
 <#
@@ -334,8 +386,9 @@ function Set-DSCCAlertContact
 
 #>   
 [CmdletBinding(DefaultParameterSetName='Default')]
-param(  [Parameter(Mandatory)]  [string]    $SystemID,
-        [Parameter(Mandatory)]  [string]    $Id,
+param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
+                                [string]    $SystemId,
+        [Parameter (Mandatory)] [string]    $ContactId,
                                 [string]    $company,
                                 [string]    $companyCode,
                                 [string]    $country,
@@ -354,27 +407,44 @@ param(  [Parameter(Mandatory)]  [string]    $SystemID,
                                 [switch]    $whatIf
     )
 process
-    {   $MyURI = $BaseURI + 'storage-systems/device-type1/' + $systemID + '/alert-contacts/' + $id
-        $MyBody=@{}
-        if ( $company )             { $MyBody += @{ company = $company } } 
-        if ( $companyCode )         { $MyBody += @{ companyCode = $companyCode } } 
-        if ( $country )             { $MyBody += @{ country = $country } } 
-        if ( $fax )                 { $MyBody += @{ fax = $fax } } 
-        if ( $firstName )           { $MyBody += @{ firstName = $firstName } } 
-        if ( $includeSvcAlerts )    { $MyBody += @{ includeSvcAlerts = $includeSvcAlerts } } 
-        if ( $lastName )            { $MyBody += @{ lastName = $lastName } } 
-        if ( $notificationServices ){ $MyBody += @{ notificationServices = $notificationServices } } 
-        if ( $preferredLanguages )  { $MyBody += @{ preferredLanguages = $preferredLanguages } } 
-        if ( $primaryEmail )        { $MyBody += @{ primaryEmail = $primaryEmail } } 
-        if ( $primaryPhone )        { $MyBody += @{ primaryPhone = $primaryPhone } } 
-        if ( $receiveEmail )        { $MyBody += @{ receiveEmail = $receiveEmail } } 
-        if ( $secondaryEmail )      { $MyBody += @{ secondaryEmail = $secondaryEmail } } 
-        if ( $secondaryPhone )      { $MyBody += @{ secondaryPhone = $secondaryPhone } } 
-        if ( $whatIf )    
-                {   return invoke-restmethodWhatIf -Uri $MyURI -Headers $MyHeaders -Method 'Patch' -Body $MyBody 
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+        write-verbose "Dectected the DeviceType is $DeviceType"
+        if ( $DeviceType -eq 'device-type1' )
+                {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/alert-contacts/' + $ContactId
+                    $MyBody=@{}
+                    if ( $company )             { $MyBody += @{ company = $company } } 
+                    if ( $companyCode )         { $MyBody += @{ companyCode = $companyCode } } 
+                    if ( $country )             { $MyBody += @{ country = $country } } 
+                    if ( $fax )                 { $MyBody += @{ fax = $fax } } 
+                    if ( $firstName )           { $MyBody += @{ firstName = $firstName } } 
+                    if ( $includeSvcAlerts )    { $MyBody += @{ includeSvcAlerts = $includeSvcAlerts } } 
+                    if ( $lastName )            { $MyBody += @{ lastName = $lastName } } 
+                    if ( $notificationServices ){ $MyBody += @{ notificationServices = $notificationServices } } 
+                    if ( $preferredLanguages )  { $MyBody += @{ preferredLanguages = $preferredLanguages } } 
+                    if ( $primaryEmail )        { $MyBody += @{ primaryEmail = $primaryEmail } } 
+                    if ( $primaryPhone )        { $MyBody += @{ primaryPhone = $primaryPhone } } 
+                    if ( $receiveEmail )        { $MyBody += @{ receiveEmail = $receiveEmail } } 
+                    if ( $secondaryEmail )      { $MyBody += @{ secondaryEmail = $secondaryEmail } } 
+                    if ( $secondaryPhone )      { $MyBody += @{ secondaryPhone = $secondaryPhone } } 
+                    if ( $WhatIf )
+                            {   $FullObjSet = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders  -method Patch
+                            }
+                        else
+                            {   try     {   $FullObjSet = Invoke-RestMethod -uri $MyURI -Headers $MyHeaders  -method Patch 
+                                        }   
+                                catch   { write-warning "The call for alerts to system ID $SystemId returned nothing."
+                                        }
+                            }
+                    return $FullObjSet
                 }
             else 
-                {   return invoke-restmethodWhat -Uri $MyURI -Headers $MyHeaders -Method 'Patch' -Body $MyBody        
+                {   if ( -not $DeviveType ) 
+                            {   Write-Warning "This command only works against System with Device-Type 1."
+                            }
+                        else 
+                            {   Write-Warning "No Valid Storage Systemd Detected using System ID $SystemId."
+                            }
+                    return 
                 }
-    }       
-}   
+    }
+}  

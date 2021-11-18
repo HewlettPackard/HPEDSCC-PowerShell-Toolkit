@@ -26,30 +26,41 @@ function Get-DSCCEvent
 .LINK
 #>   
 [CmdletBinding()]
-param(                                                                      [string]    $StorageSystemId, 
+param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
+                                                                            [string]    $SystemId, 
                                                                             [string]    $EventId,
-        [parameter(mandatory)][validateset('device-type1','device-type2')]  [string]    $DeviceType,
                                                                             [switch]    $WhatIf
      )
 process
-    {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $StorageSystemId + '/events'
-            
-        if ( $EventId )
-            {   $MyURI = $MyURI + '/' + $EventId 
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+        write-verbose "Dectected the DeviceType is $DeviceType"
+        if ( $DeviceType )
+                { $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/events'
+                    if ( $EventId )
+                            {   $MyURI = $MyURI + '/' + $EventId 
+                            }
+                    if ( $WhatIf )
+                            {   $SysColOnly = invoke-restmethodWhatIf -uri $MyURI -headers $MyHeaders -method Get
+                            }
+                        else 
+                            {   Try     {   $SysColOnly = invoke-restmethod -uri $MyURI -headers $MyHeaders -method Get
+                                        }
+                                Catch   {   Write-warning "The Call to System ID $SystemId to gather Events Failed."
+                                            $SysColOnly = ''
+                                        }
+                            }
+                    if ( ($SysColOnly).items ) { $SysColOnly = ($SysColOnly).items }
+                    if ( $EventId )
+                            {   Write-host "The results of the complete collection have been limited to just the supplied ID"
+                                return ( (($SysColOnly)) | where-object { $_.id -eq $EventId } )
+                            }
+                        else 
+                            {   return ( (($SysColOnly)) )
+                            }
+                }
+            else 
+                {   write-warning "The System with the System ID of $SystemId was not found."
+                
             }
-        if ( $WhatIf )
-                {   $SysColOnly = invoke-restmethodWhatIf -uri $MyURI -headers $MyHeaders -method Get
-                }   
-            else 
-                {   $SysColOnly = invoke-restmethod -uri $MyURI -headers $MyHeaders -method Get
-                }
-        if ( ($SysColOnly).items ) { $SysColOnly = ($SysColOnly).items }
-        if ( $EventId )
-                {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                    return ( (($SysColOnly)) | where-object { $_.id -eq $EventId } )
-                } 
-            else 
-                {   return ( (($SysColOnly)) )
-                }
     }       
 } 

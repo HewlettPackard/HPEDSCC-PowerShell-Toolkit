@@ -1,0 +1,40 @@
+Set-Alias -name Connect-HPEDSCC -Value Connect-DSCC
+Set-Alias -name Get-HPEDSCCHostServiceHostVolume -value Get-DSCCHostServiceHostVolume     
+Set-Alias -name Get-HPEDSCCHostServiceHostGroup -value Get-DSCCHostServiceHostGroup
+Set-Alias -name Remove-HPEDSCCHostServiceHostGroup -value Remove-DSCCHostServiceHostGroup
+Set-Alias -name Set-HPEDSCCHostServiceHostGroup -value Set-DSCCHostServiceHostGroup
+Set-Alias -name New-HPEDSCCHostServiceHostGroup -value New-DSCCHostServiceHostGroup
+Set-Alias -name Get-HPEDSCCHostServiceHost -value Get-DSCCHostServiceHost 
+Set-Alias -name Remove-HPEDSCCHostServiceHost -value Remove-DSCCHostServiceHost
+Set-Alias -name Set-HPEDSCCHostServiceHost -value Set-DSCCHostServiceHost
+Set-Alias -name New-HPEDSCCHostServiceHost -value New-DSCCHostServiceHost    
+Set-Alias -name Get-HPEDSCCHostServiceInitiator -value Get-DSCCHostServiceInitiator
+Set-Alias -name Remove-HPEDSCCHostServiceInitiator -value Remove-DSCCHostServiceInitiator
+Set-Alias -name New-HPEDSCCHostServiceInitiator -value New-DSCCHostServiceInitiator
+Set-Alias -name Get-HPEDSCCStorageSystem -value Get-DSCCStorageSystem        
+Set-Alias -name Invoke-HPEDSCCStorageSystemLocate -value Invoke-DSCCStorageSystemLocate
+Set-Alias -name Get-HPEDSCCStoragePool -value Get-DSCCStoragePool        
+Set-Alias -name Get-HPEDSCCStoragePoolVolume -value Get-DSCCStoragePoolVolume
+Set-Alias -name Get-HPEDSCCVolume -value Get-DSCCVolume
+Set-Alias -name Get-HPEDSCCController -value Get-DSCCController           
+Set-Alias -name Get-HPEDSCCControllerSubComponent -value Get-DSCCControllerSubComponent  
+Set-Alias -name Invoke-HPEDSCCControllerLocatePCBM -value Invoke-DSCCControllerLocatePCBM
+Set-Alias -name Get-HPEDSCCEvent -value Get-DSCCEvent               
+Set-Alias -name Get-HPEDSCCMail -value Get-DSCCMail                
+Set-Alias -name Remove-HPEDSCCMail -value Remove-DSCCMail              
+    Set-Alias -name Set-HPEDSCCMail -value Set-DSCCMail                
+    Set-Alias -name New-HPEDSCCMail -value New-DSCCMail
+    Set-Alias -name Get-HPEDSCCComponentPerfStats -value Get-DSCCComponentPerfStats
+    Set-Alias -name Get-HPEDSCCDisk -value Get-DSCCDisk
+    Set-Alias -name Get-HPEDSCCDisk -value Get-DSCCDisk                  
+    Set-Alias -name Get-HPEDSCCShelf -value Get-DSCCShelf                  
+    Set-Alias -name Invoke-HPEDSCCShelfLocate -value Invoke-DSCCShelfLocate
+    Set-Alias -name Get-HPEDSCCAlertOrContact -value Get-DSCCAlertOrContact       
+    Set-Alias -name Remove-HPEDSCCAlertOrContact -value Remove-DSCCAlertOrContact        
+    Set-Alias -name Set-HPEDSCCAlertContact -value SetDSCCAlertContact        
+    Set-Alias -name New-HPEDSCCAlertContact -value New-DSCCAlertContact 
+    Set-Alias -name Get-HPEDSCCCapacitySummary -value Get-DSCCCapacitySummary 
+    Set-Alias -name Get-HPEDSCCCapacityHistory -value Get-DSCCCapacityHistory
+    Set-Alias -name Get-HPEDSCCCapacity -value Get-DSCCCapacity 
+    Set-Alias -name Get-HPEDSCCCertificate -value Get-DSCCCertificate 
+    Set-Alias -name Find-HPEDSCCDeviceTypeFromStorageSystemID -value Find-DSCCDeviceTypeFromStorageSystemID 

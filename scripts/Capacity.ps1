@@ -56,20 +56,37 @@ param(  [Parameter(Mandatory)]  [string]   $SystemID,
                                 [switch]   $whatIf
         )
 process
-    {   $MyURI = $BaseURI + 'storage-systems/device-type1/' + $SystemID + '/application-summary'
-        $MyBody=@{}
-        if ( $select )          { $MyBody += @{ select = $select } } 
-        if ( $range  )          { $MyBody += @{ range = $range } } 
-        if ( $timeIntervalMin ) { $MyBody += @{ timeIntervalMin = $TimeIntervalMin } } 
-        if ( $WhatIf )
-                {   $collect = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders -body $MyBody -method 'Get'
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+        write-verbose "Dectected the DeviceType is $DeviceType"
+        if ( $DeviceType -eq 'device-type1' )
+                {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/application-summary'
+                    $MyBody=@{}
+                    if ( $select )          { $MyBody += @{ select = $select } } 
+                    if ( $range  )          { $MyBody += @{ range = $range } } 
+                    if ( $timeIntervalMin ) { $MyBody += @{ timeIntervalMin = $TimeIntervalMin } } 
+                    if ( $WhatIf )
+                            {   $FullObjSet = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders  -method 'Get'
+                            }
+                        else
+                            {   try     {   $FullObjSet = Invoke-RestMethod -uri $MyURI -Headers $MyHeaders  -method 'Get' 
+                                        }   
+                                catch   {   write-warning "The call for alerts to system ID $SystemId returned nothing."
+                                        }
+                            }
+                    if ( $FullObjSet.items ) 
+                            { $FullObjSet = $FullObjSet.Items
+                            }
+                    return $FullObjSet
                 }
             else 
-                {   $collect = invoke-restmethod -uri $MyURI -Headers $MyHeaders -body $MyBody -method 'Get'
+                {   if ( -not $DeviveType ) 
+                            {   Write-Warning "This command only works against System with Device-Type 1."
+                            }
+                        else 
+                            {   Write-Warning "No Valid Storage Systemd Detected using System ID $SystemId." 
+                            }
+                    return 
                 }
-        if ( ($Collect).items ) 
-                { $Collect = ($Collect).items }
-        return $collect      
     }       
 }   
 function Get-DSCCCapacityHistory
@@ -131,22 +148,39 @@ param(  [Parameter(Mandatory)]  [string]   $SystemID,
                                 [switch]   $whatIf
     )
 process
-    {   $MyURI = $BaseURI + 'storage-systems/device-type1/' + $SystemID + '/capacity-history'
-        $MyBody=@{}
-        if ( $select )          { $MyBody += @{ select = $select } } 
-        if ( $range  )          { $MyBody += @{ range = $range } } 
-        if ( $timeIntervalMin ) { $MyBody += @{ timeIntervalMin = $TimeIntervalMin } } 
-        if ( $WhatIf )
-                {   $collect = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders -body $MyBody -method 'Get'
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+        write-verbose "Dectected the DeviceType is $DeviceType"
+        if ( $DeviceType -eq 'device-type1' )
+                {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/capacity-history'
+                    $MyBody=@{}
+                    if ( $select )          { $MyBody += @{ select = $select } } 
+                    if ( $range  )          { $MyBody += @{ range = $range } } 
+                    if ( $timeIntervalMin ) { $MyBody += @{ timeIntervalMin = $TimeIntervalMin } } 
+                    if ( $WhatIf )
+                            {   $FullObjSet = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders  -method 'Get'
+                            }
+                        else
+                            {   try     {   $FullObjSet = Invoke-RestMethod -uri $MyURI -Headers $MyHeaders  -method 'Get' 
+                                        }   
+                                catch   {   write-warning "The call for alerts to system ID $SystemId returned nothing."
+                                        }
+                            }
+                    if ( $FullObjSet.items ) 
+                            { $FullObjSet = $FullObjSet.Items
+                            }
+                    return $FullObjSet
                 }
             else 
-                {   $collect = invoke-restmethod -uri $MyURI -Headers $MyHeaders -body $MyBody -method 'Get'
+                {   if ( -not $DeviveType ) 
+                            {   Write-Warning "This command only works against System with Device-Type 1."
+                            }
+                        else 
+                            {   Write-Warning "No Valid Storage Systemd Detected using System ID $SystemId." 
+                            }
+                    return 
                 }
-        if ( ($Collect).items ) 
-                { $Collect = ($Collect).items }
-        return $collect      
-    }            
-}   
+    }       
+}              
 function Get-DSCCCapacitySummary
 {
 <#
@@ -193,19 +227,36 @@ param(  [Parameter(Mandatory=$true)]    [string]   $SystemID,
                                         [switch]   $whatIf
         )
 process
-{   $MyURI = $BaseURI + 'storage-systems/device-type1/' + $SystemID + '/capacity-summary'
-    $MyBody=@{}
-    if ( $select )          { $MyBody += @{ select = $select } } 
-    if ( $range  )          { $MyBody += @{ range = $range } } 
-    if ( $timeIntervalMin ) { $MyBody += @{ timeIntervalMin = $TimeIntervalMin } } 
-    if ( $WhatIf )
-            {   $collect = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders -body $MyBody -method 'Get'
+{   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    write-verbose "Dectected the DeviceType is $DeviceType"
+    if ( $DeviceType -eq 'device-type1' )
+            {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/capacity-summary'
+                $MyBody=@{}
+                if ( $select )          { $MyBody += @{ select = $select } } 
+                if ( $range  )          { $MyBody += @{ range = $range } } 
+                if ( $timeIntervalMin ) { $MyBody += @{ timeIntervalMin = $TimeIntervalMin } } 
+                if ( $WhatIf )
+                        {   $FullObjSet = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders  -method 'Get'
+                        }
+                    else
+                        {   try     {   $FullObjSet = Invoke-RestMethod -uri $MyURI -Headers $MyHeaders  -method 'Get' 
+                                    }   
+                            catch   {   write-warning "The call for alerts to system ID $SystemId returned nothing."
+                                    }
+                        }
+                if ( $FullObjSet.items ) 
+                        { $FullObjSet = $FullObjSet.Items
+                        }
+                return $FullObjSet
             }
         else 
-            {   $collect = invoke-restmethod -uri $MyURI -Headers $MyHeaders -body $MyBody -method 'Get'
+            {   if ( -not $DeviveType ) 
+                        {   Write-Warning "This command only works against System with Device-Type 1."
+                        }
+                    else 
+                        {   Write-Warning "No Valid Storage Systemd Detected using System ID $SystemId." 
+                        }
+                return 
             }
-    if ( ($Collect).items ) 
-            { $Collect = ($Collect).items }
-    return $collect      
 }            
 }    
