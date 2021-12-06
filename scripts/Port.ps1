@@ -57,23 +57,28 @@ process
                 catch { write-warning "The Attempt the gather information from DSCC failed with API Error"
                     }
                 if ( $DeviceType -eq 'device-type2')
-                    {   $SysColOnly1 = (($SysColOnly).network_interfaces)
-                        $SysColOnly2 =(($SysColOnly).fibre_channel_interfaces)
-                        $SysColOnly = @( $SysColOnly1, $SysColOnly2 )
-                             #+ (($SysColOnly).fibre_channel_interfaces).items
-#                            }
+                    {   $SysColOnly1 = (( $SysColOnly ).network_interfaces )
+                        $SysColOnly2 = (( $SysColOnly ).fibre_channel_interfaces )
+                        $SysColOnly  = @( $SysColOnly1, $SysColOnly2 )
+
                     }   
-                if ( ($SysColOnly).items ) { $SysColOnly = ($SysColOnly).items }
-                if (  ($SysColOnly).total -eq 0 )
-                    {   Write-Warning "The Call to SystemID $SystemId returned no port Records."
-                        $SysColOnly = ''
-                    }
+                if ( ($SysColOnly).items ) 
+                        {   $SysColOnly = ($SysColOnly).items 
+                            $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Port.$DeviceType"
+                        } 
+                    else
+                        {   if (  ($SysColOnly).total -eq 0 )
+                                    {   Write-Warning "The Call to SystemID $SystemId returned no port Records."
+                                        $ReturnData = ''
+                                    }
+                        }
+
                 if ( $DiskId )
                         {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                            return ( ($SysColOnly) | where-object { $_.id -eq $PortId } )
+                            return ( $ReturnData | where-object { $_.id -eq $PortId } )
                         } 
                     else 
-                        {   return $SysColOnly
+                        {   return $ReturnData
                         }
             }
         else

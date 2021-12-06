@@ -6,6 +6,9 @@
     CompanyName = 'Hewlett Packard Enterprise'
     Copyright = '© Copyright 2021 HPE'
     PowerShellVersion = '3.0'
+
+    FormatsToProcess = 'HPEDSCC.Format.ps1xml'
+
     # Functions to export from this module
     #FunctionsToExport = '*'
 

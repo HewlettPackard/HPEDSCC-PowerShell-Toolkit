@@ -46,7 +46,7 @@ param ( [Parameter(Mandatory,ParameterSetName='ByClientCreds')]
         [Parameter(Mandatory,ParameterSetName='ByAccessToken')]
         [string]    $AccessToken,         
 
-        [Parameter(Mandatory)][ValidateSet("Production","Dev")]
+        [Parameter(Mandatory)][ValidateSet("Dev","Asia", "USA", "EU")]
         [string]    $GreenlakeType  = 'Dev', 
         
         [switch]    $WhatIf 
@@ -69,42 +69,51 @@ Process{
                             $Output | out-string 
                         }     
                     else 
-                        {   $AccessToken = ( invoke-restmethod -uri "$AuthURI" -Method Post -headers $AuthHeaders -body $MyBody -verbose ).access_token
-                        }
+                        {   try {   $AccessToken = ( invoke-restmethod -uri "$AuthURI" -Method Post -headers $AuthHeaders -body $MyBody -verbose ).access_token
+                                }
+                            catch{  write-warning "The Token was not returned."
+
+                                 }      
+                        }     
             }
     Catch   {   $_
             }
         }
     write-Verbose "The AccessToken is $AccessToken"
-    if ( $GreenlakeType -eq 'Dev')
-                {   $Global:Base = "https://scalpha-app.qa.cds.hpe.com"
-                } else 
-                {   $Global:Base = "https://user-apicommon.cloud.hpe.com"                
-                }
-
+    switch( $GreenlakeType )
+    {   'Dev'  {   $Global:Base = 'https://fleetscale-app.qa.cds.hpe.com' }
+        'Asia'  {   $Global:Base = "https://jp1.data.cloud.hpe.com"       }
+        'EU'  {   $Global:Base = "https://eu1.data.cloud.hpe.com"         }
+        'USA'   {   $Global:Base = "https://us1.data.cloud.hpe.com"       }
+    }
     $Global:CloudRoot = "/api/v1/"
     $Global:BaseUri   = $Base+$CloudRoot
     $Global:MyHeaders = @{  Authorization = 'Bearer '+$AccessToken
                          }
     $Global:TestUri = $BaseUri + "host-initiator-groups/"
-    Try     {   if ( $Whatif )
-                        {   $ReturnData = Invoke-RestMethodWhatIf -Uri $TestURI -Method Get -Headers $MyHeaders
+    if ( $AccessToken -or $whatif )
+            {   Try     {   if ( $Whatif )
+                                    {   $ReturnData = Invoke-RestMethodWhatIf -Uri $TestURI -Method Get -Headers $MyHeaders
+                                    } 
+                                else 
+                                    {   $ReturnData = invoke-restmethod -uri "$TestUri" -Method Get -headers $MyHeaders
+                                    }
+                        }
+                Catch   {   $_
+                        }
+                if ( $ReturnData )
+                        {   return @{ Access_Token = $AccessToken }
                         } 
                     else 
-                        {   $ReturnData = invoke-restmethod -uri "$TestUri" -Method Get -headers $MyHeaders
+                        {   if (-not $whatif) 
+                                    {   Write-Error "No HPE DSSC target Detected or wrong port used at that address"
+                                    }
                         }
             }
-    Catch   {   $_
+        else    
+            {   Write-warning "The request for a Token was not successful using the supplied Client-ID and CLient-Secret."            
             }
-    if ( $ReturnData )
-            {   return @{ Access_Token = $AccessToken }
-            } 
-        else 
-            {   if (-not $whatif) 
-                    {   Write-Error "No HPE DSSC target Detected or wrong port used at that address"
-                    }
-            }
-        }
+}
 }
  
 function Find-DSCCDeviceTypeFromStorageSystemID
@@ -148,3 +157,25 @@ function Invoke-RestMethodWhatIf
     write-host -foregroundcolor green ($Body | ConvertTo-JSON | Out-String)
 }
 
+function Invoke-RepackageObjectWithType 
+{   Param(  $RawObject,
+            $ObjectName
+         )
+    if ( $RawObject )
+           {   $OutputObject = @()
+                foreach ( $RawElementObject in $RawObject )
+                    {   $Z=$RawElementObject
+                        $DataSetType = "DSCC.$ObjectName"
+                        $Z.PSTypeNames.Insert(0,$DataSetType)
+                        $DataSetType = $DataSetType + ".Typename"
+                        $Z.PSObject.TypeNames.Insert(0,$DataSetType)
+                        $OutputObject += $Z
+                    }
+                return $OutputObject
+           }
+           else
+           {    write-warning "Null value sent to create object type."
+                return
+           }
+    
+}

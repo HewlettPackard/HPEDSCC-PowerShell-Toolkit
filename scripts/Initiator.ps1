@@ -1,0 +1,207 @@
+function Get-DSCCInitiator
+{
+<#
+.SYNOPSIS
+    Returns the HPE DSSC DOM Initiators Collection    
+.DESCRIPTION
+    Returns the HPE Data Services Cloud Console Data Operations Manager Initiators Collections;
+.PARAMETER InitiatorID
+    If a single Host ID is specified the output will be limited to that single record.
+.PARAMETER WhatIf
+    The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
+    This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
+.EXAMPLE
+    PS:> Get-DSCCDOMInitiator | convertTo-Json
+
+    [   {   "address": "100008F1EABFE61C",
+            "associatedLinks": [    {   "resourceUri": "string",
+                                        "type": "string"
+                                    }
+                                ],
+            "driverVersion": "4.1",
+            "firmwareVersion": "10.0",
+            "hbaModel": "myobject-5",
+            "host": [   {   "id": "6848ef683c27403e96caa51816ddc72c",
+                            "ipAddress": "15.212.100.100",
+                            "name": "host1"
+                        }
+            "hostSpeed": 1000,
+            "id": "d548ef683c27403e96caa51816ddc72c",
+            "ipAddress": "15.212.100.100",
+            "name": "init1",
+            "protocol": "FC",
+            "systems":  [    "string"    
+                        ],
+            "vendor": "hpe"
+        }
+    ],
+.EXAMPLE
+    PS:> Get-DSCCInitiator
+
+    id                               address                 name                               protocol type      systems
+    --                               -------                 ----                               -------- ----      -------
+    00219be7785a43368fbab49295e2e0b1 c0:77:3f:58:5f:19:00:0a Host Path C0773F585F19000A (1:3:2) FC       initiator {2M2019018G}
+    00bace011e774445b208858e2545a048 c0:77:2f:58:5f:19:00:50 Host Path C0772F585F190050 (1:3:1) FC       initiator {0006b878a5a008ec63000000000000000000000001, 2M202205GF}
+    010814bed01b4258871fa834368c9796 c0:77:3f:58:5f:19:00:48 Host Path C0773F585F190048 (1:3:3) FC       initiator {2M2042059V}
+    01ca788a6b244069a295d86dee748867 c0:77:3f:58:5f:19:00:2e Host Path C0773F585F19002E (1:3:2) FC       initiator {2M2042059V}
+.EXAMPLE
+    PS:> Get-DSCCInitiator -InitiatorID 46eaf545bf80404d8e479ec8d6871c97
+    
+    id                               address                 name                               protocol type      systems
+    --                               -------                 ----                               -------- ----      -------
+    46eaf545bf80404d8e479ec8d6871c97 c0:77:3f:58:5f:19:00:0a Host Path C0773F585F19000A (1:3:2) FC       initiator {2M2019018G}
+.EXAMPLE
+    PS:> Get-DSCCInitiator -InitiatorID 46eaf545bf80404d8e479ec8d6871c97  -WhatIf
+    
+    WARNING: You have selected the What-IF option, so the call will note be made to the array,
+        instead you will see a preview of the RestAPI call
+        
+    The URI for this call will be
+        https://scalpha-app.qa.cds.hpe.com/api/v1/initiators/46eaf545bf80404d8e479ec8d6871c97
+    The Method of this call will be
+        Get
+    The Header for this call will be :
+        {   "Authorization":  "Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6Iko3Tmtmc3M4eDNEaGN3NWtQcnRNVVp5R0g2TSIsInBpLmF0bSI6ImRlejAifQ.eyJjbGllbnRfaWQiOiIzZjIwODU4NS0zZGE2LTRiZjctOTRjYS00ZjMxMGQwOTYzYjUiLCJpc3MiOiJodHRwczovL3Nzby5jb21tb24uY2xvdWQuaHBlLmNvbSIsImF1ZCI6ImV4dGVybmFsX2FwaSIsInN1YiI6ImNocmlzLmxpb25ldHRpQGhwZS5jb20iLCJ1c2VyX2N0eCI6IjAwNTZiNzFlZWZjNDExZWJhMjY4NjJhZGI4NzdjMmQ4IiwiYXV0aF9zb3VyY2UiOiJjY3NfdG9rZW5fbWFuYWdlbWVudCIsInBsYXRmb3JtX2N1c3RvbWVyX2lkIjoiOGZmYzRiN2VlOWQyMTFlYjhjZWU2ZTEzYzA3MWVhMzciLCJpYXQiOjE2MzU5NTM2NzYsImFwcGxpY2F0aW9uX2luc3RhbmNlX2lkIjoiM2MxOGJkMDMtODMwNi00YzdjLTk0MmUtYzcwNGE0Yjg3NDRjIiwiZXhwIjoxNjM1OTYwODc2fQ.Yp7WTVGc0vU6sE3r8KPL4R0_sW4dB9ZvGijqwGwMpDBZ4SEz5688s-C2al1HLFnpZygPnQfSm1NWjxQgLeKSbf54gvxz7kMlhsRWtRW4vWIIPw5XHmKGVjqnGsVjdkcs8QmlBAg7eR5FcrU_b4HAIicmNV07U5rtC2LoUytT85JM20_6SEV1uZwGTWSlSs26JKNOeOEepW5BdmWrIX7DQibwzq_HUz2COF_hdVZCYCNt-pzigb8c6POr9s3RD-ZSal9naLDz0gCfVds-CKOZ5WHxijtnqG-qZ5KBvcXk22_JcfXAoA02u2o9xZ2z6UZh71yLlH9dXQ1KAahJ26k5lw"
+        }
+    The Body of this call will be:
+        "No Body"
+
+    The results of the complete collection have been limited to just the supplied ID
+#>   
+[CmdletBinding()]
+param(  [string]    $InitiatorID,
+        [switch]    $WhatIf
+     )
+process
+    {   $MyURI = $BaseURI + 'initiators'
+        if ( $WhatIf )
+                {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
+                }   
+            else 
+                {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
+                }
+        if ( ( $SysColOnly ).items )
+                {   $SysColOnly = ( $SysColOnly ).items 
+                }
+        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Initiator"
+        if ( $InitiatorID )
+                {   Write-host "The results of the complete collection have been limited to just the supplied ID"
+                    return ( $ReturnData | where-object { $_.id -eq $InitiatorID } )
+                } 
+            else 
+                {   return $ReturnData
+                }
+    }                
+}   
+function Remove-DSCCInitiator
+{
+<#
+.SYNOPSIS
+    Removes a HPE DSSC DOM Initiator.    
+.DESCRIPTION
+    Removes a HPE Data Services Cloud Console Data Operations Manager Host specified by Initiator ID;
+.PARAMETER InitiatorID
+    A single Initiator ID must be specified.
+.PARAMETER force
+    Will implement an API forcefull remove option instead of the default normal removal mechanism.
+.PARAMETER WhatIf
+    The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
+    This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
+
+.EXAMPLE
+    PS:> Remove-DSCCHostServiceInitiator -InitiatorID d548ef683c27403e96caa51816ddc72c
+
+    {   "deleteInitiator": true
+    }
+.LINK
+#>   
+[CmdletBinding()]
+param(  [Parameter(Mandatory)]  [string]    $InitiatorID,
+                                [switch]    $Force,
+                                [switch]    $WhatIf
+     )
+process
+    {   $MyURI = $BaseURI + 'initiators/' + $InitiatorID
+        $LocalBody = ''
+        if ($Force)
+                {   $LocalBody = @{force=$true}
+                }
+        if ($Whatif)
+                {   return Invoke-RestMethodWhatIf -uri $MyUri -Headers $MyHeaders -Method 'Delete' -body $LocalBody
+                } 
+            else 
+                {   return Invoke-RestMethod -uri $MyUri -Headers $MyHeaders -Method 'Delete' -body $LocalBody
+                }
+    }       
+}   
+Function New-DSCCInitiator
+{
+<#
+.SYNOPSIS
+    Creates a HPE DSSC DOM Initiator Record.    
+.DESCRIPTION
+    Creates a HPE Data Services Cloud Console Data Operations Manager Host Initiator Record;
+.PARAMETER Address
+    Address of the initiator and is required.
+.PARAMETER driverVersion
+    Driver Version of the Host Initiator.
+.PARAMETER firmwareVersion
+    Firmware Version of the Host Initiator.
+.PARAMETER hbaModel
+    Host bus adaptor model of the host initiator.
+.PARAMETER HostSpeed
+    Host Speed.
+.PARAMETER ipAddress
+    IP Address of the Initiator.
+.PARAMETER name
+    Name of the Initiator.
+.PARAMETER protocol
+    The protocol can be FC, iSCSI, or NVMe and is required.
+.PARAMETER Vendor
+    Vendor of the host initiator.
+.PARAMETER WhatIf
+    The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
+    This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
+
+.EXAMPLE
+    PS:> New-DSCCHostServiceInitiator -Address 100008F1EABFE61C -name Host1InitA -protocol FC
+
+    {   "message": "Successfully submitted",
+        "status": "SUBMITTED",
+        "taskUri": "/rest/vega/v1/tasks/4969a568-6fed-4915-bcd5-e4566a75e00c"
+    }
+#>   
+[CmdletBinding()]
+param(  [Parameter(Mandatory)]          [string]    $address,
+                                        [string]    $driverVersion,
+                                        [string]    $firmwareVersion,
+                                        [string]    $hbaModel,
+                                        [int64]     $HostSpeed,
+                                        [string]    $ipAddress,
+                                        [string]    $name,  
+        [Parameter(Mandatory)]  
+        [ValidateSet('FC','iSCSI','NMVe')][string]    $protocol,
+        [Parameter(Mandatory)]          [string]    $vendor,
+                                        [switch]    $WhatIf
+     )
+process
+    {   $MyURI = $BaseURI + 'initiators'
+                                    $MyBody += @{ address = $address} 
+        if ($driverVerson)      {   $MyBody += @{ driverVersion = $driverVersion}  }
+        if ($firmwareVersion)   {   $MyBody += @{ firmwareVersion = $firmwareVersion }  }
+        if ($hbaModel)          {   $MyBody += @{ hbaModel = $hbaModel}  }
+        if ($HostSpeed)         {   $MyBody += @{ HostSpeed = $HostSpeed}  }
+        if ($ipAddress)         {   $MyBody += @{ ipAddress = $ipAddress}  }
+        if ($name)              {   $MyBody += @{ name = $name}  }
+                                    $MyBody += @{ protocol = $protocol }
+        if ($vendor)            {   $MyBody += @{ vendor = $vendor}  }
+        if ($driverVerson)      {   $MyBody += @{ driverVersion = $driverVersion}  }
+        
+        if ($Whatif)
+                {   return Invoke-RestMethodWhatIf -uri $MyUri -method 'Put' -headers $MyHeaders -body $MyBody
+                } 
+            else 
+                {   return Invoke-RestMethod -uri $MyUri -method 'Put' -headers $MyHeaders -body $MyBody
+                }
+    }       
+}   

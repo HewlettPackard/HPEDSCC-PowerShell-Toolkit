@@ -12,8 +12,25 @@ function Get-DSCCStorageSystem
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
+.EXAMPLE 
+    PS:> Get-DSCCStorageSystem -DeviceType device-type1
+    
+    name                 id         type           model         fqdn       timezone        state  version
+    ----                 --         ----           -----         ----       --------        -----  -------
+    tmehou-pod1-primera2 2M2042059T primera-system HPE_3PAR A630 10.77.7.10 America/Chicago NORMAL 4.4.0.59
+    tmehou-pod2-primera1 2M2042059X primera-system HPE_3PAR A630 10.77.7.2  America/Chicago NORMAL 4.4.0.59
+    tmehou-pod3-primera1 2M2019018G primera-system HPE_3PAR A630 10.77.7.3  America/Chicago NORMAL 4.4.0.59
+    tmehou-pod1-primera1 2M202205GG primera-system HPE_3PAR A630 10.77.7.1  America/Chicago NORMAL 4.4.0.59
 .EXAMPLE
-    PS:> Get-DSCCStorageSystem -DeviceType1
+    PS:> Get-DSCCStorageSystem -DeviceType device-type2
+
+    name                id                                         type  model          timezone        version_current
+    ----                --                                         ----  -----          --------        ---------------
+    tmehou-pod3-AF40    0006b878a5a008ec63000000000000000000000001 group AF40-2P2QF-11T America/Chicago 6.0.0.100-924305-opt
+    tmehou-pod1-6050-gr 003be9f65d5b1de4fd000000000000000000000001 group 6050-4N2QY-46T America/Chicago 6.0.0.200-927971-opt
+    tmehou-pod2-af40    000849204632ec0d70000000000000000000000001 group AF40-QP2QF-46T America/Chicago 6.0.0.200-927971-opt
+.EXAMPLE
+    PS:> Get-DSCCStorageSystem -DeviceType device-type1 | format-list
 
     systemWWN             : 2FF70002AC026AFD
     timezone              : America/Chicago
@@ -60,31 +77,106 @@ function Get-DSCCStorageSystem
                             @{type=supportsettings;
                             resourceUri=/api/v1/storage-systems/device-type1/2M2042059T/support-settings}...}
 .EXAMPLE
-    PS:> Get-DSCCStorageSystem -DeviceType1 | format-table
+    PS:> Get-DSCCStorageSystem -DeviceType1 device-type1 -SystemId 2M202205GG | convertTo-JSON
+    
+    {
+    "systemWWN":  "2FF70002AC025F8B",
+    "timezone":  "America/Chicago",
+    "id":  "2M202205GG",
+    "safeToRemove":  false,
+    "centerplaneType":  "2 Node Centerplane",
+    "deviceId":  155531,
+    "resourceUri":  "/api/v1/storage-systems/device-type1/2M202205GG",
+    "systemDate":  1638407162,
+    "displayname":  "System tmehou-pod1-primera1",
+    "overallState":  "NORMAL",
+    "name":  "tmehou-pod1-primera1",
+    "maintenanceMode":  null,
+    "locateEnabled":  false,
+    "minimumPasswordLength":  8,
+    "nodeMemory":  "128",
+    "nodesCount":  2,
+    "masterNode":  0,
+    "onlineNodes":  [
+                        0,
+                        1
+                    ],
+    "inClusterNodes":  [
+                           0,
+                           1
+                       ],
+    "nodesPresent":  [
+                         0,
+                         1
+                     ],
+    "clusterLED":  "LED_GREEN",
+    "deviceType":  {
+                       "default":  "HPE_3PAR A630",
+                       "key":  "sys_type-67"
+                   },
+    "type":  "primera-system",
+    "customerId":  "ffc311463d8711ecbdd5428607ee1704",
+    "generation":  1638407162262,
+    "chunkletSizeMiB":  1024,
+    "fqdn":  "10.77.7.1",
+    "softwareVersions":  {
+                             "baseVersion":  "4.4.0",
+                             "release":  "",
+                             "patches":  "",
+                             "fullVersion":  "4.4.0.59",
+                             "components":  [
+                                                "@{baseVersion=4.4.0; release=; fullVersion=4.4.0.59; name=CLI Server}",
+                                                ...
+                                                "@{baseVersion=16.29.1702; release=; fullVersion=16.29.1702; name=Mellanox CX-5 Firmware}"
+                                            ]
+                         },
+    "version":  {
+                    "display":  "4.4.0",
+                    "base":  "4.4.0",
+                    "full":  "4.4.0.59",
+                    "fullWithoutPatches":  "4.4.0.59"
+                },
+    "sysLogStatus":  null,
+    "state":  {
+                  "detailed":  null,
+                  "overall":  "STATE_NORMAL"
+              },
+    "manufacturing":  {
+                          "assemblyRev":  null,
+                          "checkSum":  null,
+                          "hpeModelName":  null,
+                          "saleablePartNumber":  null,
+                          "saleableSerialNumber":  null,
+                          "sparePartNumber":  null,
+                          "serialNumber":  "2M202205GG",
+                          "model":  "HPE_3PAR A630",
+                          "manufacturer":  "HPE"
+                      },
+    "descriptors":  {
+                        "owner":  "",
+                        "contact":  "Gerald Best, 8325021955, hou.tmealerts@hpe.com",
+                        "comment":  "",
+                        "location":  ""
+                    },
+    "networkMasterNode":  1,
+    "uptime":  {
+                   "ms":  1637227068000,
+                   "tz":  "Local"
+               },
+    "domain":  "",
+    "associatedLinks":  [
+                            {
+                                "type":  "ports",
+                                "resourceUri":  "/api/v1/storage-systems/device-type1/2M202205GG/ports"
+                            },
+                            ...
+                            {
+                                "type":  "swhistory",
+                                "resourceUri":  "/api/v1/storage-systems/device-type1/2M202205GG/swupdate/history"
+                            }
+                        ]
+}
 
-    systemWWN        timezone        id         safeToRemove centerplaneType    deviceId resourceUri
-    ---------        --------        --         ------------ ---------------    -------- -----------
-    2FF70002AC026AFD America/Chicago 2M2042059T        False 2 Node Centerplane   158461 /api/v1/storage-systems/devi...
-    2FF70002AC025F8B America/Chicago 2M202205GG        False 2 Node Centerplane   155531 /api/v1/storage-systems/devi...
-    2FF70002AC026AFF America/Chicago 2M2042059X        False 2 Node Centerplane   158463 /api/v1/storage-systems/devi...
-    2FF70002AC026AF0 America/Chicago 2M2019018G        False 2 Node Centerplane   158448 /api/v1/storage-systems/devi...
-    2FF70002AC025F89 America/Chicago 2M202205GF        False 2 Node Centerplane   155529 /api/v1/storage-systems/devi...
-    2FF70002AC026AF6 America/Chicago 2M2042059V        False 2 Node Centerplane   158454 /api/v1/storage-systems/devi...
-.EXAMPLE
-    PS:> Get-DSCCStorageSystem -DevType device-type2 | format-table
-
-    id                                         name                smtp_server      smtp_port smtp_auth_enabled autosupport_enabled
-    --                                         ----                -----------      --------- ----------------- --------
-    007e2de3fcf4105fb3000000000000000000000001 tmehou-vnimble-v54  mail.smtp2go.com        25             False     True
-    003be9f65d5b1de4fd000000000000000000000001 tmehou-pod1-6050-gr mail.smtp2go.com       587             False     True
-    000849204632ec0d70000000000000000000000001 tmehou-pod2-af40    mail.smtp2go.com       587             False     True
-    0006b878a5a008ec63000000000000000000000001 tmehou-pod3-AF40    mail.smtp2go.com       587             False     True
-.EXAMPLE
-    PS:> Get-DSCCStorageSystem -StorageSystemID 2M2042059T -DeviceType1 | format-table
-
-    systemWWN        timezone        id         safeToRemove centerplaneType    deviceId resourceUri
-    ---------        --------        --         ------------ ---------------    -------- -----------
-    2FF70002AC026AFD America/Chicago 2M2042059T        False 2 Node Centerplane   158461 /api/v1/storage-systems/devi...
 .EXAMPLE
     PS:> Get-DSCCStorageSystem -WhatIf
 
@@ -104,7 +196,8 @@ function Get-DSCCStorageSystem
 #>   
 [CmdletBinding()]
 param(                                                                      [string]    $SystemId, 
-        [parameter(mandatory)][validateset('device-type1','device-type2')]  [string]    $DeviceType,
+        [parameter(mandatory,helpMessage="The Acceptable values are device-type1 or device-type2.")][validateset('device-type1','device-type2')]  
+                                                                            [string]    $DeviceType,
                                                                             [switch]    $WhatIf
      )
 process
@@ -121,14 +214,15 @@ process
             else 
                 {   if ( ($SysColOnly).total -eq 0 )
                         {   write-warning "No Items Returned"
-                            $SysColOnly=''
+                            $SysColOnly = ''
                         }
                 }
+        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "StorageSystem.$DeviceType"
         if ( $SystemId )
-                {   return ( $SysColOnly | where-object { $_.id -eq $SystemId } )
+                {   return ( $ReturnData | where-object { $_.id -eq $SystemId } )
                 } 
             else 
-                {   return $SysColOnly
+                {   return $ReturnData
                 }
     }       
 }   

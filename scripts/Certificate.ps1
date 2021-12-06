@@ -34,14 +34,34 @@ function Get-DSCCCertificate
     The Body of this call will be:
         {}
 .EXAMPLE
-    PS:>Get-DSCCCertificate -SystemID 2M202205GF  | format-table
+    PS:> Get-DSCCStorageSystem -DeviceType device-type1 | Get-DSCCCertificate
 
-    id                               uri                                                   systemId   displayname                           domain commonname
-    --                               ---                                                   --------   -----------                           ------ ----------
-    6c8147a658f8a0f97c0442aaa8d8cc9a /api/v3/certificates/6c8147a658f8a0f97c0442aaa8d8cc9a 2M202205GF Certificate 2M202205GF                       2M202205GF
-    3155164bf6035ae734687f415a50d7c7 /api/v3/certificates/3155164bf6035ae734687f415a50d7c7 2M202205GF Certificate hpe.com CA - Intermediate        hpe.com CA - Interme...
-    d689398f8b71b4f5548fbe8e574276c0 /api/v3/certificates/d689398f8b71b4f5548fbe8e574276c0 2M202205GF Certificate hpe.com CA - Root                hpe.com CA - Root
-    26eff476fdf58cc3c2b93b0a07f74b6a /api/v3/certificates/26eff476fdf58cc3c2b93b0a07f74b6a 2M202205GF Certificate HPE_3PAR A630-2M202205GF         HPE_3PAR A630-2M2022...
+    id                               systemId   displayname                           certtype fingerprint
+    --                               --------   -----------                           -------- -----------
+    da350f1b0945df4d4bf3de976fc0fbab 2M2042059T Certificate hpe.com CA - Intermediate intca    df394db1c7e2964a4d09ff51cb0613637de1d325
+    57142be4da5c0980e7a5e07b16950d78 2M2042059T Certificate 2M2042059T                cert     daf4ac9d4f245a11b40b1ae4e5096b861aed159f
+    7fa0b6bafa03a7a9079e11d36cd5e996 2M2042059T Certificate hpe.com CA - Root         rootca   8dc7f5891a5329c02f7aaeb489cebc00c285cd89
+    4bacf3f2212fa819018a97c3b185c28c 2M2042059T Certificate HPE_3PAR A630-2M2042059T  cert     b6faf6a923cfdf324e92547ed7803dfb9ba7bf86
+    abc262c9b0097508872555e71751004c 2M202205GG Certificate hpe.com CA - Root         rootca   8dc7f5891a5329c02f7aaeb489cebc00c285cd89
+    70204c140f3d07be7b5a6db2b0a6db27 2M202205GG Certificate hpe.com CA - Intermediate intca    df394db1c7e2964a4d09ff51cb0613637de1d325
+    ee5f51b62e30348d8336db3bb94ceaca 2M2042059X Certificate hpe.com CA - Root         rootca   8dc7f5891a5329c02f7aaeb489cebc00c285cd89
+    e2d5a10c2f91dd0908df3f4ef3066924 2M2042059X Certificate HPE_3PAR A630-2M2042059X  cert     21e91f9060706eb17f3a05a330b449d40210ff4a
+    8415bf51bc5c2c448768e7e21ff93993 2M2019018G Certificate hpe.com CA - Root         rootca   8dc7f5891a5329c02f7aaeb489cebc00c285cd89
+    bf4b738626fd71c3cc0be61740b1100b 2M2019018G Certificate hpe.com CA - Intermediate intca    df394db1c7e2964a4d09ff51cb0613637de1d325
+    3155164bf6035ae734687f415a50d7c7 2M202205GF Certificate hpe.com CA - Intermediate intca    df394db1c7e2964a4d09ff51cb0613637de1d325
+    6c8147a658f8a0f97c0442aaa8d8cc9a 2M202205GF Certificate 2M202205GF                intca    9ab6290b4f95f2b85a5e00db92a317c24ae6ee21
+
+.EXAMPLE
+    PS:> Get-DSCCCertificate -SystemId 2M2042059T
+
+    id                               systemId   displayname                           certtype fingerprint
+    --                               --------   -----------                           -------- -----------
+    da350f1b0945df4d4bf3de976fc0fbab 2M2042059T Certificate hpe.com CA - Intermediate intca    df394db1c7e2964a4d09ff51cb0613637de1d325
+    57142be4da5c0980e7a5e07b16950d78 2M2042059T Certificate 2M2042059T                cert     daf4ac9d4f245a11b40b1ae4e5096b861aed159f
+    7fa0b6bafa03a7a9079e11d36cd5e996 2M2042059T Certificate hpe.com CA - Root         rootca   8dc7f5891a5329c02f7aaeb489cebc00c285cd89
+    4bacf3f2212fa819018a97c3b185c28c 2M2042059T Certificate HPE_3PAR A630-2M2042059T  cert     b6faf6a923cfdf324e92547ed7803dfb9ba7bf86
+    e766500b75f853dde01548238d83115f 2M202205GG Certificate 2M202205GG                cert     1f7074a294a35bdd53b1bdc398e470f334ef4a22
+
 #>
 [CmdletBinding(DefaultParameterSetName='Default')]
 param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
@@ -57,18 +77,19 @@ process
                 {   $MyURI = $MyURI + '/' + $CertificateId
                 }   
         if ( $WhatIf )
-                {   $collect = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders -method 'Get'
+                {   $SysColOnly = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders -method 'Get'
                 }
             else 
-                {   try {   $collect = invoke-restmethod -uri $MyURI -Headers $MyHeaders -method 'Get'
+                {   try {   $SysColOnly = invoke-restmethod -uri $MyURI -Headers $MyHeaders -method 'Get'
                         }
                     catch { write-warning "No Certificates for system with SystemID $SystemID found."
 
                         }
                 }
-        if ( ($Collect).items )
-                {   $Collect = ($Collect).items
+        if ( ($SysColOnly).items )
+                {   $SysColOnly = ($SysColOnly).items
                 }
-        return $collect      
+        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Certificate.$DeviceType"
+        return $ReturnData
     }       
 }   

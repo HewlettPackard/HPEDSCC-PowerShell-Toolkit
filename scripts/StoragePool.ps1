@@ -13,7 +13,32 @@ function Get-DSCCStoragePool
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 .EXAMPLE
-    PS:> Get-DSCCStoragePool -StorageSystemId 2M202205GG -StoragePoolId 3ff8fa3d971f16948fd9cff800775b9d -DeviceType device-type1
+    PS:> Get-DSCCStorageSystem -DeviceType device-type1 | Get-DSCCStoragePool
+
+    System Id  Pool Id                          Name   Full Name  Free Space (MiB) RAID Type
+    ---------  -------                          ----   ---------  ---------------- ---------
+    2M2042059T e63f7f5ae9eeb141f7fff96814a53f7c SSD_r6 CPG SSD_r6 7434240          RAID_SIX
+    2M2042059V 186ec5f389a8595971e64e3e9217061a SSD_r6 CPG SSD_r6 7434240          RAID_SIX
+    2M202205GF f66539d66172bbd57625b0ba1b89c479 SSD_r6 CPG SSD_r6 7237632          RAID_SIX
+    2M2042059X c73181b692546590743db4de992458e9 SSD_r6 CPG SSD_r6 7434240          RAID_SIX
+    2M202205GG 3ff8fa3d971f16948fd9cff800775b9d SSD_r6 CPG SSD_r6 7434240          RAID_SIX
+    2M2019018G 172810533da636adb16697058ac1b94f SSD_r6 CPG SSD_r6 7434240          RAID_SIX
+.EXAMPLE
+    PS:> Get-DSCCStoragePool -SystemId 2M2042059T
+
+    System Id  Pool Id                          Name   Full Name  Free Space (MiB) RAID Type
+    ---------  -------                          ----   ---------  ---------------- ---------
+    2M2042059T e63f7f5ae9eeb141f7fff96814a53f7c SSD_r6 CPG SSD_r6 7434240          RAID_SIX
+.EXAMPLE
+    PS:> Get-DSCCStorageSystem -DeviceType device-type2 | Get-DSCCStoragePool
+
+    System Id                                  Pool Id                                    Name    Full Name    Free Space (MiB) RAID Type
+    ---------                                  -------                                    ----    ---------    ---------------- ---------
+    0906b878a5a008ec63000000000000000000000001 0a06b878a5a008ec63000000000000000000000001 default Default pool 7985331164160    RAID-TripleParity
+    090849204632ec0d70000000000000000000000001 0a0849204632ec0d70000000000000000000000001 default Default pool 33682373222400   RAID-TripleParity
+    093be9f65d5b1de4fd000000000000000000000001 0a3be9f65d5b1de4fd000000000000000000000001 default Default pool 32499810201600   RAID-TripleParity
+.EXAMPLE
+    PS:> Get-DSCCStoragePool -StorageSystemId 2M202205GG -StoragePoolId 3ff8fa3d971f16948fd9cff800775b9d | format-list
 
     allocationSettings   : @{HA=; RAIDType=RAID_SIX; chunkletPosPref=; deviceSpeed=; deviceType=DEVICE_TYPE_SSD;
                            diskFilter=; requestedHA=; setSize=6 data, 2 parity; stepSize=-1}
@@ -81,19 +106,20 @@ process
                         }
                 if ( ($SysColOnly).items ) 
                         {   $SysColOnly = ($SysColOnly).items 
+                            $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Pool.$DeviceType"
                         } 
                     else 
                         {   if ( ($SysColOnly).total -eq 0 ) 
                                 {   Write-warning "The System with SystemID $SystemId has no Pool defined."
-                                    $SysColOnly = ''
+                                    $ReturnData = ''
                                 }
                         }
 
                 if ( $PoolId )
-                        {   return ( $SysColOnly | where-object { $_.id -eq $PoolId } )
+                        {   return ( $ReturnData | where-object { $_.id -eq $PoolId } )
                         } 
                     else 
-                        {   return $SysColOnly
+                        {   return $ReturnData
                         }
             }
             else 
@@ -229,24 +255,29 @@ param(  [parameter(mandatory,ValueFromPipeLineByPropertyName=$true )][Alias('id'
 process
     {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         write-verbose "Dectected the DeviceType is $DeviceType"
-        if ( $DeviceType -eq 'Device-Type2')
+        if ( $DeviceType -eq 'device-type2')
                 {   Write-Warning "This command only operates against Device-Type1 Storage Devices."
                     return 
                 }
             else 
-                {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/storage-pools/' + $PoolId + '/volumes'
+                {   $MyURI = $BaseURI + 'storage-systems/' + $SystemId + '/storage-pools/' + $PoolId + '/volumes'
                     if ( $WhatIf )
                             {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
                             }   
                         else 
                             {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
+                                if ($SysColOnly)
+                                    {   $SysColOnly = (($SysColOnly).volumes).items
+                                        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "PoolVolume.$DeviceType"
+
+                                    }
                             }
                     if ( $VolumeId )
                             {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                                return ( (($SysColOnly).volumes).items | where-object { $_.id -eq $VolumeId } )
+                                return ( $ReturnData | where-object { $_.id -eq $VolumeId } )
                             } 
                         else 
-                            {   return ( (($SysColOnly).volumes).items )
+                            {   return $ReturnData
                             }
                 }
 

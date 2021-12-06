@@ -9,15 +9,34 @@ function Get-DSCCShelf
     A single Storage System ID is specified and required, the pools defined will be returned unless a specific Disk ID is requested.
 .PARAMETER DiskID
     If a single Storage System Disk ID is specified, only that Disk will be returned.
-.PARAMETER DeviceType
-    This can either be set to Device-Type1 or Device-Type2, where Device-Type1 refers to 3PAR/Primera/Alletra9K, while Device-Type2 refers to NimbleStorage/Alletra9K.
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 .EXAMPLE
+    PS:> Get-DSCCStorageSystem -DeviceType device-type1 | Get-DSCCShelf
 
+    Id                               Model          Serial Number  SystemId   Detailed Name     Overall Status
+    --                               -----          -------------  --------   -------------     --------------
+    0929bb1a282fc6ea8d81549e77dca70c HPE     600 2N PWDRRA2LMDS00R 2M2042059T Drive Enclosure 0 STATE_NORMAL
+    269fe18d901c8173d70697a7aff46d7c HPE     600 2N PWDRRA2LMDS01O 2M2042059V Drive Enclosure 0 STATE_NORMAL
+    33ca0ba3498759d593028ad3db5539ad HPE     600 2N PWDRRA1LMD1040 2M202205GF Drive Enclosure 0 STATE_NORMAL
+    0c6c79380a69c35d1a41fa47c086e834 HPE     600 2N PWDRRA2LMDS07C 2M2042059X Drive Enclosure 0 STATE_NORMAL
+    6ab4ad21f76e1623ba6879bee11788a5 HPE     600 2N PWDRRA1LMCT05E 2M202205GG Drive Enclosure 0 STATE_NORMAL
+    9b8276f429f20287faf3c4ecab95d4f9 HPE     600 2N PWDRRA1LMD107J 2M2019018G Drive Enclosure 0 STATE_NORMAL
 .EXAMPLE
+    PS:> Get-DSCCStorageSystem -DeviceType device-type2 | Get-DSCCShelf
 
+    Id                                         Model          Serial Number System Name          Detailed Name     PSU Status Fan Status Temp Status
+    --                                         -----          ------------- -----------          -------------     ---------- ---------- -----------
+    2d06b878a5a008ec63000000010000414600032098 AF40-2P2QF-11T AF-204952     TMEHOU-Pod3-Nimble   chassis_nmbl_4u24 OK         OK         OK
+    2d0849204632ec0d70000000010000414600037375 AF40-QP2QF-46T AF-226165     TMEHOL-POD2-AF40     chassis_nmbl_4u24 OK         OK         OK
+    2d3be9f65d5b1de4fd000000010000414600036c15 6050-4N2QY-46T AF-224277     tmehou-pod1-bluetail chassis_nmbl_4u24 OK         OK         OK
+.EXAMPLE
+    PS:> Get-DSCCShelf -SystemId 000849204632ec0d70000000000000000000000001
+
+    Id                                         Model          Serial Number System Name      Detailed Name     PSU Status Fan Status Temp Status
+    --                                         -----          ------------- -----------      -------------     ---------- ---------- -----------
+    2d0849204632ec0d70000000010000414600037375 AF40-QP2QF-46T AF-226165     TMEHOL-POD2-AF40 chassis_nmbl_4u24 OK         OK         OK
 .LINK
 #>   
 [CmdletBinding()]
@@ -41,17 +60,22 @@ process
               else 
                 {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
                 }
-            if ( ($SysColOnly).items ) { $SysColOnly = ($SysColOnly).items }
-            if ( ($SysColOnly).total -eq 0 )
-                    {   Write-warning "No Storage System Shelf detected for Storage Systed Id $SystemId"
-                        $SysColOnly = ''
+            if ( ($SysColOnly).items ) 
+                    {   $SysColOnly = ($SysColOnly).items 
+                        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Shelf.$DeviceType"
+                    }
+                else
+                    {   if ( ($SysColOnly).total -eq 0 )
+                                {   Write-warning "No Storage System Shelf detected for Storage Systed Id $SystemId"
+                                }
+                        $ReturnData = ''
                     }
             if ( $ShelfId )
                     {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                        return ( ($SysColOnly) | where-object { $_.id -eq $ShelfId } )
+                        return ( $ReturnData | where-object { $_.id -eq $ShelfId } )
                     } 
                 else 
-                    {   return $SysColOnly
+                    {   return $ReturnData
                     }
         }
        else 
