@@ -28,6 +28,6 @@ GreenLake Limitations; Some limits exist to be away of;
 
 Using the PowerShell Toolkit to connect to Greenlake
 The following command is used to make this initial connection;
-<code>PS:> Connect-DSCC -Client_Id 'put_client_id_here' -Client_Secret 'put_client_secret_here' -GreenlakeType USA</code>
+<P><code>PS:> Connect-DSCC -Client_Id 'put_client_id_here' -Client_Secret 'put_client_secret_here' -GreenlakeType USA</code>
 Once this commnad runs it will create a set of global variables that represent the default header which includes the retrieved 
 Access Token which are then used by all further commands.
