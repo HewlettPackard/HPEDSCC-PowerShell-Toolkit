@@ -26,7 +26,8 @@ GreenLake Limitations; Some limits exist to be away of;
 2. if the API option is not shown, you may need to use an account with escalated privedges.
 3. Once the Client_Secret has been given to you, it is no longer retrievable, so dont lose it.
 4. Once a Token has been generated, it is only valid for 2 hours, creating of a new token immediately invalidates the last token
-
+The Client_ID/Client_Secret popup will look like the following graphic;
+<img src="CreateAPIAccount.png" alt=Client ID and Secret />
 Using the PowerShell Toolkit to connect to Greenlake
 The following command is used to make this initial connection;
 <P><code>PS:> Connect-DSCC -Client_Id 'put_client_id_here' -Client_Secret 'put_client_secret_here' -GreenlakeType USA</code>
