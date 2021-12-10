@@ -201,7 +201,8 @@ param(                                                                      [str
                                                                             [switch]    $WhatIf
      )
 process
-    {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType
+    {   Invoke-DSCCAutoReconnect
+        $MyURI = $BaseURI + 'storage-systems/' + $DeviceType
         if ( $WhatIf )
                 {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
                 }   
@@ -265,7 +266,8 @@ param(  [parameter(mandatory)]  [string]    $StorageSystemId,
                                 [switch]    $WhatIf
      )
 process
-    {   $MyURI = $BaseURI + 'storage-systems/device-type1/' + $StorageSystemId 
+    {   Invoke-DSCCAutoReconnect
+        $MyURI = $BaseURI + 'storage-systems/device-type1/' + $StorageSystemId 
         $MyBody = @{    locateEnabled = $true
                    }
         if ( $WhatIf )

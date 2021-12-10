@@ -30,7 +30,8 @@ function Get-DSCCAccessControl
 param(  [switch]    $whatIf
      )
 process
-    {   $MyURI = $BaseURI + 'access-controls'
+    {   Invoke-DSCCAutoReconnect
+        $MyURI = $BaseURI + 'access-controls'
         if ( $WhatIf )
                 {   $FullObjSet = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders  -method 'Get'
                 }
@@ -80,7 +81,8 @@ function Get-DSCCResourceType
 param(  [switch]    $whatIf
      )
 process
-    {   $MyURI = $BaseURI + 'resource-types'
+    {   Invoke-DSCCAutoReconnect
+        $MyURI = $BaseURI + 'resource-types'
         if ( $WhatIf )
                 {   $FullObjSet = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders  -method 'Get'
                 }

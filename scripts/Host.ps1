@@ -92,7 +92,8 @@ param(  [string]    $HostID,
         [switch]    $WhatIf
      )
 process
-    {   $MyURI = $BaseURI + 'host-initiators'
+    {   Invoke-DSCCAutoReconnect
+        $MyURI = $BaseURI + 'host-initiators'
         if ( $WhatIf )
                 {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
                 }   
@@ -142,7 +143,8 @@ param(  [Parameter(Mandatory)]  [string]    $HostID,
                                 [switch]    $WhatIf
      )
 process
-    {   $MyURI = $BaseURI + 'host-initiators/' + $HostID
+    {   Invoke-DSCCAutoReconnect
+        $MyURI = $BaseURI + 'host-initiators/' + $HostID
         $LocalBody=''
         if ($Force)
                 {   $LocalBody = @{force=$true}
@@ -213,7 +215,8 @@ param(  [string]    $HostID,
         [switch]    $WhatIf
      )
 process
-    {   $MyURI = $BaseURI + 'host-initiators/' + $HostID + '/volumes'
+    {   Invoke-DSCCAutoReconnect
+        $MyURI = $BaseURI + 'host-initiators/' + $HostID + '/volumes'
         if ( $WhatIf )
                 {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
                 }   
@@ -298,7 +301,8 @@ param(                              [string]    $comment,
         
      )
 process
-    {   $MyURI = $BaseURI + 'Data-Ops-Manager-ProductType1-Volumes/host-initiators'
+    {   Invoke-DSCCAutoReconnect
+        $MyURI = $BaseURI + 'Data-Ops-Manager-ProductType1-Volumes/host-initiators'
         if ($comment)               {   $MyBody += @{ comment = $comment }  }
         if ($contact)               {   $MyBody += @{ contact = $contact }  }
         if ($fqdn)                  {   $MyBody += @{ fqdn = $fqdn }  }
@@ -355,7 +359,8 @@ param(  [Parameter(Mandatory)]  [string]    $hostID,
                                 [switch]    $WhatIf
      )
 process
-    {   $MyURI = $BaseURI + 'host-initiator/' + $hostID
+    {   Invoke-DSCCAutoReconnect
+        $MyURI = $BaseURI + 'host-initiator/' + $hostID
                                         $MyBody += @{} 
         if ($name)                  {   $MyBody += @{ name = $name}  }
         if ($updatedInitiators)     {   $MyBody += @{ updatedInitiators  = $updatedInitiators }  }

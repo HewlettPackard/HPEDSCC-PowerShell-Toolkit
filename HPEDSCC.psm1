@@ -10,12 +10,12 @@
 . $PSScriptRoot\scripts\HostGroup.ps1
 . $PSScriptRoot\scripts\Initiator.ps1
 . $PSScriptRoot\scripts\Host.ps1
-. $PSScriptRoot\scripts\Mail.ps1
 . $PSScriptRoot\scripts\Port.ps1
 . $PSScriptRoot\scripts\Shelf.ps1
 . $PSScriptRoot\scripts\StoragePool.ps1
 . $PSScriptRoot\scripts\StorageSystem.ps1
 . $PSScriptRoot\scripts\Volume.ps1
+. $PSScriptRoot\scripts\Snapshot.ps1
 
 write-warning "This a Prototype PowerShell Module, and not supported by HPE."
 Export-ModuleMember -Function           Connect-DSCC,                        
@@ -38,6 +38,8 @@ Export-ModuleMember -Function           Connect-DSCC,
 
     Get-DSCCVolume,               
 
+    Get-DSCCSnapshot,
+
     Get-DSCCComponentPerfStats,
 
     Get-DSCCPort,
@@ -50,4 +52,5 @@ Export-ModuleMember -Function           Connect-DSCC,
 
     Get-DSCCCertificate,
     
-    Find-DSCCDeviceTypeFromStorageSystemID,     Invoke-RepackageObjectWithType
+    Find-DSCCDeviceTypeFromStorageSystemID,     Invoke-RepackageObjectWithType, Invoke-DSCCAutoReconnect
+update-formatdata -prepend $PSScriptRoot\HPEDSCC.Format.ps1xml

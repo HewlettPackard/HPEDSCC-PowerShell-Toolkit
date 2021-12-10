@@ -73,7 +73,8 @@ param(  [string]    $InitiatorID,
         [switch]    $WhatIf
      )
 process
-    {   $MyURI = $BaseURI + 'initiators'
+    {   Invoke-DSCCAutoReconnect
+        $MyURI = $BaseURI + 'initiators'
         if ( $WhatIf )
                 {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
                 }   
@@ -121,7 +122,8 @@ param(  [Parameter(Mandatory)]  [string]    $InitiatorID,
                                 [switch]    $WhatIf
      )
 process
-    {   $MyURI = $BaseURI + 'initiators/' + $InitiatorID
+    {   Invoke-DSCCAutoReconnect
+        $MyURI = $BaseURI + 'initiators/' + $InitiatorID
         $LocalBody = ''
         if ($Force)
                 {   $LocalBody = @{force=$true}
@@ -185,7 +187,8 @@ param(  [Parameter(Mandatory)]          [string]    $address,
                                         [switch]    $WhatIf
      )
 process
-    {   $MyURI = $BaseURI + 'initiators'
+    {   Invoke-DSCCAutoReconnect
+        $MyURI = $BaseURI + 'initiators'
                                     $MyBody += @{ address = $address} 
         if ($driverVerson)      {   $MyBody += @{ driverVersion = $driverVersion}  }
         if ($firmwareVersion)   {   $MyBody += @{ firmwareVersion = $firmwareVersion }  }

@@ -94,7 +94,8 @@ param(  [parameter(mandatory,ValueFromPipeLineByPropertyName=$true )][Alias('id'
                                                                             [switch]    $WhatIf
      )
 process
-    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    {   Invoke-DSCCAutoReconnect
+        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         write-verbose "Dectected the DeviceType is $DeviceType"
         if ( $DeviceType )
             {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/storage-pools'
@@ -253,7 +254,8 @@ param(  [parameter(mandatory,ValueFromPipeLineByPropertyName=$true )][Alias('id'
                                                                                     [switch]    $WhatIf
      )
 process
-    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    {   Invoke-DSCCAutoReconnect
+        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         write-verbose "Dectected the DeviceType is $DeviceType"
         if ( $DeviceType -eq 'device-type2')
                 {   Write-Warning "This command only operates against Device-Type1 Storage Devices."
@@ -269,7 +271,6 @@ process
                                 if ($SysColOnly)
                                     {   $SysColOnly = (($SysColOnly).volumes).items
                                         $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "PoolVolume.$DeviceType"
-
                                     }
                             }
                     if ( $VolumeId )

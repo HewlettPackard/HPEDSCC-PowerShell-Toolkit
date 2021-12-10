@@ -73,12 +73,13 @@ param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('i
                                                                             [switch]    $WhatIf
      )
 process
-    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    {   Invoke-DSCCAutoReconnect
+        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         write-verbose "Dectected the DeviceType is $DeviceType"
         if ( $DeviceType )
             {   switch ( $DeviceType )
-                {   'device-type2'  
-                                    {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/disks'
+                {   
+                    'device-type2'  {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/disks'
                                         try {   if ( $WhatIf )
                                                         {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
                                                         }   
@@ -91,7 +92,6 @@ process
                                         if ( ($SysColOnly).items ) 
                                                 {   $SysColOnly = ($SysColOnly).items 
                                                     $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Disk.$DeviceType"
-
                                                 }
                                             else 
                                                 {   if (  ($SysColOnly).total -eq 0 )
@@ -137,10 +137,7 @@ process
                                                         }         
                                             } 
                                     }
-
-                }
-                
-                
+                }  
             }
         else
             {   Write-Warning "No Valid Storage Systemd Detected using System ID $SystemId."

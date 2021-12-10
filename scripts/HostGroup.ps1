@@ -97,7 +97,8 @@ param(  [string]    $HostGroupId,
         [switch]    $WhatIf
      )
 process
-    {   $MyURI = $BaseURI + 'host-initiator-groups'
+    {   Invoke-DSCCAutoReconnect
+        $MyURI = $BaseURI + 'host-initiator-groups'
         if ( $WhatIf )
                 {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
                 }   
@@ -165,7 +166,8 @@ param(  [Parameter(Mandatory)]  [string]    $HostGroupID,
                                 [switch]    $WhatIf
      )
 process
-    {   $MyURI = $BaseURI + 'host-initiator-groups/' + $HostGroupID
+    {   Invoke-DSCCAutoReconnect
+        $MyURI = $BaseURI + 'host-initiator-groups/' + $HostGroupID
         if ( $Force )
                 {   $LocalBody += @{ force = $true }
                 }
@@ -234,7 +236,8 @@ param(                          [string]    $comment,
                                 [switch]    $WhatIf
      )
 process
-    {   $MyURI = $BaseURI + 'host-initiator-groups'
+    {   Invoke-DSCCAutoReconnect
+        $MyURI = $BaseURI + 'host-initiator-groups'
                                     $MyBody  = @{ name = $name }
         if ($comment)           {   $MyBody += @{ comment = $comment }  }
         if ($hostIds)           {   $MyBody += @{ hostIds = $hostIds }  }
@@ -283,7 +286,8 @@ param(  [Parameter(Mandatory)]  [string]    $hostGroupID,
                                 [switch]    $WhatIf
      )
 process
-    {   $MyURI = $BaseURI + 'host-initiator-groups/' + $hostGroupID
+    {   Invoke-DSCCAutoReconnect
+        $MyURI = $BaseURI + 'host-initiator-groups/' + $hostGroupID
                                     $MyBody += @{} 
         if ($name)              {   $MyBody += @{ name = $name}  }
         if ($updatedHosts)      {   $MyBody += @{ updatedHosts = $updatedHosts }  }

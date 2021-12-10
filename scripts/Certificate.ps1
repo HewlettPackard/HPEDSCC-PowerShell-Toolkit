@@ -70,7 +70,8 @@ param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('i
                                                                                         [switch]   $whatIf
         )
 process
-    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    {   Invoke-DSCCAutoReconnect
+        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         write-verbose "Dectected the DeviceType is $DeviceType"
         $MyURI = $BaseUri + 'storage-systems/' + $DeviceType + '/' + $SystemID + '/certificates'
         if ( $CertificateID )

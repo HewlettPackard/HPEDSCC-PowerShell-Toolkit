@@ -32,7 +32,8 @@ param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('i
                                                                             [switch]    $WhatIf
      )
 process
-    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    {   Invoke-DSCCAutoReconnect
+        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         switch($DeviceType)
                 {   'Device-Type1'  { $ControllerWord = '/nodes'        }
                     'Device-Type2'  { $ControllerWord = '/controllers'  }
@@ -128,7 +129,8 @@ param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('i
                                                                             [switch]    $WhatIf
      )
 process
-    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    {   Invoke-DSCCAutoReconnect
+        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         switch($DeviceType)
                 {   'Device-Type1'  {   $ControllerWord = 'nodes'        }
                     'Device-Type2'  {   Write-warning "This command only works on Device-Type1 which include 3par/Primera/Alletra9K devices"
@@ -223,7 +225,8 @@ param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('i
                                                                             [switch]    $WhatIf
      )
 process
-    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    {   Invoke-DSCCAutoReconnect
+        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         if ($DeviceType -eq 'device-type2' )
                 {   Write-warning "This command only works on Device-Type1 which include 3par/Primera/Alletra9K devices"
                     return  
@@ -269,7 +272,8 @@ param(  [parameter(mandatory)][string]    $SystemId,
         [switch]    $WhatIf
      )
 process
-    {   $MyBody = @{ locate = $Locate
+    {   Invoke-DSCCAutoReconnect
+        $MyBody = @{ locate = $Locate
                    }
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         if ($DeviceType -eq 'Device-Type2')  
@@ -280,7 +284,7 @@ process
                 {   Write-Warning "No array was detected using the SystemID $SystemId"
                     return
                 }
-        $MyURI = $BaseURI + 'storage-systems/device-type1/' + $StorageSystemId + '/nodes/' + $NodeId
+        $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/nodes/' + $NodeId
         if ( $WhatIf )
                 {   $SysColOnly = invoke-restmethodWhatIf -uri $MyURI -headers $MyHeaders -body $MyBody -method Get
                 }   
@@ -312,17 +316,19 @@ function Invoke-DSCCControllerLocatePCBM
 .LINK
 #>   
 [CmdletBinding()]
-param(  [parameter(mandatory)][string]    $StorageSystemId, 
+param(  [parameter(mandatory)][string]    $SystemId, 
         [parameter(mandatory)][string]    $NodeId,
         [parameter(mandatory)][string]    $PowerId,
         [parameter(mandatory)][boolean]   $Locate,
         [switch]    $WhatIf
      )
 process
-    {   $MyBody = @{ locate = $Locate }
+    {   Invoke-DSCCAutoReconnect
+        $MyBody = @{ locate = $Locate 
+                   }
         if ( $DeviceType -eq 'Device-Type2' )   { Write-warning "This command only works on Device-Type1 which include 3par/Primera/Alletra9K devices"; return }
         if ( -not $DeviceType )                 { Write-Warning "No array was detected using the SystemID $SystemId"; return }
-        $MyURI = $BaseURI + 'storage-systems/device-type1/' + $StorageSystemId + '/nodes/' + $NodeId + '/Powers/' + $PowerId
+        $MyURI = $BaseURI + 'storage-systems/device-type1/' + $SystemId + '/nodes/' + $NodeId + '/Powers/' + $PowerId
         if ( $WhatIf )
                 {   $SysColOnly = invoke-restmethodWhatIf -uri $MyURI -headers $MyHeaders -body $MyBody -method Post
                 }   

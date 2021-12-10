@@ -161,7 +161,8 @@ param(  [Parameter(ValueFromPipeLineByPropertyName=$true )][Alias('id')]    [str
                                                                             [switch]    $WhatIf
      )
 process
-    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    {   Invoke-DSCCAutoReconnect
+        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         write-verbose "Dectected the DeviceType is $DeviceType"
         $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/'
         if ( $SystemId )
@@ -181,7 +182,7 @@ process
             else 
                 {   if ( ($SysColOnly).Total -eq 0 )
                             {   Write-Warning "No Items Detected on system with ID $SystemId."
-                                $ReturnData = ''
+                                return
                             }
                 }
         if ( $VolumeId )
@@ -190,11 +191,5 @@ process
             else 
                 {   return $ReturnData
                 }
-        clear-variable $SystemId
-        clear-variable $VolumeId
-        clear-variable $DeviceType
-        clear-variable $MyURI
-        clear-variable $SysColOnly
-        clear-variable $ReturnData
     }       
 }   

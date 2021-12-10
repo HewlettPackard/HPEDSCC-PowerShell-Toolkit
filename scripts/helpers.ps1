@@ -15,7 +15,9 @@
     If the Access Token can be gathered seperately, you can use this to authenticate your RestAPI Calls. 
     If no AccessToken is specified a Client_Id or Client_Secret need be specified.
 .PARAMETER GreenlakeType
-    This can either be the Production Instance of DSSC or it can be the Prototype/Dev instance of the DSSC. The values can either be Production or Dev 
+    This can either be the Production Instance of DSSC or it can be the Prototype/Dev instance of the DSSC. The values can either be Production or Dev.
+.PARAMETER AutoRenew
+    This switch will allow the Toolkit to reconnect automatically once a successfull connection has been made every 1h and 45 minutes.
 .PARAMETER WhatIf
     This option shows you the command that will be sent to the DSCC, will include the URI being sent to, the Header, Method, and the Body of the message.
 .EXAMPLE
@@ -49,6 +51,9 @@ param ( [Parameter(Mandatory,ParameterSetName='ByClientCreds')]
         [Parameter(Mandatory)][ValidateSet("Dev","Asia", "USA", "EU")]
         [string]    $GreenlakeType  = 'Dev', 
         
+        [Parameter(Mandatory,ParameterSetName='ByClientCreds')]
+        [switch]    $AutoRenew, 
+
         [switch]    $WhatIf 
       )
 Process{
@@ -59,17 +64,19 @@ Process{
         {   write-verbose 'Obtaining Access Token using Passed Client_Id and Client_Secrets.'
             $Global:AuthHeaders =  @{  'Content-Type' = 'application/x-www-form-urlencoded'
                                     }
-            $Global:MyBody    = [ordered]@{     'grant_type' = 'client_credentials'
+            $Global:AuthBody    = [ordered]@{     'grant_type' = 'client_credentials'
                                                 'client_id' = $Client_Id
                                                 'client_secret' = $Client_Secret
-                                          }   
+                                          }  
+            # clear-variable $Client_Id
+            # clear-variable $Client_Secret              
     Try     {   if ( $Whatif )
-                        {   $Output = Invoke-RestMethodWhatIf -Uri "$AuthURI" -Method Post -Headers $AuthHeaders -body $MyBody
+                        {   $Output = Invoke-RestMethodWhatIf -Uri "$AuthURI" -Method Post -Headers $AuthHeaders -body $AuthBody
                             Write-host "The Following is the output from the attempt to retrieve the Access Token using Credentials"
                             $Output | out-string 
                         }     
                     else 
-                        {   try {   $AccessToken = ( invoke-restmethod -uri "$AuthURI" -Method Post -headers $AuthHeaders -body $MyBody -verbose ).access_token
+                        {   try {   $AccessToken = ( invoke-restmethod -uri "$AuthURI" -Method Post -headers $AuthHeaders -body $AuthBody ).access_token
                                 }
                             catch{  write-warning "The Token was not returned."
 
@@ -78,6 +85,9 @@ Process{
             }
     Catch   {   $_
             }
+            #if ( -not $AutoRenew )
+               # {   # clear-variable $AuthBody 
+               # }
         }
     write-Verbose "The AccessToken is $AccessToken"
     switch( $GreenlakeType )
@@ -102,7 +112,14 @@ Process{
                 Catch   {   $_
                         }
                 if ( $ReturnData )
-                        {   return @{ Access_Token = $AccessToken }
+                        {   $ReturnData =  @{   Access_Token    = $AccessToken 
+                                                Token_Creation  = $( Get-Date ).datetime
+                                                Token_CreationEpoch = $( (New-TimeSpan -Start (Get-Date "01/01/1970") -End (Get-Date)).TotalSeconds ) 
+                                                Auto_Renew      = $( if ($AutoRenew) { $true } else { $false } )
+                                            }
+                            $ReturnData2 = $ReturnData | convertto-json | convertfrom-json
+                            $Global:AuthToken = Invoke-RepackageObjectWithType -RawObject $ReturnData2 -ObjectName 'AccessToken'
+                            return $AuthToken 
                         } 
                     else 
                         {   if (-not $whatif) 
@@ -136,6 +153,29 @@ function Find-DSCCDeviceTypeFromStorageSystemID
                         {   return
                         }
 }
+}
+function Invoke-DSCCAutoReconnect
+{   Param()
+    $CurrentEpoch = [int](New-TimeSpan -Start (Get-Date "01/01/1970") -End (Get-Date)).TotalSeconds
+    $TokenEpoch = [int]($AuthToken).Token_CreationEpoch
+    $Timeout = 60 * 105 # 1 hour and 45 minutes 
+    if ( ($CurrentEpoch -$TokenEpoch) -gt $Timeout ) 
+        {   if ( ($AuthToken).AutoRenew ) 
+                {   $AccessToken = ( invoke-restmethod -uri "$AuthURI" -Method Post -headers $AuthHeaders -body $AuthBody ).access_token
+                    $ReturnData =  @{   Access_Token    = $AccessToken 
+                                        Token_Creation  = $( Get-Date ).datetime
+                                        Token_CreationEpoch = [int]$( (New-TimeSpan -Start (Get-Date "01/01/1970") -End (Get-Date)).TotalSeconds ) 
+                                        Auto_Renew      = ($AuthToken).AutoRenew
+                                    }
+                    $ReturnData2 = $ReturnData | convertto-json | convertfrom-json
+                    $Global:AuthToken = Invoke-RepackageObjectWithType -RawObject $ReturnData2 -ObjectName 'AccessToken' 
+                } else 
+                {   Write-Warning "The Authorication Token is due to expire soon, and your didnt connect using the AutoRenew option."  
+                }
+        }
+    $TimeDiff = ( $CurrentEpoch - $TokenEpoch )
+    write-verbose "The Time difference in seconds is $TimeDiff seconds."
+    return
 }
 function Invoke-RestMethodWhatIf
 {   Param(  $Uri,
