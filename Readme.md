@@ -20,6 +20,7 @@ Each Greenlake account may have up to 5 API Accounts.
 if the API option is not shown, you may need to use an account with escalated privedges.
 Once the Client_Secret has been given to you, it is no longer retrievable, so dont lose it.
 Once a Token has been generated, it is only valid for 2 hours, creating of a new token immediately invalidates the last token The Client_ID/Client_Secret popup will look like the following graphic;
+
 <img src="CreateAPIAccount.png" />
 
 Using the PowerShell Toolkit to connect to Greenlake The following command is used to make this initial connection;
