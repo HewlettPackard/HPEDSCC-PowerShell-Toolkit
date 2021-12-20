@@ -91,10 +91,10 @@ Process{
         }
     write-Verbose "The AccessToken is $AccessToken"
     switch( $GreenlakeType )
-    {   'Dev'  {   $Global:Base = 'https://fleetscale-app.qa.cds.hpe.com' }
-        'Asia'  {   $Global:Base = "https://jp1.data.cloud.hpe.com"       }
-        'EU'  {   $Global:Base = "https://eu1.data.cloud.hpe.com"         }
-        'USA'   {   $Global:Base = "https://us1.data.cloud.hpe.com"       }
+    {   'Dev'   {   $Global:Base = 'https://fleetscale-app.qa.cds.hpe.com' }
+        'Asia'  {   $Global:Base = "https://jp1.data.cloud.hpe.com"        }
+        'EU'    {   $Global:Base = 'https://eu1.data.cloud.hpe.com'        }
+        'USA'   {   $Global:Base = 'https://us1.data.cloud.hpe.com'        }
     }
     $Global:CloudRoot = "/api/v1/"
     $Global:BaseUri   = $Base+$CloudRoot
