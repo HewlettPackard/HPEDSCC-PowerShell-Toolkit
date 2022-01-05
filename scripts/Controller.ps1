@@ -219,23 +219,22 @@ function Get-DSCCControllerPerf
 .LINK
 #>   
 [CmdletBinding()]
-param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
-                                                                            [string]    $SystemId,
-        [parameter(mandatory)]                                              [string]    $NodeId,
+param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )]     [string]    $systemId,
+        [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )]     [string]    $id,
                                                                             [switch]    $WhatIf
      )
 process
     {   Invoke-DSCCAutoReconnect
-        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $systemId )
         if ($DeviceType -eq 'device-type2' )
                 {   Write-warning "This command only works on Device-Type1 which include 3par/Primera/Alletra9K devices"
                     return  
                 }
         if ( -not $DeviceType )
-                {   Write-Warning "No array was detected using the SystemID $SystemId"
+                {   Write-Warning "No array was detected using the SystemID $systemId"
                     return
                 }
-        $MyURI = $BaseURI + 'storage-systems/device-type1/' + $SystemId + '/nodes/' + $NodeId + '/component-performance-statistics'
+        $MyURI = $BaseURI + 'storage-systems/device-type1/' + $systemId + '/nodes/' + $id + '/component-performance-statistics'
         if ( $WhatIf )
                 {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
                 }   

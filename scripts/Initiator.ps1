@@ -124,15 +124,23 @@ param(  [Parameter(Mandatory)]  [string]    $InitiatorID,
 process
     {   Invoke-DSCCAutoReconnect
         $MyURI = $BaseURI + 'initiators/' + $InitiatorID
-        $LocalBody = ''
+        $MyBody = ''
         if ($Force)
-                {   $LocalBody = @{force=$true}
+                {   $MyBody = @{force=$true}
+                    if ($Whatif)
+                            {   return Invoke-RestMethodWhatIf -uri $MyUri -Headers $MyHeaders -Method 'Delete' -body $MyBody
+                            } 
+                        else 
+                            {   return Invoke-RestMethod -uri $MyUri -Headers $MyHeaders -Method 'Delete' -body ( $MyBody | convertTo-json ) -ContentType 'application/json'
+                            }
                 }
-        if ($Whatif)
-                {   return Invoke-RestMethodWhatIf -uri $MyUri -Headers $MyHeaders -Method 'Delete' -body $LocalBody
-                } 
             else 
-                {   return Invoke-RestMethod -uri $MyUri -Headers $MyHeaders -Method 'Delete' -body $LocalBody
+                {   if ($Whatif)
+                            {   return Invoke-RestMethodWhatIf -uri $MyUri -Headers $MyHeaders -Method 'Delete'
+                            } 
+                        else 
+                            {   return Invoke-RestMethod -uri $MyUri -Headers $MyHeaders -Method 'Delete' -ContentType 'application/json'
+                            }
                 }
     }       
 }   
@@ -178,33 +186,33 @@ param(  [Parameter(Mandatory)]          [string]    $address,
                                         [string]    $driverVersion,
                                         [string]    $firmwareVersion,
                                         [string]    $hbaModel,
-                                        [int64]     $HostSpeed,
+                                        [int64]     $hostSpeed,
                                         [string]    $ipAddress,
                                         [string]    $name,  
         [Parameter(Mandatory)]  
-        [ValidateSet('FC','iSCSI','NMVe')][string]    $protocol,
-        [Parameter(Mandatory)]          [string]    $vendor,
+        [ValidateSet('FC','iSCSI','NMVe')][string]  $protocol,
+                                        [string]    $vendor,
                                         [switch]    $WhatIf
      )
 process
     {   Invoke-DSCCAutoReconnect
         $MyURI = $BaseURI + 'initiators'
-                                    $MyBody += @{ address = $address} 
+                                    $MyBody += [ordered]@{ address = $address} 
         if ($driverVerson)      {   $MyBody += @{ driverVersion = $driverVersion}  }
         if ($firmwareVersion)   {   $MyBody += @{ firmwareVersion = $firmwareVersion }  }
         if ($hbaModel)          {   $MyBody += @{ hbaModel = $hbaModel}  }
-        if ($HostSpeed)         {   $MyBody += @{ HostSpeed = $HostSpeed}  }
+        if ($hostSpeed)         {   $MyBody += @{ hostSpeed = $hostSpeed}  }
         if ($ipAddress)         {   $MyBody += @{ ipAddress = $ipAddress}  }
         if ($name)              {   $MyBody += @{ name = $name}  }
                                     $MyBody += @{ protocol = $protocol }
         if ($vendor)            {   $MyBody += @{ vendor = $vendor}  }
-        if ($driverVerson)      {   $MyBody += @{ driverVersion = $driverVersion}  }
-        
+        $CT = @{ 'Content-Type' = 'application/json'
+                }
         if ($Whatif)
-                {   return Invoke-RestMethodWhatIf -uri $MyUri -method 'Put' -headers $MyHeaders -body $MyBody
+                {   return Invoke-RestMethodWhatIf -uri $MyUri -method 'POST' -headers $MyHeaders -ContentType 'appplication/json' -body $MyBody
                 } 
             else 
-                {   return Invoke-RestMethod -uri $MyUri -method 'Put' -headers $MyHeaders -body $MyBody
+                {   return Invoke-RestMethod -uri $MyUri -method 'POST' -headers $MyHeaders -body ( $MyBody | convertTo-json ) -ContentType 'application/json' -verbose
                 }
     }       
 }   

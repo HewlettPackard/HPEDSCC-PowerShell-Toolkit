@@ -25,7 +25,7 @@ Export-ModuleMember -Function           Connect-DSCC,
 
     Get-DSCCController,               Get-DSCCControllerPerf,       Get-DSCCControllerSubComponent,   Invoke-DSCCControllerLocatePCBM,
 
-    Get-DSCCHostVolume,  
+    Get-DSCCHostVolume, 
     Get-DSCCHostGroup,          Remove-DSCCHostGroup,  Set-DSCCHostGroup, New-DSCCHostGroup,      
 
     Get-DSCCHost,               Remove-DSCCHost,       Set-DSCCHost,      New-DSCCHost,

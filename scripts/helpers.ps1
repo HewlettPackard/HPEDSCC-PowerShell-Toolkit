@@ -99,6 +99,7 @@ Process{
     $Global:CloudRoot = "/api/v1/"
     $Global:BaseUri   = $Base+$CloudRoot
     $Global:MyHeaders = @{  Authorization = 'Bearer '+$AccessToken
+
                          }
     $Global:TestUri = $BaseUri + "host-initiator-groups/"
     if ( $AccessToken -or $whatif )
@@ -181,6 +182,7 @@ function Invoke-RestMethodWhatIf
 {   Param(  $Uri,
             $Method,
             $Headers,
+            $ContentType,
             $Body
          )
     if ( -not $Body ) 
@@ -192,9 +194,15 @@ function Invoke-RestMethodWhatIf
     Write-host "The Method of this call will be "
     write-host -foregroundcolor green $Method
     Write-host "The Header for this call will be :"
-    write-host -foregroundcolor green ($Headers | ConvertTo-JSON | Out-String)    
-    write-host "The Body of this call will be:"
-    write-host -foregroundcolor green ($Body | ConvertTo-JSON | Out-String)
+    write-host -foregroundcolor green ($Headers | ConvertTo-JSON | Out-String)  
+    if ( $ContentType )
+        {   write-host "The Content-Type is set to "
+            write-host -foregroundcolor green ($ContentType)
+        }  
+    if ( $Body )
+        {   write-host "The Body of this call will be:"
+            write-host -foregroundcolor green ($Body | ConvertTo-JSON | Out-String)
+        }
 }
 
 function Invoke-RepackageObjectWithType 

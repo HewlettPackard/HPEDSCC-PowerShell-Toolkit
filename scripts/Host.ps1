@@ -127,14 +127,27 @@ function Remove-DSCCHost
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
-
 .EXAMPLE
     PS:> Remove-HPEDSCCDOMHostServiceHostGroup -HostId e987ef683c27403e96caa51816ddc72c
 
-    {   "message": "Successfully submitted",
-        "status": "SUBMITTED",
-        "taskUri": "/rest/vega/v1/tasks/4969a568-6fed-4915-bcd5-e4566a75e00c"
-    }
+    taskUri                              status    message
+    -------                              ------    -------
+    2899825b-0ac9-4145-9c6a-e1860db615b4 SUBMITTED
+.EXAMPLE
+    WARNING: You have selected the What-IF option, so the call will note be made to the array,
+    instead you will see a preview of the RestAPI call
+
+    The URI for this call will be
+        https://fleetscale-app.qa.cds.hpe.com/api/v1/host-initiators/b0a2e29f7f384b5181cabb262afa8c16
+    The Method of this call will be
+        Delete
+    The Header for this call will be :
+        {   "Authorization":  "Bearer eyJhbGciOiJ-wuFoaq8XP9gcnvSSgwKnTJ_g318BZMk7KXcgWaskk2go93DKPZtl_30wn5B6UIDGwHKqrcuD8V4Mbw"
+        }
+    The Content-Type is set to
+        application/json
+    The Body of this call will be:
+        "{\r\n    \"force\":  true\r\n}"
 .LINK
 #>   
 [CmdletBinding()]
@@ -145,15 +158,23 @@ param(  [Parameter(Mandatory)]  [string]    $HostID,
 process
     {   Invoke-DSCCAutoReconnect
         $MyURI = $BaseURI + 'host-initiators/' + $HostID
-        $LocalBody=''
         if ($Force)
                 {   $LocalBody = @{force=$true}
-                } 
-        if ($Whatif)
-                {   return Invoke-RestMethodWhatIf -uri $MyUri -method 'Delete' -headers $MyHeaders -body $LocalBody
-                } 
-            else 
-                {   return Invoke-RestMethod -uri $MyUri -method 'Delete' -headers $MyHeaders -body $LocalBody
+                    if ($Whatif)
+                            {   return Invoke-RestMethodWhatIf -uri $MyUri -method 'Delete' -headers $MyHeaders -body ($LocalBody | convertTo-json) -ContentType 'application/json'
+                            } 
+                        else 
+                            {   return Invoke-RestMethod -uri $MyUri -method 'Delete' -headers $MyHeaders -body ($LocalBody | convertTo-json) -ContentType 'application/json'
+                            }
+                }
+            else    
+                {   if ($Whatif)
+                            {   return Invoke-RestMethodWhatIf -uri $MyUri -method 'Delete' -headers $MyHeaders
+                            } 
+                        else 
+                            {   return Invoke-RestMethod -uri $MyUri -method 'Delete' -headers $MyHeaders
+                            }
+                
                 }
     }       
 }   
@@ -285,7 +306,7 @@ param(                              [string]    $comment,
                                     [string]    $contact,
                                     [string]    $fqdn,
                                                 $hostGroupIds,
-                                                $initiatorIds,
+                                    [array]     $initiatorIds,
                                                 $initiatorsToCreate,
                                     [string]    $ipAddress,  
                                     [string]    $location,
@@ -302,26 +323,29 @@ param(                              [string]    $comment,
      )
 process
     {   Invoke-DSCCAutoReconnect
-        $MyURI = $BaseURI + 'Data-Ops-Manager-ProductType1-Volumes/host-initiators'
+        $MyURI = $BaseURI + 'host-initiators'
+                                        $MyBody= [ordered]@{}
         if ($comment)               {   $MyBody += @{ comment = $comment }  }
         if ($contact)               {   $MyBody += @{ contact = $contact }  }
         if ($fqdn)                  {   $MyBody += @{ fqdn = $fqdn }  }
         if ($hostGroupIds)          {   $MyBody += @{ hostGroupIds = $hostGroupIds }  }
         if ($initiatorIds)          {   $MyBody += @{ initiatorIds = $initiatorIds }  }
+                            else    {   $MyBody += @{ initiatorIds = $( $null ) }  }
         if ($initiatorsToCreate )   {   $MyBody += @{ initiatorsToCreate = $initiatorsToCreate }  }
         if ($ipAddress)             {   $MyBody += @{ ipAddress = $ipAddress }  }
         if ($location)              {   $MyBody += @{ location = $location }  }
         if ($model)                 {   $MyBody += @{ model = $model }  }
+                                        $MyBody += @{ name = $name }
                                         $MyBody += @{ operatingSystem = $operatingSystem }
         if ($persona)               {   $MyBody += @{ persona = $persona }  }
         if ($protocol)              {   $MyBody += @{ protocol = $protocol }  }
         if ($subnet)                {   $MyBody += @{ subnet = $subnet }  }
                                         $MyBody += @{ userCreated = $userCreated }
         if ($Whatif)
-                {   return Invoke-RestMethodWhatIf -uri $MyUri -method 'Put' -headers $MyHeaders -body $MyBody
+                {   return Invoke-RestMethodWhatIf -uri $MyUri -method 'POST' -headers $MyHeaders -ContentType 'application/json' -body $MyBody
                 } 
             else 
-                {   return Invoke-RestMethod -uri $MyUri -method 'Put' -headers $MyHeaders -body $MyBody
+                {   return Invoke-RestMethod -uri $MyUri -method 'POST' -headers $MyHeaders -body ( $MyBody | convertTo-json ) -ContentType 'application/json'
                 }
      }      
 } 
@@ -355,7 +379,7 @@ Function Set-DSCCHost
 param(  [Parameter(Mandatory)]  [string]    $hostID,
                                 [string]    $name,  
                                             $initiatorsToCreate,
-                                            $updatedInitiators,
+                                [Array]     $updatedInitiators,
                                 [switch]    $WhatIf
      )
 process
@@ -366,10 +390,10 @@ process
         if ($updatedInitiators)     {   $MyBody += @{ updatedInitiators  = $updatedInitiators }  }
         if ($initiatorsToCreate)    {   $MyBody += @{ initiatorsToCreate = $initiatorsToCreate }  }
         if ($Whatif)
-                {   return Invoke-RestMethodWhatIf -uri $MyUri -Headers $MyHeaders -body $MyBody -Method 'Put'
+                {   return Invoke-RestMethodWhatIf -uri $MyUri -Headers $MyHeaders -body ( $MyBody | ConvertTo-JSON) -ContentType 'application/json' -Method 'PUT'
                 } 
             else 
-                {   return Invoke-RestMethod -uri $MyUri -Headers $MyHeaders -body $MyBody -Method 'Put'
+                {   return Invoke-RestMethod -uri $MyUri -Headers $MyHeaders -body ( $MyBody | ConvertTo-JSON) -ContentType 'application/json' -Method 'PUT'
                 }
     }       
 } 
