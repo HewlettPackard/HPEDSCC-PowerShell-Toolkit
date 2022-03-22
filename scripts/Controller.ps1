@@ -268,7 +268,7 @@ function Invoke-DSCCControllerLocate
 param(  [parameter(mandatory)][string]    $SystemId, 
         [parameter(mandatory)][string]    $NodeId,
         [parameter(mandatory)][boolean]   $Locate,
-        [switch]    $WhatIf
+                              [switch]    $WhatIf
      )
 process
     {   Invoke-DSCCAutoReconnect
@@ -319,7 +319,7 @@ param(  [parameter(mandatory)][string]    $SystemId,
         [parameter(mandatory)][string]    $NodeId,
         [parameter(mandatory)][string]    $PowerId,
         [parameter(mandatory)][boolean]   $Locate,
-        [switch]    $WhatIf
+                              [switch]    $WhatIf
      )
 process
     {   Invoke-DSCCAutoReconnect

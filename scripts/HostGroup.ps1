@@ -110,7 +110,7 @@ process
                 }
         $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "HostGroup"
         if ( ( $SysColOnly ).total -eq 0 )
-                {   Write-Warning "The Call to SystemID $SystemId returned no Disk Records."
+                {   Write-Warning "The Call to SystemID $SystemId returned no Host Initiator Group Records Records."
                     $ReturnData = ''                                                
                 }
         if ( $HostGroupID )
@@ -122,7 +122,6 @@ process
                 }
     }       
 }   
-
 function Remove-DSCCHostGroup
 {
 <#
@@ -229,8 +228,8 @@ Function New-DSCCHostGroup
 #>   
 [CmdletBinding()]
 param(                          [string]    $comment,
-                                            $hostIds,
-                                            $hostsToCreate,
+                                [array]     $hostIds,
+                                [array]     $hostsToCreate,
         [Parameter(Mandatory)]  [string]    $name,
                                 [boolean]   $userCreated=$true,
                                 [switch]    $WhatIf
@@ -244,10 +243,10 @@ process
         if ($hostsToCreate )    {   $MyBody += @{ hostsToCreate = $hostsToCreate }  }
                                     $MyBody += @{ userCreated = $userCreated }
         if ($Whatif)
-                {   return Invoke-RestMethodWhatIf -uri $MyUri -method 'Put' -headers $MyHeaders -body $MyBody
+                {   return Invoke-RestMethodWhatIf -uri $MyUri -method 'POST' -headers $MyHeaders -body $MyBody -ContentType 'application/json'
                 } 
             else 
-                {   return Invoke-RestMethod -uri $MyUri -method 'Put' -headers $MyHeaders -body $MyBody
+                {   return Invoke-RestMethod -uri $MyUri -method 'POST' -headers $MyHeaders -body ( $MyBody | ConvertTo-Json ) -ContentType 'application/json'
                 }
      }      
 } 
@@ -281,8 +280,8 @@ Function Set-DSCCHostGroup
 [CmdletBinding()]
 param(  [Parameter(Mandatory)]  [string]    $hostGroupID,
                                 [string]    $name,  
-                                            $hostsToCreate,
-                                            $updatedHosts,
+                                [array]     $hostsToCreate,
+                                [array]     $updatedHosts,
                                 [switch]    $WhatIf
      )
 process
@@ -297,7 +296,7 @@ process
                 {   return Invoke-RestMethodWhatIf -uri $MyUri -Header $MyHeaders -body $MyBody -Method 'Put'
                 } 
             else 
-                {   return Invoke-RestMethod -uri $MyUri -Header $MyHeaders -body $MyBody -Method 'Put'
+                {   return Invoke-RestMethod -uri $MyUri -Header $MyHeaders -body ( $MyBody | ConvertTo-Json ) -Method 'Put'
                 }
     }       
 } 

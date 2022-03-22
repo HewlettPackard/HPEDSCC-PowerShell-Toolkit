@@ -51,7 +51,7 @@ param ( [Parameter(Mandatory,ParameterSetName='ByClientCreds')]
         [Parameter(Mandatory)][ValidateSet("Dev","Asia", "USA", "EU")]
         [string]    $GreenlakeType  = 'Dev', 
         
-        [Parameter(Mandatory,ParameterSetName='ByClientCreds')]
+        [Parameter(ParameterSetName='ByClientCreds')]
         [switch]    $AutoRenew, 
 
         [switch]    $WhatIf 
@@ -64,7 +64,7 @@ Process{
         {   write-verbose 'Obtaining Access Token using Passed Client_Id and Client_Secrets.'
             $Global:AuthHeaders =  @{  'Content-Type' = 'application/x-www-form-urlencoded'
                                     }
-            $Global:AuthBody    = [ordered]@{     'grant_type' = 'client_credentials'
+            $Global:AuthBody    = [ordered]@{   'grant_type' = 'client_credentials'
                                                 'client_id' = $Client_Id
                                                 'client_secret' = $Client_Secret
                                           }  
@@ -91,7 +91,7 @@ Process{
         }
     write-Verbose "The AccessToken is $AccessToken"
     switch( $GreenlakeType )
-    {   'Dev'   {   $Global:Base = 'https://fleetscale-app.qa.cds.hpe.com' }
+    {   'Dev'   {   $Global:Base = 'https://scint-app.qa.cds.hpe.com'      }
         'Asia'  {   $Global:Base = "https://jp1.data.cloud.hpe.com"        }
         'EU'    {   $Global:Base = 'https://eu1.data.cloud.hpe.com'        }
         'USA'   {   $Global:Base = 'https://us1.data.cloud.hpe.com'        }

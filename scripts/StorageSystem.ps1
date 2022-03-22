@@ -6,21 +6,22 @@ function Get-DSCCStorageSystem
 .DESCRIPTION
     Returns the HPE Data Services Cloud Console Data Operations Manager Storage Systems Collections;
 .PARAMETER StorageSystemID
-    If a single Storage System ID is specified the output will be limited to that single record.
+    If a single Storage System ID is specified the output will be limited to that single record. If no storage system is specified all appropriate systems will be returned
 .PARAMETER DeviceType
     This can either be set to Device-Type1 or Device-Type2, where Device-Type1 refers to 3PAR/Primera/Alletra9K, while Device-Type2 refers to NimbleStorage/Alletra9K.
+    If this field is left blank, the command will retrieve both types.
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 .EXAMPLE 
     PS:> Get-DSCCStorageSystem -DeviceType device-type1
     
-    name                 id         type           model         fqdn       timezone        state  version
-    ----                 --         ----           -----         ----       --------        -----  -------
-    tmehou-pod1-primera2 2M2042059T primera-system HPE_3PAR A630 10.77.7.10 America/Chicago NORMAL 4.4.0.59
-    tmehou-pod2-primera1 2M2042059X primera-system HPE_3PAR A630 10.77.7.2  America/Chicago NORMAL 4.4.0.59
-    tmehou-pod3-primera1 2M2019018G primera-system HPE_3PAR A630 10.77.7.3  America/Chicago NORMAL 4.4.0.59
-    tmehou-pod1-primera1 2M202205GG primera-system HPE_3PAR A630 10.77.7.1  America/Chicago NORMAL 4.4.0.59
+    name                 id         type           model          timezone        state  version
+    ----                 --         ----           -----          --------        -----  -------
+    tmehou-pod1-primera2 2M2042059T primera-system HPE_3PAR A630  America/Chicago NORMAL 4.4.0.59
+    tmehou-pod2-primera1 2M2042059X primera-system HPE_3PAR A630  America/Chicago NORMAL 4.4.0.59
+    tmehou-pod3-primera1 2M2019018G primera-system HPE_3PAR A630  America/Chicago NORMAL 4.4.0.59
+    tmehou-pod1-primera1 2M202205GG primera-system HPE_3PAR A630  America/Chicago NORMAL 4.4.0.59
 .EXAMPLE
     PS:> Get-DSCCStorageSystem -DeviceType device-type2
 
@@ -29,6 +30,19 @@ function Get-DSCCStorageSystem
     tmehou-pod3-AF40    0006b878a5a008ec63000000000000000000000001 group AF40-2P2QF-11T America/Chicago 6.0.0.100-924305-opt
     tmehou-pod1-6050-gr 003be9f65d5b1de4fd000000000000000000000001 group 6050-4N2QY-46T America/Chicago 6.0.0.200-927971-opt
     tmehou-pod2-af40    000849204632ec0d70000000000000000000000001 group AF40-QP2QF-46T America/Chicago 6.0.0.200-927971-opt
+.EXAMPLE
+    PS:Get-DSCCStorageSystem
+    name                  id                                         type           model               timezone         state    version
+    ----                  --                                         ----           -----               --------         -----    -------
+    dep-test-sys-primera  MXN5442108                                 primera-system HPE_3PAR 8400       Asia/Kolkata     DEGRADED 4.3.0.79
+    group-ppatil-cds-8050 000f2fad32a41581b2000000000000000000000001 storage-system Virtual-6G-12T-320F America/New_York          6.0.0.100-914538-opt
+    group-rtp-afa184      003a78e8778c204dc2000000000000000000000001 storage-system 6030-4NQY-46T       America/New_York          6.0.0.100-924305-opt
+.EXAMPLE
+    PS:>Get-DSCCStorageSystem -SystemId 003a78e8778c204dc2000000000000000000000001
+
+    name             id                                         type           model         timezone         state version
+    ----             --                                         ----           -----         --------         ----- -------
+    group-rtp-afa184 003a78e8778c204dc2000000000000000000000001 storage-system 6030-4NQY-46T America/New_York       6.0.0.100-924305-opt
 .EXAMPLE
     PS:> Get-DSCCStorageSystem -DeviceType device-type1 | format-list
 
@@ -192,39 +206,61 @@ function Get-DSCCStorageSystem
         }
     The Body of this call will be:
         "No Body"
+.OUTPUTS
+    This command can either return objects of type DSCC.StorageSystem.device-type1, or DSCC.StorageSystem.device-type2, or when both elements are involved, it can return the
+    type DSCC.StorageSystem.Combined.
 .LINK
 #>   
 [CmdletBinding()]
 param(                                                                      [string]    $SystemId, 
-        [parameter(mandatory,helpMessage="The Acceptable values are device-type1 or device-type2.")][validateset('device-type1','device-type2')]  
+        [parameter(helpMessage="The Acceptable values are device-type1 or device-type2.")][validateset('device-type1','device-type2')]  
                                                                             [string]    $DeviceType,
                                                                             [switch]    $WhatIf
      )
 process
     {   Invoke-DSCCAutoReconnect
-        $MyURI = $BaseURI + 'storage-systems/' + $DeviceType
-        if ( $WhatIf )
-                {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
-                }   
-            else 
-                {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
+        if ( $DeviceType ) 
+            {   $DevTypes = $DeviceType 
+            } else
+            {   $DevTypes = @( 'device-type1', 'device-type2')
+            }
+        $BigCollection=@()
+        foreach ( $DevType in $DevTypes )
+        {   $MyURI = $BaseURI + 'storage-systems/' + $DevType
+            if ( $WhatIf )
+                    {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
+                    }   
+                else 
+                    {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
+                    }
+            if ( ($SysColOnly).items )  
+                    {   $SysColOnly = ($SysColOnly).items 
+                    }   
+                else 
+                    {   if ( ($SysColOnly).total -eq 0 )
+                            {   write-warning "No Items Returned"
+                                $SysColOnly = ''
+                            }
+                    }   
+            if ( $DeviceType ) 
+                {   $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "StorageSystem.$DevType"
+                } else 
+                {   $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "StorageSystem.Combined"   
                 }
-        if ( ($SysColOnly).items )  
-                {   $SysColOnly = ($SysColOnly).items 
-                }   
-            else 
-                {   if ( ($SysColOnly).total -eq 0 )
-                        {   write-warning "No Items Returned"
-                            $SysColOnly = ''
-                        }
-                }
-        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "StorageSystem.$DeviceType"
-        if ( $SystemId )
-                {   return ( $ReturnData | where-object { $_.id -eq $SystemId } )
-                } 
-            else 
-                {   return $ReturnData
-                }
+            if ( $SystemId )
+                    {   $BigCollection+=( $ReturnData | where-object { $_.id -eq $SystemId } )
+                        if ( $_.id -eq $SystemId )
+                            {   return $BigCollection   
+                            }
+                    } 
+                else 
+                    {   $BigCollection+=$ReturnData
+                        #if ( $DeviceType ) 
+                        #    {   return $ReturnData
+                        #    }
+                    }
+        }
+        return $BigCollection
     }       
 }   
 

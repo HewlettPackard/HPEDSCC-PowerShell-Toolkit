@@ -19,13 +19,16 @@ GreenLake Limitations; Some limits exist to be away of;
 Each Greenlake account may have up to 5 API Accounts.
 if the API option is not shown, you may need to use an account with escalated privedges.
 Once the Client_Secret has been given to you, it is no longer retrievable, so dont lose it.
-Once a Token has been generated, it is only valid for 2 hours, creating of a new token immediately invalidates the last token The Client_ID/Client_Secret popup will look like the following graphic;
+Once a Token has been generated, it is only valid for 2 hours, creating of a new token immediately invalidates 
+the last token The Client_ID/Client_Secret popup will look like the following graphic;
 Client
 
 Using the PowerShell Toolkit to connect to Greenlake The following command is used to make this initial connection;
 <code>PS:> Connect-DSCC -Client_Id 'put_client_id_here' -Client_Secret 'put_client_secret_here' -GreenlakeType USA</code>
 
 
-Once this commnad runs it will create a set of global variables that represent the default header which includes the retrieved Access Token which are then used by all further commands.
+Once this commnad runs it will create a set of global variables that represent the default header which includes the retrieved 
+Access Token which are then used by all further commands.
 
-Additionally an option called '-AutoRenew' now exists with the Connect-DSCC command which will allow the toolkit to reconnect on demand using the came client ID and Client Secret offered. This is not saved, and expires as soon as the PowerShell session is closed.
+Additionally an option called '-AutoRenew' now exists with the Connect-DSCC command which will allow the toolkit to reconnect 
+on demand using the came client ID and Client Secret offered. This is not saved, and expires as soon as the PowerShell session is closed.

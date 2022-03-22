@@ -3,7 +3,6 @@
 
 . $PSScriptRoot\scripts\Audit.ps1
 . $PSScriptRoot\scripts\Authz.ps1
-. $PSScriptRoot\scripts\Capacity.ps1
 . $PSScriptRoot\scripts\Certificate.ps1
 . $PSScriptRoot\scripts\Controller.ps1
 . $PSScriptRoot\scripts\Disk.ps1
@@ -45,10 +44,6 @@ Export-ModuleMember -Function           Connect-DSCC,
     Get-DSCCPort,
 
     Get-DSCCDisk,                 Get-DSCCShelf,                    Invoke-DSCCShelfLocate,
-
-    Get-DSCCCapacitySummary,
-    Get-DSCCCapacityHistory,
-    Get-DSCCCapacity,
 
     Get-DSCCCertificate,
     

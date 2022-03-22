@@ -1,6 +1,66 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Configuration>
     <ViewDefinitions>
+        <View>
+			<Name>DSCC.StorageSystem.Combined.Typename</Name>
+		    <ViewSelectedBy>
+                <TypeName>DSCC.StorageSystem.Combined.Typename</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <AutoSize />
+                <TableHeaders>
+                    <TableColumnHeader>
+                        <Label>name</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>id</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>type</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>model</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>timezone</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>state</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>version</Label>
+                    </TableColumnHeader>
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <Wrap />
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <PropertyName>name</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>id</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>type</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <Scriptblock>($_.devicetype).default + (($_.arrays).items).extended_model</Scriptblock>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>timezone</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>overallState</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <Scriptblock>($_.version).full + $_.version_current</Scriptblock>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+		</View>
       	<View>
 			<Name>DSCC.StorageSystem.device-type1.Typename</Name>
 		    <ViewSelectedBy>
@@ -20,9 +80,6 @@
                     </TableColumnHeader>
                     <TableColumnHeader>
                         <Label>model</Label>
-                    </TableColumnHeader>
-                    <TableColumnHeader>
-                        <Label>fqdn</Label>
                     </TableColumnHeader>
                     <TableColumnHeader>
                         <Label>timezone</Label>
@@ -49,9 +106,6 @@
                             </TableColumnItem>
                             <TableColumnItem>
                                 <Scriptblock>($_.devicetype).default</Scriptblock>
-                            </TableColumnItem>
-                            <TableColumnItem>
-                                <PropertyName>fqdn</PropertyName>
                             </TableColumnItem>
                             <TableColumnItem>
                                 <PropertyName>timezone</PropertyName>
@@ -650,6 +704,54 @@
             </TableControl>
 		</View> 
         <View>
+			<Name>DSCC.Disk.combined.Typename</Name>
+		    <ViewSelectedBy>
+                <TypeName>DSCC.Disk.combined.Typename</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <AutoSize />
+                <TableHeaders>
+                    <TableColumnHeader>
+                        <Label>id</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>location</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>systemId</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>model</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>serial</Label>
+                    </TableColumnHeader>
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <Wrap />
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <PropertyName>id</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>name</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <Scriptblock>$_.systemid + $_.array_id</Scriptblock>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <Scriptblock>$_.model + $_.display_name</Scriptblock>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <Scriptblock>$_.serial + $_.wwn</Scriptblock>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+		</View> 
+        <View>
 			<Name>DSCC.Disk.device-type1.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.Disk.device-type1.Typename</TypeName>
@@ -661,7 +763,7 @@
                         <Label>id</Label>
                     </TableColumnHeader>
                     <TableColumnHeader>
-                        <Label>name</Label>
+                         <Label>enclosure</Label>
                     </TableColumnHeader>
                     <TableColumnHeader>
                         <Label>wwn</Label>
@@ -998,9 +1100,9 @@
             </TableControl>
 		</View>
         <View>
-			<Name>DSCC.Initiator.Typename</Name>
+			<Name>DSCC.Initiator.Device-Type1.Typename</Name>
 		    <ViewSelectedBy>
-                <TypeName>DSCC.Initiator.Typename</TypeName>
+                <TypeName>DSCC.Initiator.Device-Type1.Typename</TypeName>
             </ViewSelectedBy>
             <TableControl>
                 <AutoSize />
@@ -1051,6 +1153,60 @@
                 </TableRowEntries>
             </TableControl>
 		</View>
+        <View>
+			<Name>DSCC.Initiator.Device-Type2.Typename</Name>
+		    <ViewSelectedBy>
+                <TypeName>DSCC.Initiator.Device-Type2.Typename</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <AutoSize />
+                <TableHeaders>
+                    <TableColumnHeader>
+                        <Label>id</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>address</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>label</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>protocol</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>initiatorGroup</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>system ID</Label>
+                    </TableColumnHeader>
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <Wrap />
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <PropertyName>id</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <Scriptblock> ( $_.iqn + $_.wwpn ) </Scriptblock>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>label</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>access_protocol</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>initiator_group_name</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <Scriptblock>(($_.associated_links).resourceUri).SubString(37,42)</Scriptblock>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+		</View>        
         <View>
 			<Name>DSCC.Audit.Typename</Name>
 		    <ViewSelectedBy>

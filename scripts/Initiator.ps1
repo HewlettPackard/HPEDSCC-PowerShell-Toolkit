@@ -5,6 +5,8 @@ function Get-DSCCInitiator
     Returns the HPE DSSC DOM Initiators Collection    
 .DESCRIPTION
     Returns the HPE Data Services Cloud Console Data Operations Manager Initiators Collections;
+.PARAMETER SystemID
+    If the Target Device to detect the Initiators from is a Nimble Storage or Alletra 6K, you will need to supply a System ID.
 .PARAMETER InitiatorID
     If a single Host ID is specified the output will be limited to that single record.
 .PARAMETER WhatIf
@@ -69,22 +71,37 @@ function Get-DSCCInitiator
     The results of the complete collection have been limited to just the supplied ID
 #>   
 [CmdletBinding()]
-param(  [string]    $InitiatorID,
-        [switch]    $WhatIf
+param(  [parameter( ValueFromPipeLineByPropertyName=$true )][Alias('id')]   [string]    $SystemId, 
+                                                                            [string]    $InitiatorID,
+                                                                            [switch]    $WhatIf
      )
 process
     {   Invoke-DSCCAutoReconnect
-        $MyURI = $BaseURI + 'initiators'
+        if ( ( -not $SystemId )  -or ( (Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId) -eq 'device-type1' ) )
+                {   $MyURI = $BaseURI + 'initiators'    
+                }
+            else 
+                {   if ( ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId ) -ne 'device-type2' )
+                            {   Write-warning "The System ID passed in does not register as a valid SystemId"
+                                return 
+                            }
+                    $MyURI = $BaseURI + 'storage-systems/device-type2/'+$SystemId+'/host-initiators'
+                }
         if ( $WhatIf )
                 {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
                 }   
             else 
                 {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
                 }
-        if ( ( $SysColOnly ).items )
-                {   $SysColOnly = ( $SysColOnly ).items 
+        if (($SysColOnly).items)
+                {   $SysColOnly = ($SysColOnly).items 
                 }
-        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Initiator"
+        if ($MyURI -eq ( $BaseURI + 'initiators' ) )
+                {   $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Initiator.Device-Type1"
+                }
+                else 
+                {   $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Initiator.Device-Type2"
+                }
         if ( $InitiatorID )
                 {   Write-host "The results of the complete collection have been limited to just the supplied ID"
                     return ( $ReturnData | where-object { $_.id -eq $InitiatorID } )
@@ -92,8 +109,8 @@ process
             else 
                 {   return $ReturnData
                 }
-    }                
-}   
+    }
+}
 function Remove-DSCCInitiator
 {
 <#
@@ -150,21 +167,32 @@ Function New-DSCCInitiator
 .SYNOPSIS
     Creates a HPE DSSC DOM Initiator Record.    
 .DESCRIPTION
-    Creates a HPE Data Services Cloud Console Data Operations Manager Host Initiator Record;
+    Creates a HPE Data Services Cloud Console Data Operations Manager Host Initiator Record; This will create either a Device-Type1 type Initiator,
+    or if a SystemID is specified, then it will make a Device-Type2 type initiator
+.PARAMETER systemID
+    This is required for Device-Type2, and references a specific system ID. This can be passed in as a pipeline variable.
 .PARAMETER Address
-    Address of the initiator and is required.
+    Used only for Device-Type1. The Address of the initiator and is required.
+.PARAMETER wwpn
+    The World Wide Port name, used only for Device-Type2, and only for FC connections
 .PARAMETER driverVersion
-    Driver Version of the Host Initiator.
+    Driver Version of the Host Initiator. Used only for Device-Type1. 
 .PARAMETER firmwareVersion
-    Firmware Version of the Host Initiator.
+    Firmware Version of the Host Initiator. Used only for Device-Type1. 
 .PARAMETER hbaModel
-    Host bus adaptor model of the host initiator.
+    Host bus adaptor model of the host initiator. Used only for Device-Type1. 
 .PARAMETER HostSpeed
-    Host Speed.
+    Host Speed. Used only for Device-Type1. 
 .PARAMETER ipAddress
-    IP Address of the Initiator.
+    IP Address of the Initiator. Used for both Device-Types, but only for iSCSI connections.
+.PARAMETER iqn
+    The IQN of the Initiator, used for Device-Type2, but only for iSCSI connections
 .PARAMETER name
-    Name of the Initiator.
+    Name of the Initiator. Used only for Device-Type1. 
+.PARAMETER alias
+    Name of the Initiator. Used only for Device-Type2, and only for FC connections 
+.PARAMETER label
+    Name of the Initiator. Used only for Device-Type2, and only for iSCSI connections 
 .PARAMETER protocol
     The protocol can be FC, iSCSI, or NVMe and is required.
 .PARAMETER Vendor

@@ -305,9 +305,9 @@ Function New-DSCCHost
 param(                              [string]    $comment,
                                     [string]    $contact,
                                     [string]    $fqdn,
-                                                $hostGroupIds,
+                                    [array]     $hostGroupIds,
                                     [array]     $initiatorIds,
-                                                $initiatorsToCreate,
+                                    [array]     $initiatorsToCreate,
                                     [string]    $ipAddress,  
                                     [string]    $location,
                                     [string]    $model,
@@ -378,8 +378,8 @@ Function Set-DSCCHost
 [CmdletBinding()]
 param(  [Parameter(Mandatory)]  [string]    $hostID,
                                 [string]    $name,  
-                                            $initiatorsToCreate,
-                                [Array]     $updatedInitiators,
+                                [array]     $initiatorsToCreate,
+                                [array]     $updatedInitiators,
                                 [switch]    $WhatIf
      )
 process
@@ -390,7 +390,7 @@ process
         if ($updatedInitiators)     {   $MyBody += @{ updatedInitiators  = $updatedInitiators }  }
         if ($initiatorsToCreate)    {   $MyBody += @{ initiatorsToCreate = $initiatorsToCreate }  }
         if ($Whatif)
-                {   return Invoke-RestMethodWhatIf -uri $MyUri -Headers $MyHeaders -body ( $MyBody | ConvertTo-JSON) -ContentType 'application/json' -Method 'PUT'
+                {   return Invoke-RestMethodWhatIf -uri $MyUri -Headers $MyHeaders -body $MyBody -ContentType 'application/json' -Method 'PUT'
                 } 
             else 
                 {   return Invoke-RestMethod -uri $MyUri -Headers $MyHeaders -body ( $MyBody | ConvertTo-JSON) -ContentType 'application/json' -Method 'PUT'
