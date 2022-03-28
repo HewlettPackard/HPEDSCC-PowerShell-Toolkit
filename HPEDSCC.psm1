@@ -15,37 +15,31 @@
 . $PSScriptRoot\scripts\StorageSystem.ps1
 . $PSScriptRoot\scripts\Volume.ps1
 . $PSScriptRoot\scripts\Snapshot.ps1
-
+# The following commands are in columns that represent the different types of commands. Additionally a line exists between each object type to make the list more readable
+#   GET/FIND Commands             REMOVE Commands                 SET Commands                NEW Commands          INVOKE/CONNECT Commands
 write-warning "This a Prototype PowerShell Module, and not supported by HPE."
-Export-ModuleMember -Function           Connect-DSCC,                        
+Export-ModuleMember -Function                                                                                       Connect-DSCC,                        
     Get-DSCCAuditEvent,
-
-    Get-DSCCAccessControl,        Get-DSCCResourceType,    
-
-    Get-DSCCController,               Get-DSCCControllerPerf,       Get-DSCCControllerSubComponent,   Invoke-DSCCControllerLocatePCBM,
-
+    Get-DSCCAccessControl,        
+    Get-DSCCResourceType,    
+    Get-DSCCController,           
+    Get-DSCCControllerPerf,       
+    Get-DSCCControllerSubComponent,                                                                                 Invoke-DSCCControllerLocatePCBM,
     Get-DSCCHostVolume, 
-    Get-DSCCHostGroup,          Remove-DSCCHostGroup,  Set-DSCCHostGroup, New-DSCCHostGroup,      
-
-    Get-DSCCHost,               Remove-DSCCHost,       Set-DSCCHost,      New-DSCCHost,
-
-    Get-DSCCInitiator,          Remove-DSCCInitiator,  New-DSCCInitiator,
-
-    Get-DSCCStorageSystem,        Invoke-DSCCStorageSystemLocate,
-
-    Get-DSCCStoragePool,          Get-DSCCStoragePoolVolume,
-
-    Get-DSCCVolume,               
-
+    Get-DSCCHostGroup,              Remove-DSCCHostGroup,       Set-DSCCHostGroup,          New-DSCCHostGroup,      
+    Get-DSCCHost,                   Remove-DSCCHost,            Set-DSCCHost,               New-DSCCHost,
+    Get-DSCCInitiator,              Remove-DSCCInitiator,                                   New-DSCCInitiator,
+    Get-DSCCStorageSystem,                                                                                          Invoke-DSCCStorageSystemLocate,
+    Get-DSCCStoragePool,          
+    Get-DSCCStoragePoolVolume,
+    Get-DSCCVolume,                 Remove-DSCCVolume,          Set-DSCCVolume,             New-DSCCVolume,     
+    Get-DSCCVolumePerf,            
     Get-DSCCSnapshot,
-
     Get-DSCCComponentPerfStats,
-
     Get-DSCCPort,
-
-    Get-DSCCDisk,                 Get-DSCCShelf,                    Invoke-DSCCShelfLocate,
-
+    Get-DSCCDisk,                 
+    Get-DSCCShelf,                                                                                                  Invoke-DSCCShelfLocate,
     Get-DSCCCertificate,
-    
-    Find-DSCCDeviceTypeFromStorageSystemID,     Invoke-RepackageObjectWithType, Invoke-DSCCAutoReconnect
+    Find-DSCCDeviceTypeFromStorageSystemID,                                                                         Invoke-RepackageObjectWithType, 
+                                                                                                                    Invoke-DSCCAutoReconnect
 update-formatdata -prepend $PSScriptRoot\HPEDSCC.Format.ps1xml

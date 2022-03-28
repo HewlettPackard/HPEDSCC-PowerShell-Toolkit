@@ -153,7 +153,7 @@ process
                 }
             else 
                 {   if ($Whatif)
-                            {   return Invoke-RestMethodWhatIf -uri $MyUri -Headers $MyHeaders -Method 'Delete'
+                            {   return Invoke-RestMethodWhatIf -uri $MyUri -Headers $MyHeaders -Method 'Delete' -ContentType 'application/json'
                             } 
                         else 
                             {   return Invoke-RestMethod -uri $MyUri -Headers $MyHeaders -Method 'Delete' -ContentType 'application/json'

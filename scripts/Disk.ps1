@@ -91,7 +91,7 @@ process
                                                 }
                                         if ( ($SysColOnly).items ) 
                                                 {   $SysColOnly = ($SysColOnly).items 
-                                                    $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Disk.$DeviceType"
+                                                    $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Disk.Combined"
                                                 }
                                             else 
                                                 {   if (  ($SysColOnly).total -eq 0 )
@@ -123,7 +123,7 @@ process
                                                 if ( ( $SysColOnly ).items )
                                                         {   $SysColOnly = $SysColOnly.items 
                                                         }
-                                                $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Disk.$DeviceType"
+                                                $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Disk.Combined"
                                                 if (  ($SysColOnly).total -eq 0 )
                                                         {   Write-Warning "The Call to SystemID $SystemId returned no Disk Records."
                                                             $ReturnData = ''                                                

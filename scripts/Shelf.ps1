@@ -2,12 +2,13 @@ function Get-DSCCShelf
 {
 <#
 .SYNOPSIS
-    Returns the HPE DSSC DOM Disks for a specific storage system     
+    Returns the HPE DSSC DOM Shelves for a specific storage system     
 .DESCRIPTION
-    Returns the HPE DSSC DOM Disks for a specific storage system 
+    Returns the HPE DSSC DOM Shelves for a specific storage system 
 .PARAMETER StorageSystemID
-    A single Storage System ID is specified and required, the pools defined will be returned unless a specific Disk ID is requested.
-.PARAMETER DiskID
+    A single Storage System ID is specified and required, the pools defined will be returned unless a specific Shelf ID is requested.
+    You can feed the output of the Get-DSCCStorageSystems command to this command to specify the required parameter.
+.PARAMETER ShelfID
     If a single Storage System Disk ID is specified, only that Disk will be returned.
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
@@ -37,7 +38,17 @@ function Get-DSCCShelf
     Id                                         Model          Serial Number System Name      Detailed Name     PSU Status Fan Status Temp Status
     --                                         -----          ------------- -----------      -------------     ---------- ---------- -----------
     2d0849204632ec0d70000000010000414600037375 AF40-QP2QF-46T AF-226165     TMEHOL-POD2-AF40 chassis_nmbl_4u24 OK         OK         OK
+.EXAMPLE
+    PS:>Get-DSCCStorageSystem | Get-DSCCShelf
+
+    Id                                         Model               Serial Number   SystemId or Name Detailed Name     Overall Status PSU/Fan/Temp Status
+    --                                         -----               -------------   ---------------- -------------     -------------- -------------------
+    f6852422f12b903df418c541ac4ff464           --                  SHM1002657RBMM1 MXN5442108       unknown           STATE_DEGRADED
+    2d0f2fad32a41581b2000000010000637300000000 Virtual-6G-12T-320F cs-fdcad6       ppatil-cds-8050  chassis_smc_3u16                 OK OK OK
+    2d3a78e8778c204dc20000000100004146000384e4 6030-4NQY-46T       AF-230628       rtp-afa184       chassis_nmbl_4u24                OK OK OK
 .LINK
+.OUTPUTS
+    The commmand should return an object of data type DSCC.Shelf.Combined which the default formatters
 #>   
 [CmdletBinding()]
 param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
@@ -63,7 +74,7 @@ process
                 }
             if ( ($SysColOnly).items ) 
                     {   $SysColOnly = ($SysColOnly).items 
-                        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Shelf.$DeviceType"
+                        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Shelf.Combined"
                     }
                 else
                     {   if ( ($SysColOnly).total -eq 0 )
