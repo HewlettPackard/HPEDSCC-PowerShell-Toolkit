@@ -737,46 +737,41 @@ process
 
 Function Get-DSCCVolumePerf
 {
-    <#
-    .SYNOPSIS
-        Retrieves the HPE DSSC DOM Storage Volume performance statistics for a specific storage system volume    
-    .DESCRIPTION
-        Returns the HPE DSSC DOM Storage Volume performance statistics for a specific storage system volume 
-    .PARAMETER StorageSystemID
-        A single Storage System ID is specified and required, the pools defined will be returned unless a specific PoolID is requested.
-    .PARAMETER VolumeID
-        A single Storage System Volume ID is specified and required, and all volumes in that system will be returned if a single volume is not specified.
-    .PARAMETER WhatIf
-        The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
-        This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
-    #>   
-    [CmdletBinding()]
-    param(  [Parameter(Mandatory=$true, ValueFromPipeLineByPropertyName=$true )][Alias('id')]   [string]    $SystemId, 
-            [Parameter(Mandatory=$true )]                                                       [string]    $VolumeId,
-            [Parameter(Mandatory=$true )][validateSet('iops','latency','throughtput')]          [String]    $Metric,
-                                                                                                [switch]    $WhatIf
-         )
-    process
-        {   Invoke-DSCCAutoReconnect
+<#
+.SYNOPSIS
+    Retrieves the HPE DSSC DOM Storage Volume performance statistics for a specific storage system volume    
+.DESCRIPTION
+    Returns the HPE DSSC DOM Storage Volume performance statistics for a specific storage system volume 
+.PARAMETER StorageSystemID
+    A single Storage System ID is specified and required, the pools defined will be returned unless a specific PoolID is requested.
+.PARAMETER VolumeID
+    A single Storage System Volume ID is specified and required, and all volumes in that system will be returned if a single volume is not specified.
+.PARAMETER PerformanceType
+    This is mandatory and can either be 'statistics' or it can be 'history'.
+.PARAMETER Metric
+    The performance metric to gather, can be either 'iops', 'latency', or 'throughput'.
+.PARAMETER WhatIf
+    The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
+    This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
+#>   
+[CmdletBinding()]
+param(  [Parameter(Mandatory=$true, ValueFromPipeLineByPropertyName=$true )][Alias('id')]   [string]    $SystemId, 
+        [Parameter(Mandatory=$true )]                                                       [string]    $VolumeId,
+        [Parameter(Mandatory=$true )][validateSet('statistics','history')]                  [String]    $PerformanceType,
+        [Parameter(Mandatory=$true )][validateSet('iops','latency','throughput')]           [String]    $Metric,
+                                                                                            [switch]    $WhatIf
+     )
+process
+    {       Invoke-DSCCAutoReconnect
             $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
             write-verbose "Dectected the DeviceType is $DeviceType"
-            $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes/' + $VolumeId + '/'
-            switch ( $DeviceType )
-                {   'device-type1'      {   $MyURI = $MyURI + 'performance-statistics' }
-                    'device-type2'      {   $MyURI = $MyURI + 'performance-history' }
-                    default             {   write-warning 'The System with the given SystemID does not exist.'
-                                            return
-                                        }
-                }
-               #  https://us1.data.cloud.hpe.com/api/v1/storage-systems/device-type1/{systemId}/volumes/{id}/
-            
+            $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes/' + $VolumeId + '/performance-' + $PerformanceType 
             if ( $WhatIf )
                     {   $SysColOnly = invoke-restmethodWhatIf -uri $MyURI -headers $MyHeaders -method Get
                     }   
                 else 
                     {   $SysColOnly = invoke-restmethod -uri $MyURI -headers $MyHeaders -method Get
                     }
-            $ReturnData = $SysColOnly
             if ( ($SysColOnly).items ) 
                     {   $SysColOnly = ($SysColOnly).items 
                     }
@@ -785,14 +780,14 @@ Function Get-DSCCVolumePerf
                         return
                     }
             switch ( $Metric )
-            {   'iops'          {   if ($ReturnData.iops)            { $ReturnData = $SysColOnly.iops }             else { $ReturnData = $SysColOnly.iops_metrics_data } }
-                'latency'       {   if ($ReturnData.latencyMS)       { $ReturnData = $SysColOnly.latencyMS }        else { $ReturnData = $SysColOnly.latency_metrics_data } }
-                'throughtput'   {   if ($ReturnData.throughtputKbps) { $ReturnData = $SysColOnly.throughtputKbps }  else { $ReturnData = $SysColOnly.throughout_metrics_data }}
+            {   'iops'          {   if ( ($SysColOnly).iops  )             { $ReturnData = ($SysColOnly).iops }             else { $ReturnData = ($SysColOnly).iops_metrics_data } }
+                'latency'       {   if ( ($SysColOnly).latencyMs )         { $ReturnData = ($SysColOnly).latencyMs }        else { $ReturnData = ($SysColOnly).latency_metrics_data } }
+                'throughtput'   {   if ( ($SysColOnly).throughtputKbps  )  { $ReturnData = ($SysColOnly).throughtputKbps }  else { $ReturnData = ($SysColOnly).throughout_metrics_data }}
             }
-            if ( $ReturnData.series_data )
-                {   $ReturnData = $ReturnData.series_data
-                }
-            #   $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "VolumePerf.Combined"        
+            if ( ($ReturnData).series_data )
+                    {   $ReturnData = ($ReturnData).series_data
+                    }
+            $ReturnData = Invoke-RepackageObjectWithType -RawObject $ReturnData -ObjectName "VolumePerf.Combined"        
             return $ReturnData
-        }       
-    } 
+    }       
+}

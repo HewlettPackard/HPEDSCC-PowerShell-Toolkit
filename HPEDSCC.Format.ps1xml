@@ -356,6 +356,48 @@
             </TableControl>
 		</View>
         <View>
+			<Name>DSCC.VolumePerf.Combined.Typename</Name>
+		    <ViewSelectedBy>
+                <TypeName>DSCC.VolumePerf.Combined.Typename</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <AutoSize />
+                <TableHeaders>
+                    <TableColumnHeader>
+                        <Label>TimeStamp</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>Read</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>Write</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>Total</Label>
+                    </TableColumnHeader>
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <Wrap />
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <Scriptblock>timestamp</Scriptblock>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <Scriptblock>$_.read_value + $_.read</Scriptblock>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <Scriptblock>$_.write_value + $_.write</Scriptblock>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <Scriptblock>$_.total_value + $_.total</Scriptblock>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+		</View>
+        <View>
 			<Name>DSCC.Shelf.Combined.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.Shelf.Combined.Typename</TypeName>

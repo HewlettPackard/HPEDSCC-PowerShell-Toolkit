@@ -34,7 +34,7 @@ Export-ModuleMember -Function                                                   
     Get-DSCCStoragePoolVolume,
     Get-DSCCVolume,                 Remove-DSCCVolume,          Set-DSCCVolume,             New-DSCCVolume,     
     Get-DSCCVolumePerf,            
-    Get-DSCCSnapshot,
+    Get-DSCCSnapshot,               Remove-DSCCSnapshot                                     New-DSCCSnapshot,
     Get-DSCCComponentPerfStats,
     Get-DSCCPort,
     Get-DSCCDisk,                 
