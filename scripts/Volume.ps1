@@ -446,7 +446,7 @@ param(  [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]
         [Parameter(ParameterSetName='DeviceType2' )]
             [ValidateRange(0,100)]                                          [int]       $warn_level,
 
-        [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]       [switch]    $WhatIf
+                                                                            [switch]    $WhatIf
      )
 
 process
