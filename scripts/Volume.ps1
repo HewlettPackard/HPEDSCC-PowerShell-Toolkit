@@ -401,7 +401,7 @@ param(  [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]
         [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]
         [Parameter(Mandatory=$true, ParameterSetName='DeviceType2' )]       [string]    $name,
  
-        [Parameter(Mandatory=$true, ParameterSetName='DeviceType2' )]       [string]    $sizeMiB,
+        [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]       [string]    $sizeMiB,
         [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]       [string]    $userCpg,
         [Parameter(ParameterSetName='DeviceType1' )]                        [string]    $comments,
         [Parameter(ParameterSetName='DeviceType1' )]                        [int]       $count,
