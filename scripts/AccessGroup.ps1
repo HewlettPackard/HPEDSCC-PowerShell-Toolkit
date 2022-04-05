@@ -25,7 +25,8 @@ process
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         write-verbose "Dectected the DeviceType is $DeviceType"
         switch ( $devicetype )
-            {   'device-type1'  {   return 
+            {   'device-type1'  {   write-warning "This command only works on Device-Type1 so far."
+                                    return 
                                 }
                 'device-type2'  {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/access-control-records/' + $AccessControlRecordId
                                 }
@@ -53,7 +54,7 @@ process
                 }
     }       
 }   
-function Remove-DSCCHostGroup
+function Remove-DSCCAccessControlRecord
 {
 [CmdletBinding()]
 param(  [Parameter(ValueFromPipeLineByPropertyName=$true,Mandatory=$true )][Alias('id')]    [string]    $SystemId,  
@@ -65,7 +66,8 @@ process
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         write-verbose "Dectected the DeviceType is $DeviceType"
         switch ( $devicetype )
-            {   'device-type1'  {   return 
+            {   'device-type1'  {   write-warning "This command only works on Device-Type2 so far"
+                                    return 
                                 }
                 'device-type2'  {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/access-control-records/' + $AccessControlRecordId
                                 }
@@ -84,7 +86,7 @@ process
                 }
     }       
 }   
-Function New-DSCCHostGroup
+Function New-DSCCAccessControlRecord
 {
 [CmdletBinding()]
 param(  [Parameter(ValueFromPipeLineByPropertyName=$true,Mandatory=$true )][Alias('id')]    [string]    $SystemId, 
@@ -125,29 +127,3 @@ process
                 }
      }      
 } 
-<# Function Set-DSCCHostGroup
-{
-[CmdletBinding()]
-param(  [Parameter(Mandatory)]  [string]    $hostGroupID,
-                                [string]    $name,  
-                                [array]     $hostsToCreate,
-                                [array]     $updatedHosts,
-                                [switch]    $WhatIf
-     )
-process
-    {   Invoke-DSCCAutoReconnect
-        $MyURI = $BaseURI + 'host-initiator-groups/' + $hostGroupID
-                                    $MyBody += @{} 
-        if ($name)              {   $MyBody += @{ name = $name}  }
-        if ($updatedHosts)      {   $MyBody += @{ updatedHosts = $updatedHosts }  }
-        if ($updatedHosts)      {   $MyBody += @{ HostsToCreate = $hostsToCreate }  }
-        
-        if ($Whatif)
-                {   return Invoke-RestMethodWhatIf -uri $MyUri -Header $MyHeaders -body $MyBody -Method 'Put'
-                } 
-            else 
-                {   return Invoke-RestMethod -uri $MyUri -Header $MyHeaders -body ( $MyBody | ConvertTo-Json ) -Method 'Put'
-                }
-    }       
-} 
-#>
