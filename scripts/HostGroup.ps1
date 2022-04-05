@@ -227,12 +227,12 @@ Function New-DSCCHostGroup
     }
 #>   
 [CmdletBinding()]
-param(                          [string]    $comment,
-                                [array]     $hostIds,
-                                [array]     $hostsToCreate,
-        [Parameter(Mandatory)]  [string]    $name,
-                                [boolean]   $userCreated=$true,
-                                [switch]    $WhatIf
+param(  [Parameter(Mandatory=$true)]    [string]    $name,
+                                        [string]    $comment,
+                                        [array]     $hostIds,
+                                        [array]     $hostsToCreate,
+                                        [boolean]   $userCreated=$true,
+                                        [switch]    $WhatIf
      )
 process
     {   Invoke-DSCCAutoReconnect

@@ -457,7 +457,7 @@ process
         $MyBody = @{    'name' =    $name 
                    }
         switch ( $ParameterSet )
-          { 'DeviceType1'   {   if ( $sizeMiB   )           {   $MyBody = $MyBody + @{ 'SizeMiB'              = $sizeMiB }              }  
+          { 'device-type1'   {  if ( $sizeMiB   )           {   $MyBody = $MyBody + @{ 'SizeMiB'              = $sizeMiB }              }  
                                 if ( $userCpg   )           {   $MyBody = $MyBody + @{ 'userCpg'              = $userCpg }              }
                                 if ( $comments   )          {   $MyBody = $MyBody + @{ 'comments'             = $comments }             }
                                 if ( $count     )           {   $MyBody = $MyBody + @{ 'count'                = $count }                }
@@ -467,7 +467,7 @@ process
                                 if ( $dataReduction)        {   $MyBody = $MyBody + @{ 'userAllocWarning'     = $userAllocWarning }     }
                                 if ( $snapCpg   )           {   $MyBody = $MyBody + @{ 'snapCpg'              = $snapCpg }              }
                             }
-            'DeviceType2'   {   if ( $size   )              {   $MyBody = $MyBody + @{ 'size'                 = $size }                 }
+            'device-type2'   {   if ( $size   )              {   $MyBody = $MyBody + @{ 'size'                 = $size }                 }
                                 if ( $pool_id   )           {   $MyBody = $MyBody + @{ 'pool_id'              = $pool_id }              }
                                 if ( $agent_type   )        {   $MyBody = $MyBody + @{ 'agent_type'           = $agent_type }           }
                                 if ( $app_uiid   )          {   $MyBody = $MyBody + @{ 'app_uiid'             = $app_uiid }             }

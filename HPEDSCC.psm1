@@ -2,6 +2,7 @@
 . $PSScriptRoot\scripts\helpers.ps1
 
 . $PSScriptRoot\scripts\Audit.ps1
+. $PSScriptRoot\scripts\AccessGroup.ps1
 . $PSScriptRoot\scripts\Authz.ps1
 . $PSScriptRoot\scripts\Certificate.ps1
 . $PSScriptRoot\scripts\Controller.ps1
@@ -25,6 +26,7 @@ Export-ModuleMember -Function                                                   
     Get-DSCCController,           
     Get-DSCCControllerPerf,       
     Get-DSCCControllerSubComponent,                                                                                 Invoke-DSCCControllerLocatePCBM,
+    Get-DSCCAccessControlRecord,    Remove-DSCCAccessControlRecord,                         New-DSCCAccessControlRecord,                                                                             
     Get-DSCCHostVolume, 
     Get-DSCCHostGroup,              Remove-DSCCHostGroup,       Set-DSCCHostGroup,          New-DSCCHostGroup,      
     Get-DSCCHost,                   Remove-DSCCHost,            Set-DSCCHost,               New-DSCCHost,
