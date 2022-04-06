@@ -356,6 +356,54 @@
             </TableControl>
 		</View>
         <View>
+			<Name>DSCC.AccessControlRecord.Typename</Name>
+		    <ViewSelectedBy>
+                <TypeName>DSCC.AccessControlRecord.Typename</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <AutoSize />
+                <TableHeaders>
+                    <TableColumnHeader>
+                        <Label>Volume Name</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>id</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>systemId</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>type</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>InitiatorGroupName</Label>
+                    </TableColumnHeader>
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <Wrap />
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <Scriptblock>$_.vol_name + $_.volumeName</Scriptblock>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <Scriptblock>$_.id</Scriptblock>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <Scriptblock>if ( $_.systemId ) { $_.systemId } else { ($_.resourceUri).substring(37,42) } </Scriptblock>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <Scriptblock>$_.'type'</Scriptblock>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <Scriptblock>$_.initiator_group_name + ($_.initiators).deviceDiscoveredName</Scriptblock>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+		</View>
+        <View>
 			<Name>DSCC.VolumePerf.Combined.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.VolumePerf.Combined.Typename</TypeName>
