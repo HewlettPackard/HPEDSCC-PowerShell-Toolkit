@@ -91,13 +91,7 @@ process
                                             {   return $ReturnData
                                             }
                                 }
-            }
-        
-        
-        
-        
-
-        
+            }     
     }       
 }   
 function Remove-DSCCAccessControlRecord

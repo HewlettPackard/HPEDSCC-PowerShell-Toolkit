@@ -15,6 +15,7 @@
 . $PSScriptRoot\scripts\StoragePool.ps1
 . $PSScriptRoot\scripts\StorageSystem.ps1
 . $PSScriptRoot\scripts\Volume.ps1
+. $PSScriptRoot\scripts\VolumeSet.ps1
 . $PSScriptRoot\scripts\Snapshot.ps1
 # The following commands are in columns that represent the different types of commands. Additionally a line exists between each object type to make the list more readable
 #   GET/FIND Commands             REMOVE Commands                 SET Commands                NEW Commands          INVOKE/CONNECT Commands
@@ -26,12 +27,13 @@ Export-ModuleMember -Function                                                   
     Get-DSCCController,           
     Get-DSCCControllerPerf,       
     Get-DSCCControllerSubComponent,                                                                                 Invoke-DSCCControllerLocatePCBM,
-    Get-DSCCAccessControlRecord,    Remove-DSCCAccessControlRecord,                         New-DSCCAccessControlRecord,                                                                             
+    Get-DSCCAccessControlRecord,    Remove-DSCCAccessControlRecord,                         New-DSCCAccessControlRecord, 
+    Get-DSCCVolumeSet,              Remove-DSCCVolumeSet,       Set-DSCCVolumeSet,          New-DSCCVolumeSet,                                                                            
     Get-DSCCHostVolume, 
     Get-DSCCHostGroup,              Remove-DSCCHostGroup,       Set-DSCCHostGroup,          New-DSCCHostGroup,      
     Get-DSCCHost,                   Remove-DSCCHost,            Set-DSCCHost,               New-DSCCHost,
     Get-DSCCInitiator,              Remove-DSCCInitiator,                                   New-DSCCInitiator,
-    Get-DSCCStorageSystem,                                                                                          Invoke-DSCCStorageSystemLocate,
+    Get-DSCCStorageSystem,                                                                                           Invoke-DSCCStorageSystemLocate,
     Get-DSCCStoragePool,          
     Get-DSCCStoragePoolVolume,
     Get-DSCCVolume,                 Remove-DSCCVolume,          Set-DSCCVolume,             New-DSCCVolume,     
