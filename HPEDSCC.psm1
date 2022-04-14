@@ -7,12 +7,13 @@
 . $PSScriptRoot\scripts\Certificate.ps1
 . $PSScriptRoot\scripts\Controller.ps1
 . $PSScriptRoot\scripts\Disk.ps1
+. $PSScriptRoot\scripts\Folder.ps1
 . $PSScriptRoot\scripts\HostGroup.ps1
 . $PSScriptRoot\scripts\Initiator.ps1
 . $PSScriptRoot\scripts\Host.ps1
 . $PSScriptRoot\scripts\Port.ps1
 . $PSScriptRoot\scripts\Shelf.ps1
-. $PSScriptRoot\scripts\StoragePool.ps1
+. $PSScriptRoot\scripts\Pool.ps1
 . $PSScriptRoot\scripts\StorageSystem.ps1
 . $PSScriptRoot\scripts\Volume.ps1
 . $PSScriptRoot\scripts\VolumeSet.ps1
@@ -34,8 +35,9 @@ Export-ModuleMember -Function                                                   
     Get-DSCCHost,                   Remove-DSCCHost,            Set-DSCCHost,               New-DSCCHost,
     Get-DSCCInitiator,              Remove-DSCCInitiator,                                   New-DSCCInitiator,
     Get-DSCCStorageSystem,                                                                                           Invoke-DSCCStorageSystemLocate,
-    Get-DSCCStoragePool,          
-    Get-DSCCStoragePoolVolume,
+    Get-DSCCPool, 
+    Get-DSCCFolder,         
+    Get-DSCCPoolVolume,
     Get-DSCCVolume,                 Remove-DSCCVolume,          Set-DSCCVolume,             New-DSCCVolume,     
     Get-DSCCVolumePerf,            
     Get-DSCCSnapshot,               Remove-DSCCSnapshot,                                     New-DSCCSnapshot,

@@ -166,16 +166,15 @@ function New-DSCCSnapshot{
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 #>   
 [CmdletBinding()]
-param(      [Parameter(ValueFromPipeLineByPropertyName=$true,mandatory=$true,ParameterSetName='devicetype1')]
-            [Parameter(ValueFromPipeLineByPropertyName=$true,mandatory=$true,ParameterSetName='devicetype2')]
+param(      [Parameter(ValueFromPipeLineByPropertyName=$true,mandatory=$true,ParameterSetName='devicetype1','device-type2')]
             [Alias('owned_by_group_id')]                                                                                    [string]    $systemId, 
             [Parameter(ValueFromPipeLineByPropertyName=$true,mandatory=$true,ParameterSetName='devicetype1')]
             [Parameter(ValueFromPipeLineByPropertyName=$true,mandatory=$true,ParameterSetName='devicetype2')]
-            [Alias('volumeId')]                                                                                             [string]    $Id,
+            [Alias('volumeId', 'applicationSetId')]                                                                         [string]    $Id,
 
-            [Parameter(ParameterSetName='devicetype1')][Parameter(ParameterSetName='devicetype2')][Alias('customName')]     [string]    $name,
-            [Parameter(ParameterSetName='devicetype1')][Parameter(ParameterSetName='devicetype2')][Alias('comment')]        [string]    $description,            
-            [Parameter(ParameterSetName='devicetype1')][Parameter(ParameterSetName='devicetype2')][Alias('readonly')]       [switch]    $writable,
+            [Parameter(ParameterSetName='devicetype1','devicetype2')][Alias('customName')]                                  [string]    $name,
+            [Parameter(ParameterSetName='devicetype1','devicetype2')][Alias('comment')]                                     [string]    $description,            
+            [Parameter(ParameterSetName='devicetype1','devicetype2')][Alias('readonly')]                                    [switch]    $writable,
             [Parameter(ParameterSetName='devicetype1',mandatory=$true)]
             [ValidateSet('PARENT_TIMESTAMP','PARENT_SEC_SINCE_EPOCH','CUSTOM')]                                             [string]    $namePattern,
             [Parameter(ParameterSetName='devicetype1')]                                                                     [int]       $expireSecs,
@@ -190,7 +189,18 @@ process
             write-verbose "Dectected the DeviceType is $DeviceType"
             $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $systemId + '/volumes/' + $Id + '/snapshots'
             switch ( $DeviceType )
-                {   'device-type1'  {                               $MyBody =           @{ 'namePattern' = $namePattern } 
+                {   'device-type1'  {   if ( Get-DSCCVolume -systemId $systemId -volumeid $id )
+                                                {   write-verbose "The ID given was for a valid Volume. Making a volume snapshot."
+                                                } 
+                                            elseif  ( Get-DSCCVolumeSet -systemId $systemId -volumeCollectionid $id )
+                                                {   write-verbose "The ID given was for a valid Application Set, so an Application Set snapshot will be run."
+                                                    $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $systemId + '/applicationsets/' + $Id + '/snapshots'
+                                                }
+                                            else
+                                                {   write-warning "The ID presented for the VolumeId or Application Set ID did not return a valid item. Cannot create snaphot."
+                                                    return
+                                                }
+                                                                    $MyBody =           @{ 'namePattern' = $namePattern } 
                                         if ( $description )     {   $MyBody = $MyBody + @{ 'comment'     = $description } }
                                         if ( $Name )            {   $MyBody = $MyBody + @{ 'customName'  = $name }        }
                                         if ( $expireSecs )      {   $MyBody = $MyBody + @{ 'expireSecs'  = $expireSecs }  }

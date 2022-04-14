@@ -176,9 +176,9 @@
             </TableControl>
 		</View>
         <View>
-			<Name>DSCC.Pool.device-type1.Typename</Name>
+			<Name>DSCC.Pool.Combined.Typename</Name>
 		    <ViewSelectedBy>
-                <TypeName>DSCC.Pool.device-type1.Typename</TypeName>
+                <TypeName>DSCC.Pool.Combined.Typename</TypeName>
             </ViewSelectedBy>
             <TableControl>
                 <AutoSize />
@@ -207,7 +207,7 @@
                         <Wrap />
                         <TableColumnItems>
                             <TableColumnItem>
-                                <PropertyName>systemId</PropertyName>
+                                <Scriptblock>( $_.systemId + ($_.array_list).id )</Scriptblock>
                             </TableColumnItem>
                             <TableColumnItem>
                                 <PropertyName>id</PropertyName>
@@ -216,13 +216,13 @@
                                 <PropertyName>name</PropertyName>
                             </TableColumnItem>
                             <TableColumnItem>
-                                <PropertyName>displayname</PropertyName>
+                                <Scriptblock>( $_.displayname + $_.description )</Scriptblock>
                             </TableColumnItem>
                             <TableColumnItem>
-                                <PropertyName>freeForAllocationMiB</PropertyName>
+                                <Scriptblock>($_.freeForAllocationMiB + $_.free_space)</Scriptblock>
                             </TableColumnItem>
                             <TableColumnItem>
-                                <Scriptblock>($_.allocationSettings).RAIDType</Scriptblock>
+                                <Scriptblock>if ( ($_.allocationSettings).RAIDType ) { ($_.allocationSettings).RAIDType } else { 'RAID-TripleParity' } </Scriptblock>
                             </TableColumnItem>
                         </TableColumnItems>
                     </TableRowEntry>
@@ -230,9 +230,9 @@
             </TableControl>
 		</View>
         <View>
-			<Name>DSCC.Pool.device-type2.Typename</Name>
+			<Name>DSCC.Folder.Typename</Name>
 		    <ViewSelectedBy>
-                <TypeName>DSCC.Pool.device-type2.Typename</TypeName>
+                <TypeName>DSCC.Folder.Typename</TypeName>
             </ViewSelectedBy>
             <TableControl>
                 <AutoSize />
@@ -241,7 +241,7 @@
                         <Label>System Id</Label>
                     </TableColumnHeader>
                     <TableColumnHeader>
-                        <Label>Pool Id</Label>
+                        <Label>Folder Id</Label>
                     </TableColumnHeader>
                     <TableColumnHeader>
                         <Label>Name</Label>
@@ -261,7 +261,7 @@
                         <Wrap />
                         <TableColumnItems>
                             <TableColumnItem>
-                                <Scriptblock>($_.array_list).id</Scriptblock>
+                                <Scriptblock>( $_.systemId + ($_.array_list).id )</Scriptblock>
                             </TableColumnItem>
                             <TableColumnItem>
                                 <PropertyName>id</PropertyName>
@@ -270,13 +270,13 @@
                                 <PropertyName>name</PropertyName>
                             </TableColumnItem>
                             <TableColumnItem>
-                                <PropertyName>description</PropertyName>
+                                <Scriptblock>( $_.displayname + $_.description )</Scriptblock>
                             </TableColumnItem>
                             <TableColumnItem>
-                                <PropertyName>free_space</PropertyName>
+                                <Scriptblock>($_.freeForAllocationMiB + $_.free_space)</Scriptblock>
                             </TableColumnItem>
                             <TableColumnItem>
-                                <Scriptblock>'RAID-TripleParity'</Scriptblock>
+                                <Scriptblock>if ( ($_.allocationSettings).RAIDType ) { ($_.allocationSettings).RAIDType } else { 'RAID-TripleParity' } </Scriptblock>
                             </TableColumnItem>
                         </TableColumnItems>
                     </TableRowEntry>
