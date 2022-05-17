@@ -394,6 +394,23 @@ Volume size in megabytes. Size is required for creating a volume but not for clo
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 .EXAMPLE
+Creating a Device-Type1 type Volume on a Alletra6K or Nimble Storage device.
+
+    PS:> New-DSCCVolume -SystemId 003a78e8778c204dc2000000000000000000000001 -name 'test2' -size 10240 -description 'tst2'
+
+    taskUri                              status    message
+    -------                              ------    -------
+    dd9e6b68-db1c-4f86-90b4-9ce31d65abfa SUBMITTED
+.EXAMPLE
+Creating a Device-Type1 type Volume on a Alletra6K or Nimble Storage device.
+
+    PS:> New-DSCCVolume -SystemId MXN5442108 -name 'MyVol' -userCpg e190f017de995e836626b8d92fe832d4 -sizeMiB 10240 -comments 'test'
+
+    taskUri                              status    message
+    -------                              ------    -------
+    dd9e6b68-db1c-4f86-90b4-9ceffd65fbfa SUBMITTED
+
+ PS:>
 #>   
 [CmdletBinding()]
 param(  [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]
@@ -401,7 +418,7 @@ param(  [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]
         [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]
         [Parameter(Mandatory=$true, ParameterSetName='DeviceType2' )]       [string]    $name,
  
-        [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]       [string]    $sizeMiB,
+        [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]       [string]    $sizeMib,
         [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]       [string]    $userCpg,
         [Parameter(ParameterSetName='DeviceType1' )]                        [string]    $comments,
         [Parameter(ParameterSetName='DeviceType1' )]                        [int]       $count,
@@ -454,20 +471,18 @@ process
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         write-verbose "Dectected the DeviceType is $DeviceType"
         $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/volumes'
-        $MyBody = @{    'name' =    $name 
-                   }
-        switch ( $ParameterSet )
-          { 'device-type1'   {  if ( $sizeMiB   )           {   $MyBody = $MyBody + @{ 'SizeMiB'              = $sizeMiB }              }  
-                                if ( $userCpg   )           {   $MyBody = $MyBody + @{ 'userCpg'              = $userCpg }              }
-                                if ( $comments   )          {   $MyBody = $MyBody + @{ 'comments'             = $comments }             }
+        $MyBody = [ordered]@{}
+        switch ( $DeviceType )
+          { 'device-type1'   {  if ( $comments   )          {   $MyBody = $MyBody + @{ 'comments'             = $comments }             }
                                 if ( $count     )           {   $MyBody = $MyBody + @{ 'count'                = $count }                }
                                 if ( $dataReduction)        {   $MyBody = $MyBody + @{ 'dataReduction'        = $True }                 }
+                                if ( $name )                {   $MyBody = $MyBody + @{ 'name'                 = $name }                 }
+                                if ( $sizeMib   )           {   $MyBody = $MyBody + @{ 'sizeMib'              = [int]$sizeMib }         }  
                                 if ( $snapCpg   )           {   $MyBody = $MyBody + @{ 'snapCpg'              = $snapCpg }              }
-                                if ( $snapshotAllocWarning) {   $MyBody = $MyBody + @{ 'snapshotAllocWarning' = $snapshotAllocWarning } }
-                                if ( $dataReduction)        {   $MyBody = $MyBody + @{ 'userAllocWarning'     = $userAllocWarning }     }
-                                if ( $snapCpg   )           {   $MyBody = $MyBody + @{ 'snapCpg'              = $snapCpg }              }
+                                if ( $userCpg   )           {   $MyBody = $MyBody + @{ 'userCpg'              = $userCpg }              }
                             }
-            'device-type2'   {   if ( $size   )              {   $MyBody = $MyBody + @{ 'size'                 = $size }                 }
+            'device-type2'   {  if ( $name )                {   $MyBody = $MyBody + @{ 'name'                 = $name }                 }
+                                if ( $size   )              {   $MyBody = $MyBody + @{ 'size'                 = $size }                }
                                 if ( $pool_id   )           {   $MyBody = $MyBody + @{ 'pool_id'              = $pool_id }              }
                                 if ( $agent_type   )        {   $MyBody = $MyBody + @{ 'agent_type'           = $agent_type }           }
                                 if ( $app_uiid   )          {   $MyBody = $MyBody + @{ 'app_uiid'             = $app_uiid }             }
@@ -494,11 +509,12 @@ process
                             }
           }
         $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes'
+        $MyBody2 = ( $MyBody | convertTo-Json )
         if ( $WhatIf )
                 {   $ReturnData = invoke-restmethodWhatIf -uri $MyURI -headers $MyHeaders -method POST -ContentType 'application/json' -body $MyBody 
                 }   
             else 
-                {   $ReturnData = invoke-restmethod -uri $MyURI -headers $MyHeaders -method POST -ContentType 'application/json' -body $MyBody 
+                {   $ReturnData = invoke-restmethod -uri $MyURI -headers $MyHeaders -method POST -ContentType 'application/json' -body $MyBody2 
                 }
         return $ReturnData
     }       
@@ -632,7 +648,7 @@ param(  [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]
         [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]
         [Parameter(Mandatory=$true, ParameterSetName='DeviceType2' )]       [string]    $name,
  
-        [Parameter(Mandatory=$true, ParameterSetName='DeviceType2' )]       [string]    $sizeMiB,
+        [Parameter(Mandatory=$true, ParameterSetName='DeviceType2' )]       [string]    $sizeMib,
         [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]       [string]    $userCpg,
         [Parameter(ParameterSetName='DeviceType1' )]                        [string]    $comments,
         [Parameter(ParameterSetName='DeviceType1' )]                        [int]       $count,
@@ -685,10 +701,10 @@ process
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         write-verbose "Dectected the DeviceType is $DeviceType"
         $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/volumes/' + $VolumeId
-        $MyBody = @{    'name' =    $name 
-                   }
-        switch ( $ParameterSet )
-          { 'DeviceType1'   {   if ( $sizeMiB   )           {   $MyBody = $MyBody + @{ 'SizeMiB'              = $sizeMiB }              }  
+        $MyBody = @{}
+        switch ( $DeviceType )
+          { 'device-type1'   {  if ( $name   )              {   $MyBody = $MyBody + @{ 'name'                 = $name }                 }  
+                                if ( $sizeMib   )           {   $MyBody = $MyBody + @{ 'sizeMib'              = [int]$sizeMib }         }  
                                 if ( $userCpg   )           {   $MyBody = $MyBody + @{ 'userCpg'              = $userCpg }              }
                                 if ( $comments   )          {   $MyBody = $MyBody + @{ 'comments'             = $comments }             }
                                 if ( $count     )           {   $MyBody = $MyBody + @{ 'count'                = $count }                }
@@ -698,7 +714,8 @@ process
                                 if ( $dataReduction)        {   $MyBody = $MyBody + @{ 'userAllocWarning'     = $userAllocWarning }     }
                                 if ( $snapCpg   )           {   $MyBody = $MyBody + @{ 'snapCpg'              = $snapCpg }              }
                             }
-            'DeviceType2'   {   if ( $size   )              {   $MyBody = $MyBody + @{ 'size'                 = $size }                 }
+            'device-type2'   {  if ( $name   )              {   $MyBody = $MyBody + @{ 'name'                 = $name }                 }  
+                                if ( $size   )              {   $MyBody = $MyBody + @{ 'size'                 = $size }                 }
                                 if ( $pool_id   )           {   $MyBody = $MyBody + @{ 'pool_id'              = $pool_id }              }
                                 if ( $agent_type   )        {   $MyBody = $MyBody + @{ 'agent_type'           = $agent_type }           }
                                 if ( $app_uiid   )          {   $MyBody = $MyBody + @{ 'app_uiid'             = $app_uiid }             }

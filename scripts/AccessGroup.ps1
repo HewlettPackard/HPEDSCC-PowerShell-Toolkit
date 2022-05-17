@@ -2,11 +2,11 @@ function Get-DSCCAccessControlRecord
 {
 <#
 .SYNOPSIS
-    Returns the HPE DSSC Access Group Collection    
+    Returns the HPE DSSC Access Group Collection     
 .DESCRIPTION
     Returns the HPE Data Services Cloud Console Data Operations Manager Access Groups Collections.
 .PARAMETER SystemID
-    If a single Host Group ID is specified the output will be limited to that single record.
+    If a single System ID is specified the output will be limited to that single set of records.
 .PARAMETER AccessControlRecordID
     If a single Access Control Record ID is specified the output will be limited to that single record.
 .PARAMETER WhatIf
@@ -41,7 +41,8 @@ process
         write-verbose "Dectected the DeviceType is $DeviceType"
         switch ( $devicetype )
             {   'device-type1'  {   if ( $VolumeId )
-                                            {   $VolObj = Get-DSCCVolume -systemid $Systemid -volumeid $VolumeId
+                                            {   write-verbose "No Volume was given, so checking all Volumes on this System"
+                                                $VolObj = Get-DSCCVolume -systemid $Systemid -volumeid $VolumeId
                                             }
                                         else
                                             {   $VolObj = Get-DSCCVolume -systemId $SystemId
@@ -59,15 +60,22 @@ process
                                                     {   $MyCol = $MyCol.items 
                                                     }
                                             if ( ( $MyCol ).total -eq 0 )
-                                                    {   Write-Warning "The Call to SystemID $SystemId returned no Access ControlRecord Records."
+                                                    {   $MyVolId = $MyVol.id
+                                                        Write-verbose "The Call to SystemID $SystemId using Volume $MyVolId returned no vLun Records."
                                                         $MyCol = ''                                                
                                                     }  
                                                 else
                                                     {   $SysColOnly += $MyCol                                                        
                                                     }
                                         } 
-                                        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName ( "AccessControlRecord")
-                                        return $ReturnData
+                                        if ( $SysColOnly ) 
+                                                {   $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName ( "AccessControlRecord")
+                                                    return $ReturnData
+                                                }
+                                            else
+                                                {   write-warning "The call to system ID $systemId returned no VLUNs."
+                                                    return
+                                                }
                                 }
                 'device-type2'  {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/access-control-records/' + $AccessControlRecordId
                                     if ( $WhatIf )
@@ -98,30 +106,36 @@ function Remove-DSCCAccessControlRecord
 {
 <#
 .SYNOPSIS
-    Removes a HPE DSSC Access Group Record    
+    Removes a HPE DSSC Access Group Record or vLUN mapping 
 .DESCRIPTION
-    Removes a HPE Data Services Cloud Console Data Operations Manager Access Groups Record.
+    Removes a HPE Data Services Cloud Console Data Operations Manager Access Groups Record or vLUN mapping.
 .PARAMETER SystemID
-    A single System ID is specified and required.
+    This parameter is required for both device-type1 and device-type2; A single System ID is specified and required.
+.PARAMETER volumeId
+    This parameter is required for device-type1 systems, and representes a volumeId
+.PARAMETER vLunId
+    This parameter is required for device-type1 systems, and representes a specific vlun mapping.
 .PARAMETER AccessControlRecordID
-    A single Access Control Record ID is specified and required.
+    This parameter is required for device-type2; A single Access Control Record ID is specified and required.
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
-.LINK
-    The API call for this operation is file:///api/v1/storage-systems/{systemid}/device-type1/access-control-records
 #>    
 [CmdletBinding()]
-param(  [Parameter(ValueFromPipeLineByPropertyName=$true,Mandatory=$true )][Alias('id')]    [string]    $SystemId,  
-        [Parameter(Mandatory=$true )]                                                       [string]    $AccessControlRecordId,      
-                                                                                            [switch]    $WhatIf
+param(  [Parameter(ParameterSetName=('device-type1','device-type2'),ValueFromPipeLineByPropertyName=$true,Mandatory=$true )]
+                                                                            [Alias('id')]       [string]    $SystemId,  
+        [Parameter(ParameterSetName=('device-type1'),Mandatory=$true )]                         [string]    $volumeId,      
+        [Parameter(ParameterSetName=('device-type1'),Mandatory=$true )]                         [string]    $vLunId,      
+        [Parameter(ParameterSetName=('device-type2'),Mandatory=$true )]                         [string]    $AccessControlRecordId,      
+                                                                                                [switch]    $WhatIf
      )
 process
     {   Invoke-DSCCAutoReconnect
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         write-verbose "Dectected the DeviceType is $DeviceType"
         switch ( $devicetype )
-            {   'device-type1'  {   write-warning "This command only works on Device-Type2 so far"
+            {   'device-type1'  {   
+                                    $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes/' + $VolumeId + '/vluns/' + $vLunId
                                     return 
                                 }
                 'device-type2'  {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/access-control-records/' + $AccessControlRecordId
@@ -145,20 +159,33 @@ Function New-DSCCAccessControlRecord
 {
 <#
 .SYNOPSIS
-    Creates a HPE DSSC Access Group Record    
+    Creates a HPE DSSC Access Group Record or LUN Mapping Record.
 .DESCRIPTION
-    Creates a HPE Data Services Cloud Console Data Operations Manager Access Group Record.
+    Creates a HPE Data Services Cloud Console Data Operations Manager Access Group Record or LUN Mapping Record.
 .PARAMETER SystemID
     A single System ID is specified and required.
-.PARAMETER AccessControlRecordID
-    A single Access Control Record ID is specified and required.
+.PARAMETER VolId
+    A single Volume must be presented for either a device-type1 or device-type2 to be mapped to a set of hosts.
+.PARAMETER autoLun
+    Only valid for Device-Type1 target systems; Boolean if the volume should autocreate a LUN
+.PARAMETER hostGroupIds
+    Only valid for Device-Type1 target systems; Either a single or multiple Host Group IDs
+.PARAMETER maxAutoLun
+    Only valid for Device-Type1 target systems; The maximum number of AutoLuns
+.PARAMETER noVcn
+    Only valid for Device-Type1 target systems; a boolean if Nvc should be used.
+.PARAMETER override
+    Only valid for Device-Type1 target systems; will override specific safetys. 
+.PARAMETER position
+    Only valid for Device-Type1 target systems; will accept a position comment like 'position_1'. 
 .PARAMETER applyTo
-    External management agent type. Possible values:'volume', 'pe', 'vvol_volume', 'vvol_snapshot', 'snapshot', 'both'.
+    Only valid for Device-Type2 target systems; External management agent type. Possible values:'volume', 'pe', 'vvol_volume', 'vvol_snapshot', 'snapshot', 'both'.
 .PARAMETER chapUserId
-    Identifier for the CHAP user.
+    Only valid for Device-Type2 target systems; Identifier for the CHAP user.
 .PARAMETER initiatorGroupId
-    Identifier for the initiator group.
+    Only valid for Device-Type2 target systems; Identifier for the initiator group.
 .PARAMETER lun
+    Only valid for Device-Type2 target systems;  
     If this access control record applies to a regular volume, this attribute is the volume's LUN (Logical Unit Number). 
     If the access protocol is iSCSI, the LUN will be 0. However, if the access protocol is Fibre Channel, the LUN will 
     be in the range from 0 to 2047. If this record applies to a Virtual Volume, this attribute is the volume's secondary 
@@ -166,14 +193,13 @@ Function New-DSCCAccessControlRecord
     the LUN will be in the range from 0 to 2047, for both iSCSI and Fibre Channel. If this record applies to a protocol
      endpoint or only a snapshot, this attribute is not meaningful and is set to null.
 .PARAMETER pe_id
-    Identifier for the protocol endpoint this access control record applies to.
+    Only valid for Device-Type2 target systems; Identifier for the protocol endpoint this access control record applies to.
 .PARAMETER pe_ids
+    Only valid for Device-Type2 target systems; 
     List of candidate protocol endpoints that may be used to access the Virtual Volume. One of them will be selected 
     for the access control record. This field is required only when creating an access control record for a Virtual Volume.
 .PARAMETER snapId
-    Identifier for the snapshot this access control record applies to.
-.PARAMETER volId
-    Identifier for the volume this access control record applies to.    
+    Only valid for Device-Type2 target systems; Identifier for the snapshot this access control record applies to.   
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
@@ -181,34 +207,58 @@ Function New-DSCCAccessControlRecord
     The API call for this operation is file:///api/v1/storage-systems/{systemid}/device-type1/access-control-records
 #>   
 [CmdletBinding()]
-param(  [Parameter(ValueFromPipeLineByPropertyName=$true,Mandatory=$true )][Alias('id')]    [string]    $SystemId, 
+param(  [Parameter(ParameterSetName=('device-type1','device-type2'),ValueFromPipeLineByPropertyName=$true,Mandatory=$true )]
+                                                                            [Alias('id')]   [string]    $SystemId, 
+        [Parameter(ParameterSetName=('device-type1'),mandatory=$true)]  
+        [Parameter(ParameterSetName=('device-type2'))]               [Alias('VolumeId')]    [string]    $volId,
+
+        [Parameter(ParameterSetName=('device-type1'))]                                      [string]    $position,
+        [Parameter(ParameterSetName=('device-type1'))]                                      [boolean]   $autoLun,
+        [Parameter(ParameterSetName=('device-type1'))]                                      [int]       $maxAutoLun,
+        [Parameter(ParameterSetName=('device-type1'))]                                      [boolean]   $override,
+        [Parameter(ParameterSetName=('device-type1'))]                                      [boolean]   $noVcn,
+        [Parameter(ParameterSetName=('device-type1'))]                                      [string[]] $hostGroupId,
+        [Parameter(ParameterSetName=('device-type2'))]
+        [Parameter(ParameterSetName=('device-type2'))]                                      [int]       $lun,
         [ValidateSet('volume','pe','vvol_volume','vvol_snapshot','snapshot','both') ]       [string]    $applyTo,
-                                                                                            [string]    $chapUserId,
-                                                                                            [string]    $initiatorGroupId,
-                                                                                            [int]       $lun,
-                                                                                            [string]    $pe_id,
-                                                                                            [string]    $pe_ids,
-                                                                                            [string]    $snapId,
-                                                                                            [string]    $volId,
-                                                                                            [switch]    $WhatIf
+        [Parameter(ParameterSetName=('device-type2'))]                                      [string]    $chapUserId,
+        [Parameter(ParameterSetName=('device-type2'))]                                      [string]    $initiatorGroupId,
+        [Parameter(ParameterSetName=('device-type2'))]                                      [string]    $pe_id,
+        [Parameter(ParameterSetName=('device-type2'))]                                      [string]    $pe_ids,
+        [Parameter(ParameterSetName=('device-type2'))]                                      [string]    $snapId,
+        [Parameter(ParameterSetName=('device-type','device-type2'))]                        [switch]    $WhatIf
      )
 process
     {   Invoke-DSCCAutoReconnect
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         write-verbose "Dectected the DeviceType is $DeviceType"
         switch ( $devicetype )
-            {   'device-type1'  {   return 
+            {   'device-type1'  {   if ( Get-DSCCVolume -systemid $Systemid -volumeid $VolId )
+                                            {   $VolObj = Get-DSCCVolume -systemid $Systemid -volumeid $VolId
+                                            }
+                                        else
+                                            {   write-warning 'The Volume ID presented was not found on the storage system.'
+                                                return
+                                            }
+                                    $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes/' + $VolId + '/vluns'
+                                                                $MyBody =  @{}
+                                    if ($autoLun)           {   $MyBody += @{ autoLun       = $autoLun      }  }
+                                    if ($hostGroupIds)      {   $MyBody += @{ hostGroupIds  = $hostGroupIds }  }
+                                    if ($maxAutoLun )       {   $MyBody += @{ maxAutoLun    = $maxAutoLun   }  }
+                                    if ($noVcn )            {   $MyBody += @{ noVcn         = $noVcn        }  }
+                                    if ($override )         {   $MyBody += @{ override      = $override     }  }
+                                    if ($position )         {   $MyBody += @{ position      = $position     }  }
                                 }
                 'device-type2'  {   $MyURI = $BaseURI + 'storage-systems/' + $devicetype + '/' + $SystemId + '/access-control-records'
                                                                 $MyBody =  @{}
-                                    if ($applyTo)           {   $MyBody += @{ apply_to = $applyTo }  }
-                                    if ($chapUserId)        {   $MyBody += @{ chap_user_id = $chapUserId }  }
+                                    if ($applyTo)           {   $MyBody += @{ apply_to           = $applyTo          }  }
+                                    if ($chapUserId)        {   $MyBody += @{ chap_user_id       = $chapUserId       }  }
                                     if ($initiatorGroupId ) {   $MyBody += @{ initiator_group_id = $initiatorGroupId }  }
-                                    if ($lun )              {   $MyBody += @{ lun = $lun }  }
-                                    if ($pe_id )            {   $MyBody += @{ pe_id = $pe_id }  }
-                                    if ($pe_ids )           {   $MyBody += @{ pe_ids = $pe_ids }  }
-                                    if ($snapId )           {   $MyBody += @{ snap_id = $snapId }  }
-                                    if ($volId )            {   $MyBody += @{ vol_id = $volId }  }
+                                    if ($lun )              {   $MyBody += @{ lun                = $lun              }  }
+                                    if ($pe_id )            {   $MyBody += @{ pe_id              = $pe_id            }  }
+                                    if ($pe_ids )           {   $MyBody += @{ pe_ids             = $pe_ids           }  }
+                                    if ($snapId )           {   $MyBody += @{ snap_id            = $snapId           }  }
+                                    if ($volId )            {   $MyBody += @{ vol_id             = $volId            }  }
                                 }
             }
         if ($Whatif)

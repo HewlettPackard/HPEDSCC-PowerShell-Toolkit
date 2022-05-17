@@ -48,7 +48,7 @@ param ( [Parameter(Mandatory,ParameterSetName='ByClientCreds')]
         [Parameter(Mandatory,ParameterSetName='ByAccessToken')]
         [string]    $AccessToken,         
 
-        [Parameter(Mandatory)][ValidateSet("Dev","Asia", "USA", "EU")]
+        [Parameter(Mandatory)][ValidateSet("Dev1","Dev2","Asia", "USA", "EU")]
         [string]    $GreenlakeType  = 'Dev', 
         
         [Parameter(ParameterSetName='ByClientCreds')]
@@ -91,7 +91,8 @@ Process{
         }
     write-Verbose "The AccessToken is $AccessToken"
     switch( $GreenlakeType )
-    {   'Dev'   {   $Global:Base = 'https://scint-app.qa.cds.hpe.com'      }
+    {   'Dev1'  {   $Global:Base = 'https://scint-app.qa.cds.hpe.com'      }
+        'Dev2'  {   $Global:Base = 'https://fleetscale-app.qa.cds.hpe.com' }
         'Asia'  {   $Global:Base = "https://jp1.data.cloud.hpe.com"        }
         'EU'    {   $Global:Base = 'https://eu1.data.cloud.hpe.com'        }
         'USA'   {   $Global:Base = 'https://us1.data.cloud.hpe.com'        }
