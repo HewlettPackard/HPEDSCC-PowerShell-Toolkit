@@ -530,27 +530,23 @@ function Set-DSCCVolume
     accept either 1 of 2 sets of parameters; device-type1 or device-type2. 
 .PARAMETER StorageSystemId
     A single Storage System ID is specified and required. This is required for both parameter sets
-.PARAMETER VolumeId
+.PARAMETER Id
     A single Volume ID is specified and required. This is required for both parameter sets
 .PARAMETER name
     A single name is specified and required, and is required for both parameter sets.
-.PARAMETER sizeMiB
-Volume size in megabytes. Size is required for creating a volume but not for cloning an existing volume.When creating a 
+.PARAMETER sizeMib
+    Volume size in megabytes. Size is required for creating a volume but not for cloning an existing volume.When creating a 
     new volume, size is required. When cloning an existing volume, size defaults to that of the parent volume. 
     This parameter is only valid for device-type2 which represents Alletra 9K and Primera or 3PAR targets.
-.PARAMETER userCpg
-    User CPG. This parameter is only valid for device-type2 which represents Alletra 9K and Primera or 3PAR targets.
-.PARAMETER comments
-    The detailed description of the volume.This parameter is only valid for device-type2 which represents 
-    Alletra 9K and Primera or 3PAR targets.
-.PARAMETER count
-    How many Volumes to create using the given parameters. This parameter is only valid for device-type2 which 
-    represents Alletra 9K and Primera or 3PAR targets.
-.PARAMETER dataReduction
-    If data reduction technologies such as compression or deduplication should be turned on. This parameter is only valid 
-    for device-type2 which represents Alletra 9K and Primera or 3PAR targets.
-.PARAMETER snapCpg
-    The CPG that will be used to store the snapshot data
+.PARAMETER conversionType
+    The type of version that will be used either can be CONVERSIONTYPE_THIN, or CONVERSIONTYPE_DDS'. 
+    This parameter is only valid for device-type2 which represents Alletra 9K and Primera or 3PAR targets.
+.PARAMETER size
+    Volume size in megabytes. Size is required for creating a volume but not for cloning an existing volume.When creating a 
+    new volume, size is required. When cloning an existing volume, size defaults to that of the parent volume. 
+    This parameter is only valid for device-type1 which represents Alletra 6K and Nimble Storage targets.
+.PARAMETER userCpgName
+    User CPG Name. This parameter is only valid for device-type2 which represents Alletra 9K and Primera or 3PAR targets.
 .PARAMETER snapshotAllocWarning
     Snapshot Alloc Warning
 .PARAMETER userAllocWarning
@@ -558,39 +554,15 @@ Volume size in megabytes. Size is required for creating a volume but not for clo
 .PARAMETER size
     Volume size in megabytes. Size is required for creating a volume but not for cloning an existing volume.When creating a 
     new volume, size is required. When cloning an existing volume, size defaults to that of the parent volume.
-.PARAMETER pool_id
-    Identifier associated with the pool in the storage pool table. A 42 digit hexadecimal int64. Defaults to the ID of the 'default' pool.
-.PARAMETER agent_type
-    External management agent type. Defaults to 'none'. Possible values: 'none', 'smis', 'vvol', 'openstack', 'openstackv2'.
-    This parameter is only valid for device-type1 which represents Alletra 6K and Nimble Storage.
 .PARAMETER app_uuid
     Application identifier of volume. String of up to 255 alphanumeric characters, hyphen, colon, dot and underscore are allowed. 
-    This parameter is only valid for device-type1 which represents Alletra 6K and Nimble Storage.
-.PARAMETER base_snap_id
-    Base snapshot ID. This attribute is required together with name and clone when cloning a volume with the create operation. A 42 
-    digit hexadecimal int64. Defaults to the empty string. This parameter is only valid for device-type1 which represents Alletra 6K and Nimble Storage.
-.PARAMETER block_size
-    Size in bytes of blocks in the volume. Defaults to 4096, but may also be set to 8192, 16388, 32786, and 65536, representing 4K, 8K, 16K, 32K, or 64K.
-    This parameter is only valid for device-type1 which represents Alletra 6K and Nimble Storage.
-.PARAMETER cache_pinned
-	If set to true, all the contents of this volume are kept in flash cache. This provides for consistent performance guarantees for all types of workloads. 
-    The amount of flash needed to pin the volume is equal to the limit for the volume. Defaults to 'false'. 
-    This parameter is only valid for device-type1 which represents Alletra 6K and Nimble Storage.
-.PARAMETER clone
-    Whether this volume is a clone. Use this attribute in combination with name and base_snap_id to create a clone by setting clone = true. Defaults to 'false'.
     This parameter is only valid for device-type1 which represents Alletra 6K and Nimble Storage.
 .PARAMETER dedepe_enabled
     Indicate whether dedupe is enabled. Defaults to 'false'. This parameter is only valid for device-type1 which 
     represents Alletra 6K and Nimble Storage. This parameter is only valid for device-type1 which represents Alletra 6K and Nimble Storage.
-.PARAMETER description
-    Text description of volume. String of up to 255 printable ASCII characters. Defaults to the empty string. 
-    This parameter is only valid for device-type1 which represents Alletra 6K and Nimble Storage.
-.PARAMETER dest_pool_id
-    ID of the destination pool where the volume is moving to. A 42 digit hexadecimal int64. Defaults to the empty string.
-    This parameter is only valid for device-type1 which represents Alletra 6K and Nimble Storage.
-.PARAMETER encryption_cipher
-    The encryption cipher of the volume. Defaults to 'none'. Possible values: 'none', 'aes_256_xts'.
-    This parameter is only valid for device-type1 which represents Alletra 6K and Nimble Storage.
+.PARAMETER caching_enabled
+    Indicate whether caching is enabled. Defaults to 'false'. This parameter is only valid for device-type1 which 
+    represents Alletra 6K and Nimble Storage. This parameter is only valid for device-type1 which represents Alletra 6K and Nimble Storage.
 .PARAMETER folder_id
     ID of the folder holding this volume. An optional NsObjectID. A 42 digit hexadecimal int64 or the empty string. 
     Defaults to the empty string. This parameter is only valid for device-type1 which represents Alletra 6K and Nimble Storage.
@@ -604,38 +576,19 @@ Volume size in megabytes. Size is required for creating a volume but not for clo
     limit_mbps are specified, limit_mbps must not be hit before limit_iops. In other words, IOPS and MBPS limits should honor 
     limit_iops _ampersand_amp;lt;= ((limit_mbps MB/s * 2^20 B/MB) / block_size B). By default the volume is created with unlimited iops.
     This parameter is only valid for device-type1 which represents Alletra 6K and Nimble Storage.
-.PARAMETER multi_initiator
-    This indicates whether volume and its snapshots are multi-initiator accessible. This attribute applies only to volumes and 
-    snapshots available to iSCSI initiators. Defaults to 'false'. This parameter is only valid for device-type1 which represents 
-    Alletra 6K and Nimble Storage.
+.PARAMETER limit_mbps
+    IOPS limit for this volume. If limit_iops is not specified when a volume is created, or if limit_iops is set to -1, 
+    then the volume has no IOPS limit. If limit_iops is not specified while creating a clone, IOPS limit of parent volume 
+    will be used as limit. IOPS limit should be in range [1, 4294967294] or -1 for unlimited. If both limit_iops and 
+    limit_mbps are specified, limit_mbps must not be hit before limit_iops. In other words, IOPS and MBPS limits should honor 
+    limit_iops _ampersand_amp;lt;= ((limit_mbps MB/s * 2^20 B/MB) / block_size B). By default the volume is created with unlimited iops.
+    This parameter is only valid for device-type1 which represents Alletra 6K and Nimble Storage.
 .PARAMETer online
     Online state of volume, available for host initiators to establish connections. Defaults to 'true'.
-    This parameter is only valid for device-type1 which represents Alletra 6K and Nimble Storage.
-.PARAMETER owned_by_group_id
-    ID of group that currently owns the volume. A 42 digit hexadecimal int64. Defaults to the ID of the group that created the volume.
     This parameter is only valid for device-type1 which represents Alletra 6K and Nimble Storage.
 .PARAMETER perfpolicy_id
     Identifier of the performance policy. After creating a volume, performance policy for the volume can only be changed to another 
     performance policy with same block size. A 42 digit hexadecimal int64. Defaults to ID of the 'default' performance policy.
-    This parameter is only valid for device-type1 which represents Alletra 6K and Nimble Storage.
-.PARAMETER read_only
-    Volume is read-only. Defaults to 'false'. This parameter is only valid for device-type1 which represents Alletra 6K 
-    and Nimble Storage.
-.PARAMETER reserve
-    Amount of space to reserve for this volume as a percentage of volume size. Percentage as integer from 0 to 100. 
-    Defaults to the default volume reservation set on the group, typically 0. This parameter is only valid for 
-    device-type1 which represents Alletra 6K and Nimble Storage.
-.PARAMETER snap_reserve
-    Amount of space to reserve for snapshots of this volume as a percentage of volume size. Defaults to the default snapshot 
-    reserve set on the group, typically 0. This parameter is only valid for device-type1 which represents Alletra 6K and Nimble Storage.
-.PARAMETER snap_warn_level
-    Threshold for available space as a percentage of volume size below which an alert is raised. Defaults to the default 
-    snapshot warning level set on the group, typically 0. This parameter is only valid for device-type1 which represents 
-    Alletra 6K and Nimble Storage.
-.PARAMETER warn_level
-    Threshold for available space as a percentage of volume size below which an alert is raised. If this option is not specified, 
-    array default volume warn level setting is used to decide the warning level for this volume. Percentage as integer from 0 to 100. 
-    Defaults to the default volume warning level set on the group, typically 80.
     This parameter is only valid for device-type1 which represents Alletra 6K and Nimble Storage.
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
@@ -646,102 +599,66 @@ Volume size in megabytes. Size is required for creating a volume but not for clo
 param(  [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]
         [Parameter(Mandatory=$true, ParameterSetName='DeviceType2' )]       [string]    $SystemId, 
         [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]
-        [Parameter(Mandatory=$true, ParameterSetName='DeviceType2' )]       [string]    $name,
- 
-        [Parameter(Mandatory=$true, ParameterSetName='DeviceType2' )]       [string]    $sizeMib,
-        [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]       [string]    $userCpg,
-        [Parameter(ParameterSetName='DeviceType1' )]                        [string]    $comments,
-        [Parameter(ParameterSetName='DeviceType1' )]                        [int]       $count,
-        [Parameter(ParameterSetName='DeviceType1' )]                        [boolean]   $dataReduction,
-        [Parameter(ParameterSetName='DeviceType1' )]                        [string]    $snapCpg,
-        [Parameter(ParameterSetName='DeviceType1' )]                        [string]    $snapshotAllocWarning,
-        [Parameter(ParameterSetName='DeviceType1' )]                        [string]    $userAllocWarning,
-       
-        [Parameter(Mandatory=$true, ParameterSetName='DeviceType2' )]       [string]    $size,
-        [Parameter(ParameterSetName='DeviceType2' )]                        [string]    $pool_id,
-        [Parameter(ParameterSetName='DeviceType2' )]
-            [ValidateSet('none','smis','vvol','openstack','openstackv2')]   [string]    $agent_type,
+        [Parameter(Mandatory=$true, ParameterSetName='DeviceType2' )]       [string]    $id,
+        [Parameter(ParameterSetName='DeviceType1' )]
+            [ValidateSet('CONVERSIONTYPE_THIN','CONVERSIONTYPE_DDS')]       [string]    $conversionType,
+        [Parameter(ParameterSetName='DeviceType1' )]
+        [Parameter(ParameterSetName='DeviceType2' )]                        [string]    $name,
+        [Parameter(ParameterSetName='DeviceType1' )]                        [int]       $sizeMib,
+        [Parameter(ParameterSetName='DeviceType1' )]                        [int]       $snapshotAllocWarning,
+        [Parameter(ParameterSetName='DeviceType1' )]                        [int]       $userAllocWarning,
+        [Parameter(ParameterSetName='DeviceType1' )]                        [string]    $userCpgName,
+        
         [Parameter(ParameterSetName='DeviceType2' )]                        [string]    $app_uid,
-        [Parameter(ParameterSetName='DeviceType2' )]                        [string]    $base_snap_id,
-        [Parameter(ParameterSetName='DeviceType2' )]
-            [ValidateSet(4096,8192,16384,32768,65536)]                      [int]       $block_size,
-        [Parameter(ParameterSetName='DeviceType2' )]                        [switch]    $cache_pinned,
-        [Parameter(ParameterSetName='DeviceType2' )]                        [switch]    $clone,
+        [Parameter(ParameterSetName='DeviceType2' )]                        [boolean]   $caching_enabled,
         [Parameter(ParameterSetName='DeviceType2' )]                        [switch]    $dedupe_enabled,
         [Parameter(ParameterSetName='DeviceType2' )]                        [string]    $description,
-        [Parameter(ParameterSetName='DeviceType2' )]                        [string]    $dest_pool_id,
-        [Parameter(ParameterSetName='DeviceType2' )]
-            [ValidateSet('none','aes_256_xts')]                             [string]    $encryption_cipher,
         [Parameter(ParameterSetName='DeviceType2' )]                        [string]    $folder_id,
+        [Parameter(ParameterSetName='DeviceType2' )]                        [boolean]    $force,
         [Parameter(ParameterSetName='DeviceType2' )]
             [ValidateRange(0,100)]                                          [int]       $limit,
         [Parameter(ParameterSetName='DeviceType2' )]
             [ValidateRange(256,4294967294)]                                 [int]       $limit_iops,
         [Parameter(ParameterSetName='DeviceType2' )]
             [ValidateRange(256,4294967294)]                                 [int]       $limit_mbps,
-        [Parameter(ParameterSetName='DeviceType2' )]                        [switch]    $multi_initiator,
         [Parameter(ParameterSetName='DeviceType2' )]                        [switch]    $online,
-        [Parameter(ParameterSetName='DeviceType2' )]                        [string]    $owned_by_group_id,
         [Parameter(ParameterSetName='DeviceType2' )]                        [string]    $perfpolicy_id,
-        [Parameter(ParameterSetName='DeviceType2' )]                        [switch]    $read_only,
-        [Parameter(ParameterSetName='DeviceType2' )]
-            [ValidateRange(0,100)]                                          [int]       $reserve,
-        [Parameter(ParameterSetName='DeviceType2' )]
-            [ValidateRange(0,100)]                                          [int]       $snap_reserve,
-        [Parameter(ParameterSetName='DeviceType2' )]
-            [ValidateRange(0,100)]                                          [int]       $snap_warn_level,
-        [Parameter(ParameterSetName='DeviceType2' )]
-            [ValidateRange(0,100)]                                          [int]       $warn_level,
-
-        [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]       [switch]    $WhatIf
+        [Parameter(ParameterSetName='DeviceType2' )]                        [int]       $size,
+        [Parameter(ParameterSetName='DeviceType1' )]                        [int]       $count,
+        [Parameter(ParameterSetName='DeviceType1' )]                        [boolean]   $dataReduction,       
+        [Parameter(ParameterSetName='DeviceType1' )]
+        [Parameter(ParameterSetName='DeviceType2' )]                        [switch]    $WhatIf
      )
 
 process
     {   Invoke-DSCCAutoReconnect
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         write-verbose "Dectected the DeviceType is $DeviceType"
-        $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/volumes/' + $VolumeId
+        $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes/' + $id
         $MyBody = @{}
         switch ( $DeviceType )
-          { 'device-type1'   {  if ( $name   )              {   $MyBody = $MyBody + @{ 'name'                 = $name }                 }  
+          { 'device-type1'   {  if ( $conversionType   )    {   $MyBody = $MyBody + @{ 'conversionType'       = $conversionType }       }  
+                                if ( $name   )              {   $MyBody = $MyBody + @{ 'name'                 = $name }                 }  
                                 if ( $sizeMib   )           {   $MyBody = $MyBody + @{ 'sizeMib'              = [int]$sizeMib }         }  
-                                if ( $userCpg   )           {   $MyBody = $MyBody + @{ 'userCpg'              = $userCpg }              }
-                                if ( $comments   )          {   $MyBody = $MyBody + @{ 'comments'             = $comments }             }
-                                if ( $count     )           {   $MyBody = $MyBody + @{ 'count'                = $count }                }
-                                if ( $dataReduction)        {   $MyBody = $MyBody + @{ 'dataReduction'        = $True }                 }
-                                if ( $snapCpg   )           {   $MyBody = $MyBody + @{ 'snapCpg'              = $snapCpg }              }
+                                if ( $userCpgName   )       {   $MyBody = $MyBody + @{ 'userCpgName'          = $userCpgName }          }
                                 if ( $snapshotAllocWarning) {   $MyBody = $MyBody + @{ 'snapshotAllocWarning' = $snapshotAllocWarning } }
-                                if ( $dataReduction)        {   $MyBody = $MyBody + @{ 'userAllocWarning'     = $userAllocWarning }     }
-                                if ( $snapCpg   )           {   $MyBody = $MyBody + @{ 'snapCpg'              = $snapCpg }              }
+                                if ( $userAllocWarning)     {   $MyBody = $MyBody + @{ 'userAllocWarning'     = $userAllocWarning }     }
                             }
-            'device-type2'   {  if ( $name   )              {   $MyBody = $MyBody + @{ 'name'                 = $name }                 }  
-                                if ( $size   )              {   $MyBody = $MyBody + @{ 'size'                 = $size }                 }
-                                if ( $pool_id   )           {   $MyBody = $MyBody + @{ 'pool_id'              = $pool_id }              }
-                                if ( $agent_type   )        {   $MyBody = $MyBody + @{ 'agent_type'           = $agent_type }           }
-                                if ( $app_uiid   )          {   $MyBody = $MyBody + @{ 'app_uiid'             = $app_uiid }             }
-                                if ( $base_snap_id   )      {   $MyBody = $MyBody + @{ 'base_snap_id'         = $base_snap_id }         }
-                                if ( $block_size   )        {   $MyBody = $MyBody + @{ 'block_size'           = $block_size }           }
-                                if ( $cache_pinned   )      {   $MyBody = $MyBody + @{ 'cache_pinned'         = $cache_pinned }         }
-                                if ( $clone   )             {   $MyBody = $MyBody + @{ 'clone'                = $clone }                }
+            'device-type2'   {  if ( $app_uiid   )          {   $MyBody = $MyBody + @{ 'app_uiid'             = $app_uiid }             }
+                                if ( $caching_enabled )     {   $MyBody = $MyBody + @{ 'caching_enabled'      = $caching_enabled }      }
                                 if ( $dedupe_enabled   )    {   $MyBody = $MyBody + @{ 'dedupe_enabled'       = $dedupe_enabled }       }
                                 if ( $description   )       {   $MyBody = $MyBody + @{ 'description'          = $description }          }
-                                if ( $dest_pool_id   )      {   $MyBody = $MyBody + @{ 'dest_pool_id'         = $dest_pool_id }         }
-                                if ( $encryption_cipher )   {   $MyBody = $MyBody + @{ 'encryption_cipher'    = $encryption_cipher }    }
                                 if ( $folder_id   )         {   $MyBody = $MyBody + @{ 'folder_id'            = $folder_id }            }
+                                if ( $force   )             {   $MyBody = $MyBody + @{ 'force'                = $true }                 }  
                                 if ( $limit   )             {   $MyBody = $MyBody + @{ 'limit'                = $limit }                }
                                 if ( $limit_iops   )        {   $MyBody = $MyBody + @{ 'limit_iops'           = $limit_iops }           }
-                                if ( $multi_initiator   )   {   $MyBody = $MyBody + @{ 'multi_initiator'      = $multi_initiator }      }
+                                if ( $limit_mbps   )        {   $MyBody = $MyBody + @{ 'limit_mbps'           = $limit_mbps }           }
+                                if ( $name   )              {   $MyBody = $MyBody + @{ 'name'                 = $name }                 }  
                                 if ( $online   )            {   $MyBody = $MyBody + @{ 'online'               = $online }               }
-                                if ( $owned_by_group_id   ) {   $MyBody = $MyBody + @{ 'owned_by_group_id'    = $owned_by_group_id }    }
                                 if ( $perfpolicy_id   )     {   $MyBody = $MyBody + @{ 'perfpolicy_id'        = $perfpolicy_id }        }
-                                if ( $read_only   )         {   $MyBody = $MyBody + @{ 'read_only'            = $read_only }            }
-                                if ( $reserve   )           {   $MyBody = $MyBody + @{ 'reserve'              = $reserve }              }
-                                if ( $snap_reserve   )      {   $MyBody = $MyBody + @{ 'snap_reserve'         = $snap_reserve }         }
-                                if ( $snap_warn_level   )   {   $MyBody = $MyBody + @{ 'snap_warn_level'      = $snap_warn_level }      }
-                                if ( $warn_level   )        {   $MyBody = $MyBody + @{ 'warn_level'           = $warn_level }           }
+                                if ( $size   )              {   $MyBody = $MyBody + @{ 'size'                 = $size }                 }
                             }
           }
-        $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes'
         if ( $WhatIf )
                 {   $ReturnData = invoke-restmethodWhatIf -uri $MyURI -headers $MyHeaders -method PUT -ContentType 'application/json' -body $MyBody 
                 }   
