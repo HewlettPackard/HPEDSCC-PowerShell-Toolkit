@@ -91,7 +91,7 @@ Process{
         }
     write-Verbose "The AccessToken is $AccessToken"
     switch( $GreenlakeType )
-    {   'Dev1'  {   $Global:Base = 'https://scint-app.qa.cds.hpe.com'      }
+    {   'Dev1'  {   $Global:Base = 'https://scalpha-app.qa.cds.hpe.com'      }
         'Dev2'  {   $Global:Base = 'https://fleetscale-app.qa.cds.hpe.com' }
         'Asia'  {   $Global:Base = "https://jp1.data.cloud.hpe.com"        }
         'EU'    {   $Global:Base = 'https://eu1.data.cloud.hpe.com'        }
@@ -102,7 +102,7 @@ Process{
     $Global:MyHeaders = @{  Authorization = 'Bearer '+$AccessToken
 
                          }
-    $Global:TestUri = $BaseUri + "host-initiator-groups/"
+    $Global:TestUri = $BaseUri + "host-initiators/"
     if ( $AccessToken -or $whatif )
             {   Try     {   if ( $Whatif )
                                     {   $ReturnData = Invoke-RestMethodWhatIf -Uri $TestURI -Method Get -Headers $MyHeaders
