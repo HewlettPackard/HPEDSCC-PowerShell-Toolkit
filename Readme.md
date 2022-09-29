@@ -32,3 +32,5 @@ Access Token which are then used by all further commands.
 
 Additionally an option called '-AutoRenew' now exists with the Connect-DSCC command which will allow the toolkit to reconnect 
 on demand using the came client ID and Client Secret offered. This is not saved, and expires as soon as the PowerShell session is closed.
+
+The documenation on this RestAPI can be found at https://console-us1.data.cloud.hpe.com/doc/api/v1/

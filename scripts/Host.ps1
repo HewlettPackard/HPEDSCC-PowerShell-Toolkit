@@ -94,23 +94,31 @@ param(  [string]    $HostID,
 process
     {   Invoke-DSCCAutoReconnect
         $MyURI = $BaseURI + 'host-initiators'
+        clear-variable -Name SysColOnly -ErrorAction SilentlyContinue
+        clear-variable -Name ReturnData -ErrorAction SilentlyContinue
         if ( $WhatIf )
-                {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
+                {   invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
                 }   
             else 
-                {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
+                {   try     {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
+                            }
+                    catch 
+                            {   ThrowHTTPError -ErrorResponse $_
+                            }
                 }
-        if ( ( $SysColOnly ).items )
-                { $SysColOnly = ( $SysColOnly ).items 
-                }
-        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Host"
-        if ( $HostID )
-                {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                    return ( $ReturnData | where-object { $_.id -eq $HostId } )
-                } 
-            else 
-                {   return $ReturnData
-                }
+        if ($SysColOnly) 
+            {   if ( ( $SysColOnly ).items )
+                    { $SysColOnly = ( $SysColOnly ).items 
+                    }
+                $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Host"
+                if ( $HostID )
+                        {   Write-verbose "The results of the complete collection have been limited to just the supplied ID"
+                            return ( $ReturnData | where-object { $_.id -eq $HostId } )
+                        } 
+                    else 
+                        {   return $ReturnData
+                        }
+            }
     }       
 }   
 function Remove-DSCCHost
@@ -239,10 +247,13 @@ process
     {   Invoke-DSCCAutoReconnect
         $MyURI = $BaseURI + 'host-initiators/' + $HostID + '/volumes'
         if ( $WhatIf )
-                {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
+                {   invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
                 }   
             else     
-                {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
+                {   try     {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
+                            }
+                    catch   {   ThrowHTTPError -ErrorResponse $_
+                            }
                 }
         return $SysColOnly 
     }       

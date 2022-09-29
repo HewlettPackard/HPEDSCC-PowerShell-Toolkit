@@ -78,7 +78,7 @@ param(  [parameter( ValueFromPipeLineByPropertyName=$true )][Alias('id')]   [str
 process
     {   Invoke-DSCCAutoReconnect
         if ( ( -not $SystemId )  -or ( (Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId) -eq 'device-type1' ) )
-                {   $MyURI = $BaseURI + 'initiators'    
+                {   $MyURI = $BaseURI + 'host-initiators'    
                 }
             else 
                 {   if ( ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId ) -ne 'device-type2' )

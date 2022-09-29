@@ -18,12 +18,18 @@
     This can either be the Production Instance of DSSC or it can be the Prototype/Dev instance of the DSSC. The values can either be Production or Dev.
 .PARAMETER AutoRenew
     This switch will allow the Toolkit to reconnect automatically once a successfull connection has been made every 1h and 45 minutes.
-.PARAMETER WhatIf
+.PARAMETER WhatIfToken
     This option shows you the command that will be sent to the DSCC, will include the URI being sent to, the Header, Method, and the Body of the message.
-.EXAMPLE
+    Since this command has two parts, the use of this will show you the what-if option for the call to the single-sign-on service which returns the authorization
+    token only.
+.PARAMETER WhatIfGreenLakeType
+    This option shows you the command that will be sent to the DSCC, will include the URI being sent to, the Header, Method, and the Body of the message.
+    Since this command has two parts, the use of this will obtain the authorization token from the single-sign-on server, and then attemp to make a standard 
+    call to the defined cloud. If the cloud choosen is incorrect, the SSO server would still succeed, but the following command would fail.
+    .EXAMPLE
     PS:> Connect-HPEDSCC -AccessToken 'ABC123XYZ' -GreenlakeType Dev
 .EXAMPLE
-    PS:> Connect-HPEDSCC -AccessToken 'ABC123XYZ' -GreenlakeType Dev -whatif
+    PS:> Connect-HPEDSCC -AccessToken 'ABC123XYZ' -GreenlakeType Dev -whatifToken
     
     The URI for this call will be https://pavo-user-api.common.cloud.hpe.com/api/v1
     The Method of this call will be Get
@@ -36,7 +42,9 @@
 .EXAMPLE
     PS:> Connect-DSCC -Client_Id '1234abcd' -Client_Secret 'ABC123XYZ' -GreenlakeType Dev
 .EXAMPLE
-    PS:> Connect-DSCC -Client_Id '1234abcd' -Client_Secret 'ABC123XYZ' -GreenlakeType Dev -whatif    
+    PS:> Connect-DSCC -Client_Id '1234abcd' -Client_Secret 'ABC123XYZ' -GreenlakeType Dev -whatifToken
+.EXAMPLE
+    PS:> Connect-DSCC -Client_Id '1234abcd' -Client_Secret 'ABC123XYZ' -GreenlakeType Dev -whatifGreenLakeType        
 #>
 [CmdletBinding()]
 param ( [Parameter(Mandatory,ParameterSetName='ByClientCreds')]
@@ -48,13 +56,16 @@ param ( [Parameter(Mandatory,ParameterSetName='ByClientCreds')]
         [Parameter(Mandatory,ParameterSetName='ByAccessToken')]
         [string]    $AccessToken,         
 
-        [Parameter(Mandatory)][ValidateSet("Dev1","Dev2","Asia", "USA", "EU")]
+        [Parameter(Mandatory)][ValidateSet("Dev1","Dev2","Dev3","Asia", "USA", "EU")]
         [string]    $GreenlakeType  = 'Dev', 
         
         [Parameter(ParameterSetName='ByClientCreds')]
         [switch]    $AutoRenew, 
 
-        [switch]    $WhatIf 
+        [Parameter(ParameterSetName='ByClientCreds')]
+        [switch]    $WhatIfToken, 
+
+        [switch]    $WhatIfGreenLakeType 
       )
 Process{
     $Global:AuthUri = "https://sso.common.cloud.hpe.com/as/token.oauth2"
@@ -70,7 +81,7 @@ Process{
                                           }  
             # clear-variable $Client_Id
             # clear-variable $Client_Secret              
-    Try     {   if ( $Whatif )
+    Try     {   if ( $WhatifToken )
                         {   $Output = Invoke-RestMethodWhatIf -Uri "$AuthURI" -Method Post -Headers $AuthHeaders -body $AuthBody
                             Write-host "The Following is the output from the attempt to retrieve the Access Token using Credentials"
                             $Output | out-string 
@@ -86,13 +97,14 @@ Process{
     Catch   {   $_
             }
             #if ( -not $AutoRenew )
-               # {   # clear-variable $AuthBody 
+               # {   # clear-variable $AuthBody Mana
                # }
         }
     write-Verbose "The AccessToken is $AccessToken"
     switch( $GreenlakeType )
-    {   'Dev1'  {   $Global:Base = 'https://scalpha-app.qa.cds.hpe.com'      }
+    {   'Dev1'  {   $Global:Base = 'https://scalpha-app.qa.cds.hpe.com'    }
         'Dev2'  {   $Global:Base = 'https://fleetscale-app.qa.cds.hpe.com' }
+        'Dev3'  {   $Global:Base = 'https://scint-app.qa.cds.hpe.com'      }
         'Asia'  {   $Global:Base = "https://jp1.data.cloud.hpe.com"        }
         'EU'    {   $Global:Base = 'https://eu1.data.cloud.hpe.com'        }
         'USA'   {   $Global:Base = 'https://us1.data.cloud.hpe.com'        }
@@ -103,12 +115,15 @@ Process{
 
                          }
     $Global:TestUri = $BaseUri + "host-initiators/"
-    if ( $AccessToken -or $whatif )
-            {   Try     {   if ( $Whatif )
-                                    {   $ReturnData = Invoke-RestMethodWhatIf -Uri $TestURI -Method Get -Headers $MyHeaders
+    if ( $AccessToken -or $whatifGreenLakeType )
+            {   Try     {   if ( $WhatifGreenLakeType )
+                                    {   Write-Warning 'This operation will run a Get-DSCCStorageSystem to test if the Cloud Type is set right'
+                                        $ReturnData = Get-DsccStorageSystem -whatif
+                                        write-warning ''
                                     } 
                                 else 
-                                    {   $ReturnData = invoke-restmethod -uri "$TestUri" -Method Get -headers $MyHeaders
+                                    {   Write-Verbose 'This operation will run a Get-DSCCStorageSystem to test if the Cloud Type is set right'
+                                        $ReturnData = Get-DSCCStorageSystem
                                     }
                         }
                 Catch   {   $_
@@ -124,8 +139,12 @@ Process{
                             return $AuthToken 
                         } 
                     else 
-                        {   if (-not $whatif) 
+                        {   if (-not $whatifGreenLakeType) 
                                     {   Write-Error "No HPE DSSC target Detected or wrong port used at that address"
+                                    }
+                                else 
+                                    {   Write-Warning "Since WhatIF option was used, no expected return data is expected."
+                                    
                                     }
                         }
             }
@@ -161,22 +180,36 @@ function Invoke-DSCCAutoReconnect
     $CurrentEpoch = [int](New-TimeSpan -Start (Get-Date "01/01/1970") -End (Get-Date)).TotalSeconds
     $TokenEpoch = [int]($AuthToken).Token_CreationEpoch
     $Timeout = 60 * 105 # 1 hour and 45 minutes 
+    write-verbose "CurrentEpoch = $CurrentEpoch"
+    write-verbose "TokenEpoch = $TokenEpoch"
     if ( ($CurrentEpoch -$TokenEpoch) -gt $Timeout ) 
         {   if ( ($AuthToken).AutoRenew ) 
-                {   $AccessToken = ( invoke-restmethod -uri "$AuthURI" -Method Post -headers $AuthHeaders -body $AuthBody ).access_token
-                    $ReturnData =  @{   Access_Token    = $AccessToken 
-                                        Token_Creation  = $( Get-Date ).datetime
-                                        Token_CreationEpoch = [int]$( (New-TimeSpan -Start (Get-Date "01/01/1970") -End (Get-Date)).TotalSeconds ) 
-                                        Auto_Renew      = ($AuthToken).AutoRenew
-                                    }
-                    $ReturnData2 = $ReturnData | convertto-json | convertfrom-json
-                    $Global:AuthToken = Invoke-RepackageObjectWithType -RawObject $ReturnData2 -ObjectName 'AccessToken' 
-                } else 
-                {   Write-Warning "The Authorication Token is due to expire soon, and your didnt connect using the AutoRenew option."  
-                }
+                    {   write-verbose "The Token is close to expiring, This will renew the command"
+                        $AccessToken = ( invoke-restmethod -uri "$AuthURI" -Method Post -headers $AuthHeaders -body $AuthBody ).access_token
+                        $ReturnData =  @{   Access_Token    = $AccessToken 
+                                            Token_Creation  = $( Get-Date ).datetime
+                                            Token_CreationEpoch = [int]$( (New-TimeSpan -Start (Get-Date "01/01/1970") -End (Get-Date)).TotalSeconds ) 
+                                            Auto_Renew      = ($AuthToken).AutoRenew
+                                        }
+                        $ReturnData2 = $ReturnData | convertto-json | convertfrom-json
+                        $Global:AuthToken = Invoke-RepackageObjectWithType -RawObject $ReturnData2 -ObjectName 'AccessToken' 
+                    } 
+                else 
+                    {   Write-Warning "The Authorication Token is due to expire soon, and your didnt connect using the AutoRenew option."  
+                    }
         }
     $TimeDiff = ( $CurrentEpoch - $TokenEpoch )
     write-verbose "The Time difference in seconds is $TimeDiff seconds."
+    return
+}
+function ThrowHTTPError {
+    Param ( $ErrorResponse
+          )
+          $Response = ( (($ErrorResponse).Exception).Response | convertto-json )
+          $ECode =  (((($ErrorResponse).Exception).Response).StatusCode).value__
+          $EText = ((($ErrorResponse).Exception).Response).StatusDescription
+          write-warning "The RestAPI Request failed with the following Status: `r`n`tHTTPS Return Code = $ECode`r`n`tHTTPS Return Code Description = $EText"
+          Write-Verbose "Raw Response  = $Response"
     return
 }
 function Invoke-RestMethodWhatIf
@@ -189,7 +222,7 @@ function Invoke-RestMethodWhatIf
     if ( -not $Body ) 
         {   $Body = 'No Body'
         }
-    write-warning "You have selected the What-IF option, so the call will note be made to the array, `ninstead you will see a preview of the RestAPI call"
+    write-warning "You have selected the What-IF option, so the call will not be made to the array, `ninstead you will see a preview of the RestAPI call"
     Write-host "The URI for this call will be " 
     write-host  "$Uri" -foregroundcolor green
     Write-host "The Method of this call will be "
