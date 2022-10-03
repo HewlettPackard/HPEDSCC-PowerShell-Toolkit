@@ -62,28 +62,9 @@ process
     {   Invoke-DSCCAutoReconnect
         $systemId = $( $systemId + $owned_by_group_id )
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $systemId )
-        write-verbose "Dectected the DeviceType is $DeviceType"
-        $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $systemId + '/volumes/' + $Id + '/snapshots'
-        if ( $WhatIf )
-                {   $SysColOnly = invoke-restmethodWhatIf -uri $MyURI -headers $MyHeaders -method Get
-                }   
-            else 
-                {   try     {   $SysColOnly = invoke-restmethod -uri $MyURI -headers $MyHeaders -method Get
-                            }
-                    catch   {   Write-Warning "No Snapshots Detected on system ID $SystemId and Volume ID $Id."
-                                return
-                            }
-                }
-        if ( ($SysColOnly).items ) 
-                {   $SysColOnly = ($SysColOnly).items 
-                    $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Snapshot.$DeviceType"
-                }
-            else 
-                {   if ( ($SysColOnly).Total -eq 0 )
-                            {   Write-Warning "No Snapshots Detected on system ID $SystemId and Volume ID $Id."
-                                return
-                            }
-                }
+        $MyAdd = 'storage-systems/' + $DeviceType + '/' + $systemId + '/volumes/' + $Id + '/snapshots'
+        $SysColOnly = Invoke-DSCCRestMethod -UriAdd $MyAdd -method Get -WhatIfBoolean $WhatIf
+        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Snapshot.$DeviceType"
         if ( $VolumeId )
                 {   return ( $ReturnData | where-object { $_.id -eq $VolumeId } )
                 } 
@@ -122,16 +103,11 @@ process
     {       Invoke-DSCCAutoReconnect
             $systemId = $( $systemId + $owned_by_group_id )
             $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $systemId )
-            write-verbose "Dectected the DeviceType is $DeviceType"
-            $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $systemId + '/volumes/' + $Id + '/snapshots/' + $snapshotId 
-            if ( $force )   {   $MyURI = $MyURI + '?force=true' }
-            if ( $WhatIf )
-                    {   $SysColOnly = invoke-restmethodWhatIf -uri $MyURI -headers $MyHeaders -method DELETE
-                    }   
-                else 
-                    {   $SysColOnly = invoke-restmethod -uri $MyURI -headers $MyHeaders -method DELETE
-                    }
-            return $SysColOnly
+            $MyAdd = 'storage-systems/' + $DeviceType + '/' + $systemId + '/volumes/' + $Id + '/snapshots/' + $snapshotId 
+            if ( $force )   
+                {   $MyAdd = $MyAdd + '?force=true' 
+                }
+            return Invoke-DSCCRestMethod -UriAdd $MyAdd -method DELETE -WhatIfBoolean $WhatIf
     }       
 } 
     
@@ -186,7 +162,6 @@ param(      [Parameter(ValueFromPipeLineByPropertyName=$true,mandatory=$true,Par
 process
     {       Invoke-DSCCAutoReconnect
             $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $systemId )
-            write-verbose "Dectected the DeviceType is $DeviceType"
             $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $systemId + '/volumes/' + $Id + '/snapshots'
             switch ( $DeviceType )
                 {   'device-type1'  {   if ( Get-DSCCVolume -systemId $systemId -volumeid $id )
@@ -194,7 +169,7 @@ process
                                                 } 
                                             elseif  ( Get-DSCCVolumeSet -systemId $systemId -volumeCollectionid $id )
                                                 {   write-verbose "The ID given was for a valid Application Set, so an Application Set snapshot will be run."
-                                                    $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $systemId + '/applicationsets/' + $Id + '/snapshots'
+                                                    $MyAdd = 'storage-systems/' + $DeviceType + '/' + $systemId + '/applicationsets/' + $Id + '/snapshots'
                                                 }
                                             else
                                                 {   write-warning "The ID presented for the VolumeId or Application Set ID did not return a valid item. Cannot create snaphot."
@@ -217,12 +192,6 @@ process
                                             else                {   $MyBody = $MyBody + @{ 'readOnly'    = $false }       }
                                     }
                 }
-            if ( $WhatIf )
-                    {   $SysColOnly = invoke-restmethodWhatIf -uri $MyURI -headers $MyHeaders -method POST -body $MyBody -ContentType 'application/json'
-                    }   
-                else 
-                    {   $SysColOnly = invoke-restmethod -uri $MyURI -headers $MyHeaders -method POST -body $MyBody -ContentType 'application/json'
-                    }
-            return $SysColOnly
+            return Invoke-DSCCRestMethod -UriAdd $MyAdd -method POST -body $MyBody -whatifBoolean $WhatIf
     }       
 } 

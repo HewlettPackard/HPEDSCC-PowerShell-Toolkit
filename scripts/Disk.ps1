@@ -75,30 +75,11 @@ param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('i
 process
     {   Invoke-DSCCAutoReconnect
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-        write-verbose "Dectected the DeviceType is $DeviceType"
         if ( $DeviceType )
             {   switch ( $DeviceType )
-                {   
-                    'device-type2'  {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/disks'
-                                        try {   if ( $WhatIf )
-                                                        {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
-                                                        }   
-                                                    else 
-                                                        {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
-                                                        }
-                                            }
-                                        catch { write-warning "The Attempt the gather information from DSCC failed with API Error"
-                                                }
-                                        if ( ($SysColOnly).items ) 
-                                                {   $SysColOnly = ($SysColOnly).items 
-                                                    $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Disk.Combined"
-                                                }
-                                            else 
-                                                {   if (  ($SysColOnly).total -eq 0 )
-                                                            {   Write-Warning "The Call to SystemID $SystemId returned no Disk Records."
-                                                                $ReturnData = ''
-                                                            }                                                
-                                                }
+                {   'device-type2'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/disks'
+                                        $SysColOnly = invoke-DSCCrestmethod -uriadd $MyAdd -method Get -whatifBoolean $WhatIf
+                                        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Disk.Combined"
                                         if ( $DiskId )
                                                 {   Write-host "The results of the complete collection have been limited to just the supplied ID"
                                                     return ( $ReturnData | where-object { $_.id -eq $DiskId } )
@@ -110,24 +91,9 @@ process
                     'device-type1'  {   $Shelflist = Get-DSCCShelf -systemId $SystemID  
                                         foreach ( $Shelfid in $Shelflist )
                                             {   $Shelfid = $Shelfid.Id
-                                                $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/enclosures/' + $Shelfid +'/enclosure-disks'
-                                                try {   if ( $WhatIf )
-                                                            {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
-                                                            }   
-                                                        else 
-                                                            {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
-                                                            }
-                                                    }
-                                                catch { write-warning "The Attempt the gather information from DSCC failed with API Error"
-                                                        }
-                                                if ( ( $SysColOnly ).items )
-                                                        {   $SysColOnly = $SysColOnly.items 
-                                                        }
+                                                $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/enclosures/' + $Shelfid +'/enclosure-disks'
+                                                $SysColOnly = invoke-DSCCrestmethod -uriAdd $MyAdd  -method Get -whatifBoolean $WhatIf
                                                 $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Disk.Combined"
-                                                if (  ($SysColOnly).total -eq 0 )
-                                                        {   Write-Warning "The Call to SystemID $SystemId returned no Disk Records."
-                                                            $ReturnData = ''                                                
-                                                        }
                                                 if ( $DiskId )
                                                         {   Write-host "The results of the complete collection have been limited to just the supplied ID"
                                                             return ( $ReturnData | where-object { $_.id -eq $DiskId } )
@@ -139,9 +105,6 @@ process
                                     }
                 }  
             }
-        else
-            {   Write-Warning "No Valid Storage Systemd Detected using System ID $SystemId."
-                return
-            }
+        return
     }       
 }

@@ -37,50 +37,23 @@ function Get-DSCCPort
 .LINK
 #>   
 [CmdletBinding()]
-param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
-                                                                            [string]    $SystemId,
-                                                                            [string]    $PortId,
-                                                                            [switch]    $WhatIf
+param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('id')][string]    $SystemId,
+                                                                                    [switch]    $WhatIf
      )
 process
     {   Invoke-DSCCAutoReconnect
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-        write-verbose "Dectected the DeviceType is $DeviceType"
         if ( $DeviceType )
             {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/ports'
-                try {   if ( $WhatIf )
-                                {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
-                                }   
-                            else 
-                                {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
-                                }
-                    }
-                catch { write-warning "The Attempt the gather information from DSCC failed with API Error"
-                    }
+                $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/ports'
+                $SysColOnly = invoke-DSCCRestMethod -UriAdd $MyAdd -Method Get -WhatIfBoolean $WhatIf
                 if ( $DeviceType -eq 'device-type2')
                     {   $SysColOnly1 = (( $SysColOnly ).network_interfaces )
                         $SysColOnly2 = (( $SysColOnly ).fibre_channel_interfaces )
                         $SysColOnly  = @( $SysColOnly1, $SysColOnly2 )
-
-                    }   
-                if ( ($SysColOnly).items ) 
-                        {   $SysColOnly = ($SysColOnly).items 
-                            $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Port.$DeviceType"
-                        } 
-                    else
-                        {   if (  ($SysColOnly).total -eq 0 )
-                                    {   Write-Warning "The Call to SystemID $SystemId returned no port Records."
-                                        $ReturnData = ''
-                                    }
-                        }
-
-                if ( $DiskId )
-                        {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                            return ( $ReturnData | where-object { $_.id -eq $PortId } )
-                        } 
-                    else 
-                        {   return $ReturnData
-                        }
+                    }
+                $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Port.$DeviceType"
+                return $ReturnData
             }
         else
             {   Write-Warning "No Valid Storage Systemd Detected using System ID $SystemId"

@@ -39,19 +39,8 @@ param(  [switch]    $whatIf
      )
 process
     {   Invoke-DSCCAutoReconnect
-        $MyURI = $BaseURI + 'audit-events'
-        if ( $WhatIf )
-                {   $SysColOnly = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders  -method 'Get'
-                }
-            else
-                {   try     {   $SysColOnly = Invoke-RestMethod -uri $MyURI -Headers $MyHeaders  -method 'Get' 
-                            }   
-                    catch   {   write-warning "The call for audits and events returned nothing."
-                            }
-                }
-        if ( ( $SysColOnly ).items )
-                {   $SysColOnly = ( $SysColOnly ).items
-                }
+        $MyAdd = 'audit-events'
+        $SysColOnly = Invoke-DSCCRestMethod -uriadd $MyAdd -method 'Get' -whatifBoolean $WhatIf 
         $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Audit"
         return $ReturnData  
     }       

@@ -38,21 +38,15 @@ process
                 {   'Device-Type1'  { $ControllerWord = '/nodes'        }
                     'Device-Type2'  { $ControllerWord = '/controllers'  }
                 }    
-        $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + $ControllerWord
+        $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + $ControllerWord
         if ( $ControllerId )
                 {   $MyURI = $MyURI + '/' + $ControllerId 
                 }
-        if ( $WhatIf )
-                {   $SysColOnly = invoke-restmethodWhatIf -uri $MyURI -headers $MyHeaders -method Get
-                }   
-            else 
-                {   $SysColOnly = invoke-restmethod -uri $MyURI -headers $MyHeaders -method Get
-                }
+        $SysColOnly = invoke-DSCCrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf
         if ( ($SysColOnly).items ) 
                 {   $SysColOnly = ($SysColOnly).items 
                 }
-        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Controller.$DeviceType"
-        
+        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Controller.$DeviceType"        
         return $ReturnData
     }       
 } 
@@ -131,31 +125,21 @@ param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('i
 process
     {   Invoke-DSCCAutoReconnect
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+        clear-varibable -name ControllerWord -ErrorAction SilentlyContinue
         switch($DeviceType)
                 {   'Device-Type1'  {   $ControllerWord = 'nodes'        }
                     'Device-Type2'  {   Write-warning "This command only works on Device-Type1 which include 3par/Primera/Alletra9K devices"
                                         return  
                                     }
+                    default         {   Write-Warning "No array was detected using the SystemID $SystemId"
+                                        return
+                                    }
                 }
-        if ( -not $DeviceType )
-                {   Write-Warning "No array was detected using the SystemID $SystemId"
-                    return
-                }
-        $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + $ControllerWord
-        if ( $ControllerId )
-                {   $MyURI = $MyURI + '/' + $ControllerId 
-                }
-        $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/' + $ControllerWord + '/' + $NodeId + '/node-' + $SubComponent
+        $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/' + $ControllerWord + '/' + $NodeId + '/node-' + $SubComponent
         if ($SubComponent -eq 'batteries' )
-                { $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/' + $ControllerWord + '/' + $NodeId + '/nodes-' + $SubComponent
+                { $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/' + $ControllerWord + '/' + $NodeId + '/nodes-' + $SubComponent
                 }
-        if ( $WhatIf )
-                {   $SysColOnly = invoke-restmethodWhatIf -uri $MyURI -headers $MyHeaders -method Get
-                }   
-            else 
-                {   $SysColOnly = invoke-restmethod -uri $MyURI -headers $MyHeaders -method Get
-                }
-        if ( ($SysColOnly).items ) { $SysColOnly = ($SysColOnly).items }
+        $SysColOnly = invoke-DSCCrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf
         if ( $SubComponentId )
                 {   Write-host "The results of the complete collection have been limited to just the supplied ID"
                     return ( $SysColOnly | where-object { $_.id -eq $SubComponentId } )
@@ -234,14 +218,8 @@ process
                 {   Write-Warning "No array was detected using the SystemID $systemId"
                     return
                 }
-        $MyURI = $BaseURI + 'storage-systems/device-type1/' + $systemId + '/nodes/' + $id + '/component-performance-statistics'
-        if ( $WhatIf )
-                {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
-                }   
-            else 
-                {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
-                }
-        if ( ($SysColOnly).items ) { $SysColOnly = ($SysColOnly).items }
+        $MyAdd = 'storage-systems/device-type1/' + $systemId + '/nodes/' + $id + '/component-performance-statistics'
+        $SysColOnly = invoke-DSCCrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf
         return $SysColOnly
     }       
 }
@@ -283,13 +261,8 @@ process
                 {   Write-Warning "No array was detected using the SystemID $SystemId"
                     return
                 }
-        $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/nodes/' + $NodeId
-        if ( $WhatIf )
-                {   $SysColOnly = invoke-restmethodWhatIf -uri $MyURI -headers $MyHeaders -body $MyBody -method Get
-                }   
-            else 
-                {   $SysColOnly = invoke-restmethod -uri $MyURI -headers $MyHeaders -body $MyBody -method Post
-                }
+        $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/nodes/' + $NodeId
+        $SysColOnly = invoke-DSCCrestmethod -uriadd $MyAdd -body $MyBody -method Post -whatifBoolean $WhatIf
         return $SysColOnly
     }       
 } 
@@ -323,17 +296,10 @@ param(  [parameter(mandatory)][string]    $SystemId,
      )
 process
     {   Invoke-DSCCAutoReconnect
-        $MyBody = @{ locate = $Locate 
-                   }
+        $MyBody = ( @{ locate = $Locate } | convertto-json )
         if ( $DeviceType -eq 'Device-Type2' )   { Write-warning "This command only works on Device-Type1 which include 3par/Primera/Alletra9K devices"; return }
         if ( -not $DeviceType )                 { Write-Warning "No array was detected using the SystemID $SystemId"; return }
-        $MyURI = $BaseURI + 'storage-systems/device-type1/' + $SystemId + '/nodes/' + $NodeId + '/Powers/' + $PowerId
-        if ( $WhatIf )
-                {   $SysColOnly = invoke-restmethodWhatIf -uri $MyURI -headers $MyHeaders -body $MyBody -method Post
-                }   
-            else 
-                {   $SysColOnly = invoke-restmethod -uri $MyURI -headers $MyHeaders -body $MyBody -method Post
-                }
-        return $SysColOnly
+        $MyAdd = 'storage-systems/device-type1/' + $SystemId + '/nodes/' + $NodeId + '/Powers/' + $PowerId
+        return $invoke-restmethod -uriadd $MyAdd -body $MyBody -method Post -whatifBoolean $WhatIf
     }       
 } 

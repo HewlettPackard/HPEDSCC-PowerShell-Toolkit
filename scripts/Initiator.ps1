@@ -71,42 +71,29 @@ function Get-DSCCInitiator
     The results of the complete collection have been limited to just the supplied ID
 #>   
 [CmdletBinding()]
-param(  [parameter( ValueFromPipeLineByPropertyName=$true )][Alias('id')]   [string]    $SystemId, 
+param(  [parameter( ValueFromPipeLineByPropertyName=$true )][Alias('id')]   [string]    $SystemId,
                                                                             [string]    $InitiatorID,
                                                                             [switch]    $WhatIf
      )
 process
     {   Invoke-DSCCAutoReconnect
         if ( ( -not $SystemId )  -or ( (Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId) -eq 'device-type1' ) )
-                {   $MyURI = $BaseURI + 'host-initiators'    
+                {   $MyAdd = 'initiators'
                 }
-            else 
+            else
                 {   if ( ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId ) -ne 'device-type2' )
                             {   Write-warning "The System ID passed in does not register as a valid SystemId"
-                                return 
+                                return
                             }
-                    $MyURI = $BaseURI + 'storage-systems/device-type2/'+$SystemId+'/host-initiators'
+                    $MyAdd = 'storage-systems/device-type2/'+$SystemId+'/host-initiators'
                 }
-        if ( $WhatIf )
-                {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
-                }   
-            else 
-                {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
-                }
-        if (($SysColOnly).items)
-                {   $SysColOnly = ($SysColOnly).items 
-                }
-        if ($MyURI -eq ( $BaseURI + 'initiators' ) )
-                {   $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Initiator.Device-Type1"
-                }
-                else 
-                {   $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Initiator.Device-Type2"
-                }
+        $SysColOnly = Invoke-DSCCRestMethod -UriAdd $MyAdd -method Get -whatifBoolean $WhatIf
+        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Initiator"
         if ( $InitiatorID )
                 {   Write-host "The results of the complete collection have been limited to just the supplied ID"
                     return ( $ReturnData | where-object { $_.id -eq $InitiatorID } )
-                } 
-            else 
+                }
+            else
                 {   return $ReturnData
                 }
     }
@@ -140,25 +127,12 @@ param(  [Parameter(Mandatory)]  [string]    $InitiatorID,
      )
 process
     {   Invoke-DSCCAutoReconnect
-        $MyURI = $BaseURI + 'initiators/' + $InitiatorID
+        $MyAdd = 'initiators/' + $InitiatorID
         $MyBody = ''
         if ($Force)
                 {   $MyBody = @{force=$true}
-                    if ($Whatif)
-                            {   return Invoke-RestMethodWhatIf -uri $MyUri -Headers $MyHeaders -Method 'Delete' -body $MyBody
-                            } 
-                        else 
-                            {   return Invoke-RestMethod -uri $MyUri -Headers $MyHeaders -Method 'Delete' -body ( $MyBody | convertTo-json ) -ContentType 'application/json'
-                            }
                 }
-            else 
-                {   if ($Whatif)
-                            {   return Invoke-RestMethodWhatIf -uri $MyUri -Headers $MyHeaders -Method 'Delete' -ContentType 'application/json'
-                            } 
-                        else 
-                            {   return Invoke-RestMethod -uri $MyUri -Headers $MyHeaders -Method 'Delete' -ContentType 'application/json'
-                            }
-                }
+        return Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Delete' -Body $MyBody -WhatIfBoolean $WhatIf
     }       
 }   
 Function New-DSCCInitiator
@@ -224,23 +198,16 @@ param(  [Parameter(Mandatory)]          [string]    $address,
      )
 process
     {   Invoke-DSCCAutoReconnect
-        $MyURI = $BaseURI + 'initiators'
-                                    $MyBody += [ordered]@{ address = $address} 
-        if ($driverVerson)      {   $MyBody += @{ driverVersion = $driverVersion}  }
+        $MyAdd = 'initiators'
+                                    $MyBody += [ordered]@{ address = $address           } 
+        if ($driverVerson)      {   $MyBody += @{ driverVersion = $driverVersion     }  }
         if ($firmwareVersion)   {   $MyBody += @{ firmwareVersion = $firmwareVersion }  }
-        if ($hbaModel)          {   $MyBody += @{ hbaModel = $hbaModel}  }
-        if ($hostSpeed)         {   $MyBody += @{ hostSpeed = $hostSpeed}  }
-        if ($ipAddress)         {   $MyBody += @{ ipAddress = $ipAddress}  }
-        if ($name)              {   $MyBody += @{ name = $name}  }
-                                    $MyBody += @{ protocol = $protocol }
-        if ($vendor)            {   $MyBody += @{ vendor = $vendor}  }
-        $CT = @{ 'Content-Type' = 'application/json'
-                }
-        if ($Whatif)
-                {   return Invoke-RestMethodWhatIf -uri $MyUri -method 'POST' -headers $MyHeaders -ContentType 'appplication/json' -body $MyBody
-                } 
-            else 
-                {   return Invoke-RestMethod -uri $MyUri -method 'POST' -headers $MyHeaders -body ( $MyBody | convertTo-json ) -ContentType 'application/json' -verbose
-                }
+        if ($hbaModel)          {   $MyBody += @{ hbaModel = $hbaModel               }  }
+        if ($hostSpeed)         {   $MyBody += @{ hostSpeed = $hostSpeed             }  }
+        if ($ipAddress)         {   $MyBody += @{ ipAddress = $ipAddress             }  }
+        if ($name)              {   $MyBody += @{ name = $name                       }  }
+                                    $MyBody += @{ protocol = $protocol                  }
+        if ($vendor)            {   $MyBody += @{ vendor = $vendor                   }  }
+        Invoke-DSCCRestMethod -UriAdd $MyAdd - Method 'POST' -body $MyBody -whatifBoolean $WhatIf
     }       
 }   

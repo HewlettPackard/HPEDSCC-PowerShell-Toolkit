@@ -96,26 +96,10 @@ param(  [parameter(mandatory,ValueFromPipeLineByPropertyName=$true )][Alias('id'
 process
     {   Invoke-DSCCAutoReconnect
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-        write-verbose "Dectected the DeviceType is $DeviceType"
         if ( $DeviceType )
-            {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/storage-pools'
-                if ( $WhatIf )
-                        {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
-                        }   
-                    else 
-                        {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
-                        }
-                if ( ($SysColOnly).items ) 
-                        {   $SysColOnly = ($SysColOnly).items 
-                            $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Pool.$DeviceType"
-                        } 
-                    else 
-                        {   if ( ($SysColOnly).total -eq 0 ) 
-                                {   Write-warning "The System with SystemID $SystemId has no Pool defined."
-                                    $ReturnData = ''
-                                }
-                        }
-
+            {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/storage-pools'
+                invoke-DSCCrestmethod -UriAdd $MyAdd -method Get -whatifBoolean $WhatIf
+                $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Pool.$DeviceType"
                 if ( $PoolId )
                         {   return ( $ReturnData | where-object { $_.id -eq $PoolId } )
                         } 
@@ -123,12 +107,7 @@ process
                         {   return $ReturnData
                         }
             }
-            else 
-            {   write-warning "The StorageSystemId Presented cannot be found."
-                return
-                
-            }
-        
+        return
     }       
 }   
 function Get-DSCCStoragePoolVolume
@@ -256,31 +235,22 @@ param(  [parameter(mandatory,ValueFromPipeLineByPropertyName=$true )][Alias('id'
 process
     {   Invoke-DSCCAutoReconnect
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-        write-verbose "Dectected the DeviceType is $DeviceType"
+        Clear-Variable -Name ReturnData -ErrorAction SilentlyContinue
         if ( $DeviceType -eq 'device-type2')
                 {   Write-Warning "This command only operates against Device-Type1 Storage Devices."
-                    return 
                 }
             else 
-                {   $MyURI = $BaseURI + 'storage-systems/' + $SystemId + '/storage-pools/' + $PoolId + '/volumes'
-                    if ( $WhatIf )
-                            {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
-                            }   
-                        else 
-                            {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
-                                if ($SysColOnly)
-                                    {   $SysColOnly = (($SysColOnly).volumes).items
-                                        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "PoolVolume.$DeviceType"
-                                    }
-                            }
-                    if ( $VolumeId )
-                            {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                                return ( $ReturnData | where-object { $_.id -eq $VolumeId } )
-                            } 
-                        else 
-                            {   return $ReturnData
-                            }
+                {   $MyAdd = 'storage-systems/' + $SystemId + '/storage-pools/' + $PoolId + '/volumes'
+                    invoke-DSCCrestmethod -UriAdd $MyAdd -method Get -whatifBoolean $WhatIf
+                    $SysColOnly = (($SysColOnly).volumes).items
+                    $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "PoolVolume.$DeviceType"
                 }
-
+        if ( $VolumeId )
+                {   Write-host "The results of the complete collection have been limited to just the supplied ID"
+                    return ( $ReturnData | where-object { $_.id -eq $VolumeId } )
+                } 
+            else 
+                {   return $ReturnData
+                }
     }       
 }   

@@ -162,13 +162,14 @@ function Find-DSCCDeviceTypeFromStorageSystemID
 
             [switch]    $WhatIf 
           )
-    $ReturnResult = ''
     if ( ( Get-DSCCStorageSystem -SystemId $SystemId -DeviceType Device-Type1 ) )
-            { return 'device-type1'
+            {   write-verbose "The DeviceType Detected was Device-Type1"
+                return 'device-type1'
             } 
         else 
             {   if ( ( Get-DSCCStorageSystem -SystemId $SystemId -DeviceType Device-Type2 ) )
-                        {   return 'device-type2'
+                        {   write-verbose "The DeviceType detected was Device-Type2"
+                            return 'device-type2'
                         }
                     else 
                         {   return
@@ -180,38 +181,65 @@ function Invoke-DSCCAutoReconnect
     $CurrentEpoch = [int](New-TimeSpan -Start (Get-Date "01/01/1970") -End (Get-Date)).TotalSeconds
     $TokenEpoch = [int]($AuthToken).Token_CreationEpoch
     $Timeout = 60 * 105 # 1 hour and 45 minutes 
-    write-verbose "CurrentEpoch = $CurrentEpoch"
-    write-verbose "TokenEpoch = $TokenEpoch"
-    if ( ($CurrentEpoch -$TokenEpoch) -gt $Timeout ) 
-        {   if ( ($AuthToken).AutoRenew ) 
-                    {   write-verbose "The Token is close to expiring, This will renew the command"
-                        $AccessToken = ( invoke-restmethod -uri "$AuthURI" -Method Post -headers $AuthHeaders -body $AuthBody ).access_token
-                        $ReturnData =  @{   Access_Token    = $AccessToken 
-                                            Token_Creation  = $( Get-Date ).datetime
-                                            Token_CreationEpoch = [int]$( (New-TimeSpan -Start (Get-Date "01/01/1970") -End (Get-Date)).TotalSeconds ) 
-                                            Auto_Renew      = ($AuthToken).AutoRenew
-                                        }
-                        $ReturnData2 = $ReturnData | convertto-json | convertfrom-json
-                        $Global:AuthToken = Invoke-RepackageObjectWithType -RawObject $ReturnData2 -ObjectName 'AccessToken' 
-                    } 
-                else 
-                    {   Write-Warning "The Authorication Token is due to expire soon, and your didnt connect using the AutoRenew option."  
-                    }
+    if ( ($AuthToken).AutoRenew ) 
+        {   write-verbose "CurrentEpoch = $CurrentEpoch; TokenEpoch = $TokenEpoch"        
+            $TimeDiff = ( $CurrentEpoch - $TokenEpoch )
+            if ( $TimeDiff -gt $Timeout ) 
+                {   write-verbose "The Token is close to expiring, This will renew the command"
+                    $AccessToken = ( invoke-restmethod -uri "$AuthURI" -Method Post -headers $AuthHeaders -body $AuthBody ).access_token
+                    $ReturnData =  @{   Access_Token    = $AccessToken 
+                                        Token_Creation  = $( Get-Date ).datetime
+                                        Token_CreationEpoch = [int]$( (New-TimeSpan -Start (Get-Date "01/01/1970") -End (Get-Date)).TotalSeconds ) 
+                                        Auto_Renew      = ($AuthToken).AutoRenew
+                                    }
+                    $ReturnData2 = $ReturnData | convertto-json | convertfrom-json
+                    $Global:AuthToken = Invoke-RepackageObjectWithType -RawObject $ReturnData2 -ObjectName 'AccessToken' 
+                } 
+            write-verbose "The Time difference in seconds was $TimeDiff seconds and allowable difference is $Timeout."
         }
-    $TimeDiff = ( $CurrentEpoch - $TokenEpoch )
-    write-verbose "The Time difference in seconds is $TimeDiff seconds."
     return
 }
-function ThrowHTTPError {
-    Param ( $ErrorResponse
+function ThrowHTTPError 
+{   Param ( $ErrorResponse
           )
-          $Response = ( (($ErrorResponse).Exception).Response | convertto-json )
-          $ECode =  (((($ErrorResponse).Exception).Response).StatusCode).value__
-          $EText = ((($ErrorResponse).Exception).Response).StatusDescription
-          write-warning "The RestAPI Request failed with the following Status: `r`n`tHTTPS Return Code = $ECode`r`n`tHTTPS Return Code Description = $EText"
-          Write-Verbose "Raw Response  = $Response"
-    return
+    Process 
+    {   $Response =   ((($ErrorResponse).Exception).Response | convertto-json )
+        $ECode =      (((($ErrorResponse).Exception).Response).StatusCode).value__
+        $EText =      ((($ErrorResponse).Exception).Response).StatusDescription + ((($ErrorResponse).Exception).Response).ReasonPhrase 
+        write-warning "The RestAPI Request failed with the following Status: `r`n`tHTTPS Return Code = $ECode`r`n`tHTTPS Return Code Description = $EText"
+        Write-Debug   "Raw Response  = $Response"
+        return
+    }
 }
+function Invoke-DSCCRestMethod
+{   Param(  $UriAdd,
+            $Body='',
+            $Method='Get',
+            $WhatIfBoolean=$false
+         )
+    Process
+    {   $MyURI = $BaseURI + $UriAdd
+        Clear-Variable -Name InvokeReturnData -ErrorAction SilentlyContinue
+        if ( $WhatIfBoolean )
+                {   invoke-RestMethodWhatIf -Uri $MyUri -Method $Method -Headers $MyHeaders -Body $Body -ContentType 'application/json'
+                } 
+            else 
+                {   try     {   $InvokeReturnData = invoke-restmethod -Uri $MyUri -Method $Method -Headers $MyHeaders -Body $Body -ContentType 'application/json'
+                                if (($InvokeReturnData).items)
+                                    {   $InvokeReturnData = ($InvokeReturnData).items 
+                                    }
+                                if (($InvokeReturnData).Total -eq 0)
+                                    {   Write-warning "The call succeeded however zero items were returned"
+                                        $InvokeReturnData = ''
+                                    }
+                            }
+                    catch   {   ThrowHTTPError -ErrorResponse $_
+                            }
+                }   
+        return $InvokeReturnData
+    }
+}
+
 function Invoke-RestMethodWhatIf
 {   Param(  $Uri,
             $Method,

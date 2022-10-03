@@ -72,24 +72,11 @@ param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('i
 process
     {   Invoke-DSCCAutoReconnect
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-        write-verbose "Dectected the DeviceType is $DeviceType"
-        $MyURI = $BaseUri + 'storage-systems/' + $DeviceType + '/' + $SystemID + '/certificates'
+        $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemID + '/certificates'
         if ( $CertificateID )
                 {   $MyURI = $MyURI + '/' + $CertificateId
                 }   
-        if ( $WhatIf )
-                {   $SysColOnly = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders -method 'Get'
-                }
-            else 
-                {   try {   $SysColOnly = invoke-restmethod -uri $MyURI -Headers $MyHeaders -method 'Get'
-                        }
-                    catch { write-warning "No Certificates for system with SystemID $SystemID found."
-
-                        }
-                }
-        if ( ($SysColOnly).items )
-                {   $SysColOnly = ($SysColOnly).items
-                }
+        $SysColOnly = invoke-DSCCrestmethod -uriAdd $MyAdd -method 'Get' -WhatIfBoolean $WhatIf
         $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Certificate.$DeviceType"
         return $ReturnData
     }       

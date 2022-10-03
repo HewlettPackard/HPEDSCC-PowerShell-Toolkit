@@ -226,42 +226,19 @@ process
             }
         $BigCollection=@()
         foreach ( $DevType in $DevTypes )
-        {   $MyURI = $BaseURI + 'storage-systems/' + $DevType
-            if ( $WhatIf )
-                    {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
-                    }   
-                else 
-                    {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
-                    }
-            if ( ($SysColOnly).items )  
-                    {   $SysColOnly = ($SysColOnly).items 
-                    }   
-                else 
-                    {   if ( ($SysColOnly).total -eq 0 )
-                            {   write-warning "No Items Returned"
-                                $SysColOnly = ''
-                            }
-                    }   
-            if ( $DeviceType ) 
-                {   $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "StorageSystem.$DevType"
-                } else 
-                {   $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "StorageSystem.Combined"   
-                }
-            if ( $SystemId )
-                    {   $BigCollection+=( $ReturnData | where-object { $_.id -eq $SystemId } )
-                        if ( $_.id -eq $SystemId )
-                            {   return $BigCollection   
-                            }
-                    } 
-                else 
-                    {   $BigCollection+=$ReturnData
-                        #if ( $DeviceType ) 
-                        #    {   return $ReturnData
-                        #    }
-                    }
-        }
-        return $BigCollection
-    }       
+            {   $MyAdd = 'storage-systems/' + $DevType
+                $SysColOnly = invoke-DSCCrestmethod -UriAdd $MyAdd -method Get -whatifBoolean $WhatIf  
+                $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "StorageSystem.Combined"   
+                $BigCollection+= $ReturnData 
+            }
+        if ( $SystemId)
+            {   return ( $BigCollection | where-object { $_.id -eq $SystemId } )
+            } 
+          else 
+            {   return $BigCollection
+            }
+
+    }   
 }   
 
 function Invoke-DSCCStorageSystemLocate
@@ -303,15 +280,9 @@ param(  [parameter(mandatory)]  [string]    $StorageSystemId,
      )
 process
     {   Invoke-DSCCAutoReconnect
-        $MyURI = $BaseURI + 'storage-systems/device-type1/' + $StorageSystemId 
-        $MyBody = @{    locateEnabled = $true
-                   }
-        if ( $WhatIf )
-                {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -body $MyBody -method Post
-                }   
-            else 
-                {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -body $MyBody -method Post
-                }
+        $MyAdd = 'storage-systems/device-type1/' + $StorageSystemId 
+        $MyBody = @{    locateEnabled = $true   }
+        invoke-restmethod -UriAdd $MyAdd -body $MyBody -method Post -whatifBoolean $WhatIf
         return $SysColOnly
     }       
 }   

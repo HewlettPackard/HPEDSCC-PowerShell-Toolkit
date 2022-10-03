@@ -22,28 +22,12 @@ param(  [parameter(mandatory,ValueFromPipeLineByPropertyName=$true )][Alias('id'
 process
     {   Invoke-DSCCAutoReconnect
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -systemId $systemId )
-        write-verbose "Dectected the DeviceType is $DeviceType"
         switch ( $DeviceType )
         {   'device-type1'  {   write-warning "This command only works on Device-Type 2 devices." 
                                 return
                             }
-            'device-type2'  {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $systemId + '/folders'
-                                if ( $WhatIf )
-                                        {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
-                                        }   
-                                    else 
-                                        {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
-                                        }
-                                $sysColOnly | convertto-json | out-string
-                                if ( ($SysColOnly).items ) 
-                                        {   $SysColOnly = ($SysColOnly).items 
-                                        } 
-                                    else 
-                                        {   if ( ($SysColOnly).total -eq 0 ) 
-                                                {   Write-warning "The System with SystemID $SystemId has no Folder defined."
-                                                    return
-                                                }
-                                        }
+            'device-type2'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $systemId + '/folders'
+                                $SysColOnly = invoke-DSCCrestmethod -uriadd $MyAdd -method Get -whatifBoolean
                                 $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Folder"
                                 if ( $folderId )
                                         {   return ( $ReturnData | where-object { $_.id -eq $folderId } )

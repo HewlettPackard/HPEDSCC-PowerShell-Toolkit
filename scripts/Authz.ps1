@@ -31,22 +31,9 @@ param(  [switch]    $whatIf
      )
 process
     {   Invoke-DSCCAutoReconnect
-        $MyURI = $BaseURI + 'access-controls'
-        if ( $WhatIf )
-                {   $FullObjSet = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders  -method 'Get'
-                }
-            else
-                {   try     {   $FullObjSet = Invoke-RestMethod -uri $MyURI -Headers $MyHeaders  -method 'Get' 
-                            }   
-                    catch   {   write-warning "The call for audits and events returned nothing."
-                            }
-                }
-        if ( ($FullObjSet).items )
-                {   return ($FullObjSet).items 
-                }
-            else 
-                {   return $FullObjSet   
-                }
+        $MyAdd = 'access-controls'
+        $FullObjSet = Invoke-DSCCRestMethod -uriAdd $MyAdd -method 'Get' -WhatIfBoolean $WhatIf 
+        return $FullObjSet   
     }       
 }   
 function Get-DSCCResourceType
@@ -82,21 +69,8 @@ param(  [switch]    $whatIf
      )
 process
     {   Invoke-DSCCAutoReconnect
-        $MyURI = $BaseURI + 'resource-types'
-        if ( $WhatIf )
-                {   $FullObjSet = invoke-restmethodWhatIf -uri $MyURI -Headers $MyHeaders  -method 'Get'
-                }
-            else
-                {   try     {   $FullObjSet = Invoke-RestMethod -uri $MyURI -Headers $MyHeaders  -method 'Get' 
-                            }   
-                    catch   {   write-warning "The call for audits and events returned nothing."
-                            }
-                }
-        if ( ($FullObjSet).items )
-                {   return ($FullObjSet).items 
-                }
-            else 
-                {   return $FullObjSet   
-                }
+        $MyAdd = 'resource-types'
+        $FullObjSet = Invoke-DSCCRestMethod -uriadd $MyAdd -method 'Get' -whatifBoolean $WhatIf 
+        return $FullObjSet   
     }       
 }   

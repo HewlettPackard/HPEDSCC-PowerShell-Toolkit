@@ -38,52 +38,25 @@ param(  [Parameter(ValueFromPipeLineByPropertyName=$true,Mandatory=$true )][Alia
 process
     {   Invoke-DSCCAutoReconnect
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-        write-verbose "Dectected the DeviceType is $DeviceType"
         switch ( $devicetype )
             {   'device-type1'  {   if ( $VolumeId )
-                                            {   write-verbose "No Volume was given, so checking all Volumes on this System"
-                                                $VolObj = Get-DSCCVolume -systemid $Systemid -volumeid $VolumeId
+                                            {   $VolObj = Get-DSCCVolume -systemid $Systemid -volumeid $VolumeId
                                             }
                                         else
-                                            {   $VolObj = Get-DSCCVolume -systemId $SystemId
+                                            {   write-verbose "No Volume was given, so checking all Volumes on this System"
+                                                $VolObj = Get-DSCCVolume -systemId $SystemId
                                             }
                                     $SysColOnly = @()
                                     foreach ($MyVol in $VolObj)
-                                        {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes/' + ($MyVol).id + '/vluns'
-                                            if ( $WhatIf )
-                                                    {   $MyCol = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
-                                                    }   
-                                                else 
-                                                    {   $MyCol = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get    
-                                                    }
-                                            if ( ( $MyCol ).items )
-                                                    {   $MyCol = $MyCol.items 
-                                                    }
-                                            if ( ( $MyCol ).total -eq 0 )
-                                                    {   $MyVolId = $MyVol.id
-                                                        Write-verbose "The Call to SystemID $SystemId using Volume $MyVolId returned no vLun Records."
-                                                        $MyCol = ''                                                
-                                                    }  
-                                                else
-                                                    {   $SysColOnly += $MyCol                                                        
-                                                    }
+                                        {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes/' + ($MyVol).id + '/vluns'
+                                            $MyCol = invoke-DSCCrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf    
+                                            $SysColOnly += $MyCol                                                        
                                         } 
-                                        if ( $SysColOnly ) 
-                                                {   $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName ( "AccessControlRecord")
-                                                    return $ReturnData
-                                                }
-                                            else
-                                                {   write-warning "The call to system ID $systemId returned no VLUNs."
-                                                    return
-                                                }
+                                    $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName ( "AccessControlRecord")
+                                    return $ReturnData
                                 }
-                'device-type2'  {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/access-control-records/' + $AccessControlRecordId
-                                    if ( $WhatIf )
-                                            {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
-                                            }   
-                                        else 
-                                            {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
-                                            }
+                'device-type2'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/access-control-records/' + $AccessControlRecordId
+                                    $SysColOnly = invoke-Dsccrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf
                                     if ( ( $SysColOnly ).items )
                                             {   $SysColOnly = $SysColOnly.items 
                                             }
@@ -132,27 +105,13 @@ param(  [Parameter(ParameterSetName=('device-type1','device-type2'),ValueFromPip
 process
     {   Invoke-DSCCAutoReconnect
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-        write-verbose "Dectected the DeviceType is $DeviceType"
         switch ( $devicetype )
-            {   'device-type1'  {   
-                                    $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes/' + $VolumeId + '/vluns/' + $vLunId
-                                    return 
+            {   'device-type1'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes/' + $VolumeId + '/vluns/' + $vLunId
                                 }
-                'device-type2'  {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/access-control-records/' + $AccessControlRecordId
+                'device-type2'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/access-control-records/' + $AccessControlRecordId
                                 }
             }
-        if ( $WhatIf )
-                {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
-                }   
-            else 
-                {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
-                }
-        if ( $Whatif )
-                {   return Invoke-RestMethodWhatIf -Uri $MyUri -Method 'Delete' -headers $MyHeaders -body $LocalBody
-                } 
-            else 
-                {   return Invoke-RestMethod -uri $MyUri -Headers $MyHeaders -Method Delete -body $LocalBody
-                }
+        return Invoke-DSCCRestMethod -uriAdd $MyAdd -Method Delete -WhatIfBoolean $WhatIf
     }       
 }   
 Function New-DSCCAccessControlRecord
@@ -231,16 +190,8 @@ param(  [Parameter(ParameterSetName=('device-type1','device-type2'),ValueFromPip
 process
     {   Invoke-DSCCAutoReconnect
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-        write-verbose "Dectected the DeviceType is $DeviceType"
         switch ( $devicetype )
-            {   'device-type1'  {   if ( Get-DSCCVolume -systemid $Systemid -volumeid $VolId )
-                                            {   $VolObj = Get-DSCCVolume -systemid $Systemid -volumeid $VolId
-                                            }
-                                        else
-                                            {   write-warning 'The Volume ID presented was not found on the storage system.'
-                                                return
-                                            }
-                                    $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes/' + $VolId + '/vluns'
+            {   'device-type1'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes/' + $VolId + '/vluns'
                                                                 $MyBody =  @{}
                                     if ($autoLun)           {   $MyBody += @{ autoLun       = $autoLun      }  }
                                     if ($hostGroupIds)      {   $MyBody += @{ hostGroupIds  = $hostGroupIds }  }
@@ -249,7 +200,7 @@ process
                                     if ($override )         {   $MyBody += @{ override      = $override     }  }
                                     if ($position )         {   $MyBody += @{ position      = $position     }  }
                                 }
-                'device-type2'  {   $MyURI = $BaseURI + 'storage-systems/' + $devicetype + '/' + $SystemId + '/access-control-records'
+                'device-type2'  {   $MyAdd = 'storage-systems/' + $devicetype + '/' + $SystemId + '/access-control-records'
                                                                 $MyBody =  @{}
                                     if ($applyTo)           {   $MyBody += @{ apply_to           = $applyTo          }  }
                                     if ($chapUserId)        {   $MyBody += @{ chap_user_id       = $chapUserId       }  }
@@ -261,11 +212,6 @@ process
                                     if ($volId )            {   $MyBody += @{ vol_id             = $volId            }  }
                                 }
             }
-        if ($Whatif)
-                {   return Invoke-RestMethodWhatIf -uri $MyUri -method 'POST' -headers $MyHeaders -body $MyBody -ContentType 'application/json'
-                } 
-            else 
-                {   return Invoke-RestMethod -uri $MyUri -method 'POST' -headers $MyHeaders -body ( $MyBody | ConvertTo-Json ) -ContentType 'application/json'
-                }
+        return Invoke-DSCCRestMethod -uriadd $MyAdd -method 'POST' -body ( $MyBody | ConvertTo-Json ) -whatifBoolean $WhatIf
      }      
 } 

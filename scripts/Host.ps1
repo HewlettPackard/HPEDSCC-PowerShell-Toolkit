@@ -93,32 +93,16 @@ param(  [string]    $HostID,
      )
 process
     {   Invoke-DSCCAutoReconnect
-        $MyURI = $BaseURI + 'host-initiators'
-        clear-variable -Name SysColOnly -ErrorAction SilentlyContinue
-        clear-variable -Name ReturnData -ErrorAction SilentlyContinue
-        if ( $WhatIf )
-                {   invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
-                }   
-            else 
-                {   try     {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
-                            }
-                    catch 
-                            {   ThrowHTTPError -ErrorResponse $_
-                            }
-                }
-        if ($SysColOnly) 
-            {   if ( ( $SysColOnly ).items )
-                    { $SysColOnly = ( $SysColOnly ).items 
+        $MyAdd = 'host-initiators'
+        $SysColOnly = Invkoe-DSCCRestMethod -UriAdd $MyAdd -method Get -WhatIfBoolean $WhatIf
+        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Host"
+        if ( $HostID )
+                    {   Write-verbose "The results of the complete collection have been limited to just the supplied ID"
+                        return ( $ReturnData | where-object { $_.id -eq $HostId } )
+                    } 
+                else 
+                    {   return $ReturnData
                     }
-                $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Host"
-                if ( $HostID )
-                        {   Write-verbose "The results of the complete collection have been limited to just the supplied ID"
-                            return ( $ReturnData | where-object { $_.id -eq $HostId } )
-                        } 
-                    else 
-                        {   return $ReturnData
-                        }
-            }
     }       
 }   
 function Remove-DSCCHost
@@ -165,25 +149,11 @@ param(  [Parameter(Mandatory)]  [string]    $HostID,
      )
 process
     {   Invoke-DSCCAutoReconnect
-        $MyURI = $BaseURI + 'host-initiators/' + $HostID
+        $MyAdd = 'host-initiators/' + $HostID
         if ($Force)
-                {   $LocalBody = @{force=$true}
-                    if ($Whatif)
-                            {   return Invoke-RestMethodWhatIf -uri $MyUri -method 'Delete' -headers $MyHeaders -body ($LocalBody | convertTo-json) -ContentType 'application/json'
-                            } 
-                        else 
-                            {   return Invoke-RestMethod -uri $MyUri -method 'Delete' -headers $MyHeaders -body ($LocalBody | convertTo-json) -ContentType 'application/json'
-                            }
-                }
-            else    
-                {   if ($Whatif)
-                            {   return Invoke-RestMethodWhatIf -uri $MyUri -method 'Delete' -headers $MyHeaders
-                            } 
-                        else 
-                            {   return Invoke-RestMethod -uri $MyUri -method 'Delete' -headers $MyHeaders
-                            }
-                
-                }
+            {   $MyBody = ( @{force=$true} | convertto-json )
+            }
+        return Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Delete' -body $MyBody -WhatIfBoolean $WhatIf
     }       
 }   
 function Get-DSCCHostVolume
@@ -245,17 +215,15 @@ param(  [string]    $HostID,
      )
 process
     {   Invoke-DSCCAutoReconnect
-        $MyURI = $BaseURI + 'host-initiators/' + $HostID + '/volumes'
-        if ( $WhatIf )
-                {   invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
-                }   
-            else     
-                {   try     {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
-                            }
-                    catch   {   ThrowHTTPError -ErrorResponse $_
-                            }
+        $MyAdd = 'host-initiators/' + $HostID + '/volumes'
+        $ReturnData = Invoke-DSCCRestMethod -UriAdd $MyAdd -Method Get -WhatIfBoolean $WhatIf
+        if ( $HostID )
+                {   Write-verbose "The results of the complete collection have been limited to just the supplied ID"
+                    return ( $ReturnData | where-object { $_.id -eq $HostId } )
+                } 
+            else 
+                {   return $ReturnData
                 }
-        return $SysColOnly 
     }       
 } 
 Function New-DSCCHost
@@ -330,35 +298,29 @@ param(                              [string]    $comment,
                                     [string]    $subnet,
                                     [boolean]   $userCreated=$true,
                                     [switch]    $WhatIf
-        
      )
 process
     {   Invoke-DSCCAutoReconnect
-        $MyURI = $BaseURI + 'host-initiators'
+        $MyAdd = 'host-initiators'
                                         $MyBody= [ordered]@{}
-        if ($comment)               {   $MyBody += @{ comment = $comment }  }
-        if ($contact)               {   $MyBody += @{ contact = $contact }  }
-        if ($fqdn)                  {   $MyBody += @{ fqdn = $fqdn }  }
-        if ($hostGroupIds)          {   $MyBody += @{ hostGroupIds = $hostGroupIds }  }
-        if ($initiatorIds)          {   $MyBody += @{ initiatorIds = $initiatorIds }  }
-                            else    {   $MyBody += @{ initiatorIds = $( $null ) }  }
-        if ($initiatorsToCreate )   {   $MyBody += @{ initiatorsToCreate = $initiatorsToCreate }  }
-        if ($ipAddress)             {   $MyBody += @{ ipAddress = $ipAddress }  }
-        if ($location)              {   $MyBody += @{ location = $location }  }
-        if ($model)                 {   $MyBody += @{ model = $model }  }
-                                        $MyBody += @{ name = $name }
-                                        $MyBody += @{ operatingSystem = $operatingSystem }
-        if ($persona)               {   $MyBody += @{ persona = $persona }  }
-        if ($protocol)              {   $MyBody += @{ protocol = $protocol }  }
-        if ($subnet)                {   $MyBody += @{ subnet = $subnet }  }
-                                        $MyBody += @{ userCreated = $userCreated }
-        if ($Whatif)
-                {   return Invoke-RestMethodWhatIf -uri $MyUri -method 'POST' -headers $MyHeaders -ContentType 'application/json' -body $MyBody
-                } 
-            else 
-                {   return Invoke-RestMethod -uri $MyUri -method 'POST' -headers $MyHeaders -body ( $MyBody | convertTo-json ) -ContentType 'application/json'
-                }
-     }      
+        if ($comment)               {   $MyBody += @{ comment = $comment                        }  }
+        if ($contact)               {   $MyBody += @{ contact = $contact                        }  }
+        if ($fqdn)                  {   $MyBody += @{ fqdn = $fqdn                              }  }
+        if ($hostGroupIds)          {   $MyBody += @{ hostGroupIds = $hostGroupIds              }  }
+        if ($initiatorIds)          {   $MyBody += @{ initiatorIds = $initiatorIds              }  }
+                            else    {   $MyBody += @{ initiatorIds = $( $null )                 }  }
+        if ($initiatorsToCreate )   {   $MyBody += @{ initiatorsToCreate = $initiatorsToCreate  }  }
+        if ($ipAddress)             {   $MyBody += @{ ipAddress = $ipAddress                    }  }
+        if ($location)              {   $MyBody += @{ location = $location                      }  }
+        if ($model)                 {   $MyBody += @{ model = $model                            }  }
+                                        $MyBody += @{ name = $name                                 }
+                                        $MyBody += @{ operatingSystem = $operatingSystem           }
+        if ($persona)               {   $MyBody += @{ persona = $persona                        }  }
+        if ($protocol)              {   $MyBody += @{ protocol = $protocol                      }  }
+        if ($subnet)                {   $MyBody += @{ subnet = $subnet                          }  }
+                                        $MyBody += @{ userCreated = $userCreated                   }
+        return Invoke-DSCCRestMethod -uri $MyUri -method 'POST' -body ( $MyBody | convertTo-json ) -WhatIfBoolean $WhatIf
+    }      
 } 
 Function Set-DSCCHost
 {
@@ -395,16 +357,11 @@ param(  [Parameter(Mandatory)]  [string]    $hostID,
      )
 process
     {   Invoke-DSCCAutoReconnect
-        $MyURI = $BaseURI + 'host-initiator/' + $hostID
+        $MyAdd = 'host-initiator/' + $hostID
                                         $MyBody += @{} 
-        if ($name)                  {   $MyBody += @{ name = $name}  }
-        if ($updatedInitiators)     {   $MyBody += @{ updatedInitiators  = $updatedInitiators }  }
-        if ($initiatorsToCreate)    {   $MyBody += @{ initiatorsToCreate = $initiatorsToCreate }  }
-        if ($Whatif)
-                {   return Invoke-RestMethodWhatIf -uri $MyUri -Headers $MyHeaders -body $MyBody -ContentType 'application/json' -Method 'PUT'
-                } 
-            else 
-                {   return Invoke-RestMethod -uri $MyUri -Headers $MyHeaders -body ( $MyBody | ConvertTo-JSON) -ContentType 'application/json' -Method 'PUT'
-                }
+        if ($name)                  {   $MyBody += @{ name = $name                              }  }
+        if ($updatedInitiators)     {   $MyBody += @{ updatedInitiators  = $updatedInitiators   }  }
+        if ($initiatorsToCreate)    {   $MyBody += @{ initiatorsToCreate = $initiatorsToCreate  }  }
+        return Invoke-DSCCRestMethod -uri $MyUri -body $MyBody -Method 'PUT' -WhatIfBoolean $WhatIf
     }       
 } 

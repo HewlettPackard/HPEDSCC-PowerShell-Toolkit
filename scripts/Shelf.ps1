@@ -59,41 +59,26 @@ param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('i
 process
     { Invoke-DSCCAutoReconnect
       $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-      write-verbose "Dectected the DeviceType is $DeviceType"
       if ( $DeviceType )
-        {   $ShelfWord = '/shelves'
-            if ( $DeviceType -eq 'Device-Type1')
-                {   $ShelfWord = '/enclosures'
-                }
-            $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + $ShelfWord
-            if ( $WhatIf )
-                {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -method Get
-                }   
-              else 
-                {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -method Get
-                }
-            if ( ($SysColOnly).items ) 
-                    {   $SysColOnly = ($SysColOnly).items 
-                        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Shelf.Combined"
+            {   $ShelfWord = '/shelves'
+                if ( $DeviceType -eq 'Device-Type1')
+                    {   $ShelfWord = '/enclosures'
                     }
-                else
-                    {   if ( ($SysColOnly).total -eq 0 )
-                                {   Write-warning "No Storage System Shelf detected for Storage Systed Id $SystemId"
-                                }
-                        $ReturnData = ''
-                    }
-            if ( $ShelfId )
-                    {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                        return ( $ReturnData | where-object { $_.id -eq $ShelfId } )
-                    } 
-                else 
-                    {   return $ReturnData
-                    }
-        }
-       else 
-        {   write-warning "The Storage System ID presented was not detected."
-            return  
-        }
+                $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + $ShelfWord
+                $SysColOnly = Invoke-DSCCRestMethod -UriAdd $MyAdd -method Get -WhatIfBoolean $WhatIf                
+                $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Shelf.Combined"
+                if ( $ShelfId )
+                        {   Write-host "The results of the complete collection have been limited to just the supplied ID"
+                            return ( $ReturnData | where-object { $_.id -eq $ShelfId } )
+                        } 
+                    else 
+                        {   return $ReturnData
+                        }
+            }
+        else 
+            {   write-warning "The Storage System ID presented was not detected."
+                return  
+            }
     }       
 }
 function Invoke-DSCCShelfLocate
@@ -147,23 +132,16 @@ param(  [parameter(mandatory,ValueFromPipeLineByPropertyName=$true )][Alias('id'
 process
     {   Invoke-DSCCAutoReconnect
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-        write-verbose "Dectected the DeviceType is $DeviceType"
         if ( $DeviceType )
-            {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType2 + '/' + $SystemId + '/shelves/' + $ShelfId + '/action/locate'
+            {   $MyAdd = 'storage-systems/' + $DeviceType2 + '/' + $SystemId + '/shelves/' + $ShelfId + '/action/locate'
                 $MyBody = @{    cid     = $CId 
                                 status  = $Status
-                           }
-                if ( $WhatIf )
-                        {   $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -headers $MyHeaders -body $MyBody -method Post
-                        }   
-                    else 
-                        {   $SysColOnly = invoke-restmethod -uri $MyUri -headers $MyHeaders -body $MyBody -method Post
-                        }
-                return $SysColOnly
+                           } 
+                return Invoke-DSCCRestMethod -UriAdd $MyAdd -body ( $MyBody | ConvertTo-json ) -method Post -WhatIfBoolean $WhatIf
             } 
             else 
-            {   Write-Warning "No StorageSystem detected with a valid that valid System ID"
-                
+            {   Write-Warning "No StorageSystem detected with a valid that valid System ID"  
+                return          
             }
     }       
 }   

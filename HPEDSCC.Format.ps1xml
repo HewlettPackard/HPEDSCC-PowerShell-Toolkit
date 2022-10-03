@@ -1028,6 +1028,54 @@
             </TableControl>
 		</View>        
         <View>
+			<Name>DSCC.Initiator.Typename</Name>
+		    <ViewSelectedBy>
+                <TypeName>DSCC.Initiator.Typename</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <AutoSize />
+                <TableHeaders>
+                    <TableColumnHeader>
+                        <Label>id</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>name</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>operatingSystem</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>protocol</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>systems</Label>
+                    </TableColumnHeader>
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <Wrap />
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <PropertyName>id</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>name</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>operatingSystem</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>protocol</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>systems</PropertyName>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+		</View>        
+        <View>
 			<Name>DSCC.Audit.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.Audit.Typename</TypeName>
