@@ -6,7 +6,8 @@ function Get-DSCCAccessControlRecord
 .DESCRIPTION
     Returns the HPE Data Services Cloud Console Data Operations Manager Access Groups Collections.
 .PARAMETER SystemID
-    If a single System ID is specified the output will be limited to that single set of records.
+    If a single System ID is specified the output will be limited to that single set of records. If no System ID is 
+    given, the command will be run against all Storage Systems Ids
 .PARAMETER AccessControlRecordID
     If a single Access Control Record ID is specified the output will be limited to that single record.
 .PARAMETER WhatIf
@@ -30,51 +31,69 @@ function Get-DSCCAccessControlRecord
     test-now          0d3a78e8778c204dc2000000000000000000000029            access-control-record jpnhost04
 #>   
 [CmdletBinding()]
-param(  [Parameter(ValueFromPipeLineByPropertyName=$true,Mandatory=$true )][Alias('id')]    [string]    $SystemId,  
+param(  [Parameter(ValueFromPipeLineByPropertyName=$true)]                  [Alias('id')]   [string]    $SystemId,  
                                                                                             [string]    $AccessControlRecordId,    
                                                                                             [string]    $VolumeId,  
-                                                                                            [switch]    $WhatIf
+                                                                                            [boolean]   $WhatIf=$false
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-        switch ( $devicetype )
-            {   'device-type1'  {   if ( $VolumeId )
-                                            {   $VolObj = Get-DSCCVolume -systemid $Systemid -volumeid $VolumeId
-                                            }
-                                        else
-                                            {   write-verbose "No Volume was given, so checking all Volumes on this System"
-                                                $VolObj = Get-DSCCVolume -systemId $SystemId
-                                            }
-                                    $SysColOnly = @()
-                                    foreach ($MyVol in $VolObj)
-                                        {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes/' + ($MyVol).id + '/vluns'
-                                            $MyCol = invoke-DSCCrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf    
-                                            $SysColOnly += $MyCol                                                        
-                                        } 
-                                    $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName ( "AccessControlRecord")
-                                    return $ReturnData
-                                }
-                'device-type2'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/access-control-records/' + $AccessControlRecordId
-                                    $SysColOnly = invoke-Dsccrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf
-                                    if ( ( $SysColOnly ).items )
-                                            {   $SysColOnly = $SysColOnly.items 
-                                            }
-                                    if ( ( $SysColOnly ).total -eq 0 )
-                                            {   Write-Warning "The Call to SystemID $SystemId returned no Access ControlRecord Records."
-                                                return                                                
-                                            }
-                                    $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "AccessControlRecord"
-                                    if ( $AccessControlRecordId )
-                                            {   return ( $ReturnData | where-object { $_.id -eq $AccessControlRecordId } )
-                                            } 
-                                        else 
-                                            {   return $ReturnData
-                                            }
-                                }
-            }     
-    }       
-}   
+{   Invoke-DSCCAutoReconnect
+    if ( -not $PSBoundParameters.ContainsKey('SystemId' ) )
+            {   write-verbose "No SystemID Given, running all SystemIDs"
+                $ReturnCol=@()
+                foreach( $Sys in Get-DSCCStorageSystem )
+                    {   write-verbose "Walking Through Multiple Systems"
+                        If ( ($Sys).Id )
+                            {   write-verbose "Found a system with a System.id"
+                                $ReturnCol += Get-DSCCAccessControlRecord -SystemId ($Sys).Id -WhatIf $WhatIf
+                            }
+                    }
+                write-verbose "Returning the Multiple System Id Access Controll Groups."
+                return $ReturnCol
+            }
+        else 
+            {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+                switch ( $devicetype )
+                    {   'device-type1'  {   if ( $VolumeId )
+                                                    {   $VolObj = Get-DSCCVolume -systemid $Systemid -volumeid $VolumeId
+                                                    }
+                                                else
+                                                    {   write-verbose "No Volume was given, so checking all Volumes on this System"
+                                                        $VolObj = Get-DSCCVolume -systemId $SystemId
+                                                    }
+                                            $SysColOnly = @()
+                                            foreach ($MyVol in $VolObj)
+                                                {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes/' + ($MyVol).id + '/vluns'
+                                                    $MyCol = invoke-DSCCrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf    
+                                                    $SysColOnly += $MyCol                                                        
+                                                } 
+                                            $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName ( "AccessControlRecord")
+                                            return $ReturnData
+                                        }
+                        'device-type2'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/access-control-records/' + $AccessControlRecordId
+                                            $SysColOnly = invoke-Dsccrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf
+                                            if ( ( $SysColOnly ).items )
+                                                    {   $SysColOnly = $SysColOnly.items 
+                                                    }
+                                            if ( ( $SysColOnly ).total -eq 0 )
+                                                    {   Write-Warning "The Call to SystemID $SystemId returned no Access ControlRecord Records."
+                                                        return                                                
+                                                    }
+                                            if ( -not $SysColOnly )
+                                                    {   Write-Warning "No Access Control Records found for this system"
+                                                        return
+                                                    }
+                                            if ( $AccessControlRecordId )
+                                                    {   return ( $ReturnData | where-object { $_.id -eq $AccessControlRecordId } )
+                                                    } 
+                                                else 
+                                                    {   return $ReturnData
+                                                    }
+                                        }
+                    }     
+            }       
+}  
+} 
 function Remove-DSCCAccessControlRecord
 {
 <#
