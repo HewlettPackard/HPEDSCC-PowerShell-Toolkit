@@ -94,7 +94,7 @@ param(  [string]    $HostID,
 process
     {   Invoke-DSCCAutoReconnect
         $MyAdd = 'host-initiators'
-        $SysColOnly = Invkoe-DSCCRestMethod -UriAdd $MyAdd -method Get -WhatIfBoolean $WhatIf
+        $SysColOnly = Invoke-DSCCRestMethod -UriAdd $MyAdd -method Get -WhatIfBoolean $WhatIf
         $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Host"
         if ( $HostID )
                     {   Write-verbose "The results of the complete collection have been limited to just the supplied ID"

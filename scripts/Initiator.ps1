@@ -73,30 +73,44 @@ function Get-DSCCInitiator
 [CmdletBinding()]
 param(  [parameter( ValueFromPipeLineByPropertyName=$true )][Alias('id')]   [string]    $SystemId,
                                                                             [string]    $InitiatorID,
-                                                                            [switch]    $WhatIf
+                                                                            [boolean]   $WhatIf=$false
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        if ( ( -not $SystemId )  -or ( (Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId) -eq 'device-type1' ) )
-                {   $MyAdd = 'initiators'
-                }
-            else
-                {   if ( ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId ) -ne 'device-type2' )
-                            {   Write-warning "The System ID passed in does not register as a valid SystemId"
-                                return
+{   Invoke-DSCCAutoReconnect
+    if ( -not $SystemId )
+            {   $ReturnCol= @()
+                foreach ( $Sys in Get-DSCCStorageSystem )
+                    {   write-verbose "No SystemID was given, so running against all system IDs"
+                        IF ( ($Sys).id )
+                            {   write-verbose "Discovered first Systel"
+                                $ReturnCol += Get-DSCCInitiator -SystemId ($Sys).id -whatif $WhatIf
                             }
-                    $MyAdd = 'storage-systems/device-type2/'+$SystemId+'/host-initiators'
-                }
-        $SysColOnly = Invoke-DSCCRestMethod -UriAdd $MyAdd -method Get -whatifBoolean $WhatIf
-        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Initiator"
-        if ( $InitiatorID )
-                {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                    return ( $ReturnData | where-object { $_.id -eq $InitiatorID } )
-                }
-            else
-                {   return $ReturnData
-                }
-    }
+                    }
+                return $ReturnCol
+            } 
+        else
+            {
+                switch(Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId)
+                    {   'device-type1'  {   $MyAdd = 'initiators'  
+                                        }    
+                        'device-type2'  {   $MyAdd = 'storage-systems/device-type2/'+$SystemId+'/host-initiators'  
+                                        }    
+                        default         {   Write-warning "The System ID passed in does not register as a valid SystemId"
+                                            return
+                                        }                
+                    }
+                write-verbose "About to make main call to retrieve Initiators"
+                $SysColOnly = Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Get' -WhatIfBoolean $WhatIf
+                $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Initiator"
+                if ( $PSBoundParameters.ContainsKey('InitiatorID') )
+                        {   Write-host "The results of the complete collection have been limited to just the supplied ID"
+                            return ( $ReturnData | where-object { $_.id -eq $InitiatorID } )
+                        }
+                    else
+                        {   return $ReturnData
+                    }
+            }
+}
 }
 function Remove-DSCCInitiator
 {
@@ -123,7 +137,7 @@ function Remove-DSCCInitiator
 [CmdletBinding()]
 param(  [Parameter(Mandatory)]  [string]    $InitiatorID,
                                 [switch]    $Force,
-                                [switch]    $WhatIf
+                                [switch]    $WhatIf=$false
      )
 process
     {   Invoke-DSCCAutoReconnect

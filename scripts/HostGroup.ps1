@@ -94,12 +94,12 @@ function Get-DSCCHostGroup
 #>   
 [CmdletBinding()]
 param(  [string]    $HostGroupId,        
-        [switch]    $WhatIf
+        [boolean]    $WhatIf=$false
      )
 process
     {   Invoke-DSCCAutoReconnect
         $MyAdd = 'host-initiator-groups'
-        $SysColOnly = invoke-restmethodWhatIf -uri $MyUri -method Get -WhatIfBoolean $WhatIf
+        $SysColOnly = invoke-DSCCRestMethod -UriAdd $MyAdd -method Get -WhatIfBoolean $WhatIf
         $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "HostGroup"
         if ( $HostGroupID )
                 {   Write-host "The results of the complete collection have been limited to just the supplied ID"
@@ -150,7 +150,7 @@ function Remove-DSCCHostGroup
 [CmdletBinding()]
 param(  [Parameter(Mandatory)]  [string]    $HostGroupID,
                                 [switch]    $Force,
-                                [switch]    $WhatIf
+                                [boolean]    $WhatIf=$false
      )
 process
     {   Invoke-DSCCAutoReconnect
@@ -159,7 +159,7 @@ process
         if ( $Force )
                 {   $MyBody += ( @{ force = $true } | convertTo-json )
                 }
-        return Invoke-DSCCRestMethodWhat -UriAdd $MyAdd -Method 'Delete' -body $MyBody -WhatIfBoolean $WhatIf
+        return Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Delete' -body $MyBody -WhatIfBoolean $WhatIf
     }       
 }   
 Function New-DSCCHostGroup
@@ -216,7 +216,7 @@ param(  [Parameter(Mandatory=$true)]    [string]    $name,
                                         [array]     $hostIds,
                                         [array]     $hostsToCreate,
                                         [boolean]   $userCreated=$true,
-                                        [switch]    $WhatIf
+                                        [boolean]    $WhatIf=$false
      )
 process
     {   Invoke-DSCCAutoReconnect
@@ -261,7 +261,7 @@ param(  [Parameter(Mandatory)]  [string]    $hostGroupID,
                                 [string]    $name,
                                 [array]     $hostsToCreate,
                                 [array]     $updatedHosts,
-                                [switch]    $WhatIf
+                                [Boolean]    $WhatIf=$false
      )
 process
     {   Invoke-DSCCAutoReconnect
