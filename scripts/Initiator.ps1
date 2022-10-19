@@ -79,10 +79,11 @@ process
 {   Invoke-DSCCAutoReconnect
     if ( -not $SystemId )
             {   $ReturnCol= @()
+                write-verbose "No SystemID was given, so running against all system IDs"
                 foreach ( $Sys in Get-DSCCStorageSystem )
-                    {   write-verbose "No SystemID was given, so running against all system IDs"
+                    {   write-verbose "Running discover on a singular System ID"
                         IF ( ($Sys).id )
-                            {   write-verbose "Discovered first Systel"
+                            {   write-verbose "This systemID is valid."
                                 $ReturnCol += Get-DSCCInitiator -SystemId ($Sys).id -whatif $WhatIf
                             }
                     }
@@ -137,7 +138,7 @@ function Remove-DSCCInitiator
 [CmdletBinding()]
 param(  [Parameter(Mandatory)]  [string]    $InitiatorID,
                                 [switch]    $Force,
-                                [switch]    $WhatIf=$false
+                                [boolean]    $WhatIf=$false
      )
 process
     {   Invoke-DSCCAutoReconnect

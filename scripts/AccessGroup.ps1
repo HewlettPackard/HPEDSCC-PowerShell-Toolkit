@@ -11,12 +11,12 @@ function Get-DSCCAccessControlRecord
 .PARAMETER AccessControlRecordID
     If a single Access Control Record ID is specified the output will be limited to that single record.
 .PARAMETER WhatIf
-    The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
-    This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
+    The WhatIf can be either $true or $false and will show you the RAW RestAPI call that would be made to DSCC instead of actually 
+    sending the request. This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 .LINK
     The API call for this operation is file:///api/v1/storage-systems/{systemid}/device-type1/access-control-records
 .EXAMPLE
-    PS:> Get-DSCCStorageSystem  | Get-DSCCAccessControlRecord
+    PS:> Get-DSCCAccessControlRecord
     
     WARNING: The Call to SystemID MXN5442108 returned no Access ControlRecord Records.
 
@@ -25,7 +25,6 @@ function Get-DSCCAccessControlRecord
     jpnvol04.1        05337c8f5eb8b41d9bd6237a0cd2f02d           MXN5442108 vlun                  jpnhost04
     jpnvol04.1        4d45e53862f8cb41b2e89171ffa1b195           MXN5442108 vlun                  jpnhostgroup04
     fleet-test-volume 21d4e8b481380388392db7617531af56           MXN5442108 vlun                  fleet-test-host
-    fleet-test-volume f548680bf257c2d27c3f25f8ec6a824c           MXN5442108 vlun                  sc-fleet-test-hostgroup0
     jpnvol04.0        7cf3ebd3b23670a3fcf521c373b81905           MXN5442108 vlun                  jpnhost04
     jpnvol04.0        77bb708bb9b176670a8f46e8b5ea1384           MXN5442108 vlun                  jpnhostgroup04
     test-now          0d3a78e8778c204dc2000000000000000000000029            access-control-record jpnhost04

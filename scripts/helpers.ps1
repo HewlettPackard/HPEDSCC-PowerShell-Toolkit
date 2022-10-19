@@ -47,83 +47,91 @@
     PS:> Connect-DSCC -Client_Id '1234abcd' -Client_Secret 'ABC123XYZ' -GreenlakeType Dev -whatifGreenLakeType        
 #>
 [CmdletBinding()]
-param ( [Parameter(Mandatory,ParameterSetName='ByClientCreds')]
-        [string]    $Client_Id,
-
-        [Parameter(Mandatory,ParameterSetName='ByClientCreds')]
-        [string]    $Client_Secret,         
-
-        [Parameter(Mandatory,ParameterSetName='ByAccessToken')]
-        [string]    $AccessToken,         
-
-        [Parameter(Mandatory)][ValidateSet("Dev1","Dev2","Dev3","Asia", "USA", "EU")]
-        [string]    $GreenlakeType  = 'Dev', 
-        
-        [Parameter(ParameterSetName='ByClientCreds')]
-        [switch]    $AutoRenew, 
-
-        [Parameter(ParameterSetName='ByClientCreds')]
-        [switch]    $WhatIfToken, 
-
-        [switch]    $WhatIfGreenLakeType 
+param ( [Parameter(Mandatory,ParameterSetName='ByClientCreds')]                         [string]    $Client_Id,
+        [Parameter(Mandatory,ParameterSetName='ByClientCreds')]                         [string]    $Client_Secret,         
+        [Parameter(Mandatory,ParameterSetName='ByAccessToken')]                         [string]    $AccessToken,         
+        [Parameter(Mandatory)][ValidateSet("Dev1","Dev2","Dev3","Asia", "USA", "EU")]   [string]    $GreenlakeType, 
+        [Parameter(ParameterSetName='ByClientCreds')]                                   [switch]    $AutoRenew, 
+        [Parameter(ParameterSetName='ByClientCreds')]                                   [switch]    $WhatIfToken, 
+                                                                                        [switch]    $WhatIfGreenLakeType 
       )
-Process{
-    $Global:AuthUri = "https://sso.common.cloud.hpe.com/as/token.oauth2"
+Process
+{   $Global:AuthUri = "https://sso.common.cloud.hpe.com/as/token.oauth2"
     write-verbose "Changing default TLS to 1.2 from 1.0"
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     if ( $PsCmdlet.ParameterSetName -eq 'ByClientCreds')
-        {   write-verbose 'Obtaining Access Token using Passed Client_Id and Client_Secrets.'
+        {   if ( Resolve-DNSName 'sso.common.cloud.hpe.com' )
+                    {   write-verbose "Able to DNS Resolve the Single Sign In Server Successfully"
+                    }
+                else 
+                    {   write-error "The Single Sign In (SSO) Server was not DSN Resolvable./r/n Please fix the network enviornment before re-running this command."
+                        return 
+                    }
+            if ( (test-connection 'sso.common.cloud.hpe.com' -TcpPort 443) -or ( ($PSVersionTable.PSVersion).Major -ge 7 ) )
+                    {   write-verbose "Able to successfully connect to the SSO Server."
+                    }
+                else   
+                    {   Write-Error "The Single Sign-In Server 'sso.common.cloud.hpe.com' Cannot be connected to. /r/n Please fix the network enviornment before re-running this command."
+                        return
+                    }
+            write-verbose 'Obtaining Access Token using Passed Client_Id and Client_Secrets.'
             $Global:AuthHeaders =  @{  'Content-Type' = 'application/x-www-form-urlencoded'
                                     }
             $Global:AuthBody    = [ordered]@{   'grant_type' = 'client_credentials'
                                                 'client_id' = $Client_Id
                                                 'client_secret' = $Client_Secret
-                                          }  
-            # clear-variable $Client_Id
-            # clear-variable $Client_Secret              
-    Try     {   if ( $WhatifToken )
-                        {   $Output = Invoke-RestMethodWhatIf -Uri "$AuthURI" -Method Post -Headers $AuthHeaders -body $AuthBody
-                            Write-host "The Following is the output from the attempt to retrieve the Access Token using Credentials"
-                            $Output | out-string 
-                        }     
-                    else 
-                        {   try {   $AccessToken = ( invoke-restmethod -uri "$AuthURI" -Method Post -headers $AuthHeaders -body $AuthBody ).access_token
-                                }
-                            catch{  write-warning "The Token was not returned."
-
-                                 }      
-                        }     
-            }
-    Catch   {   $_
-            }
-            #if ( -not $AutoRenew )
-               # {   # clear-variable $AuthBody Mana
-               # }
+                                            }  
+            Try     {   if ( $WhatifToken )
+                                {   $Output = Invoke-RestMethodWhatIf -Uri "$AuthURI" -Method Post -Headers $AuthHeaders -body $AuthBody
+                                    Write-host "The Following is the output from the attempt to retrieve the Access Token using Credentials"
+                                    $Output | out-string 
+                                }     
+                            else 
+                                {   try     {   $AccessToken = ( invoke-restmethod -uri "$AuthURI" -Method Post -headers $AuthHeaders -body $AuthBody ).access_token
+                                            }
+                                    catch   {   write-Error "The Token was not returned. Please check your ID and Secret."
+                                                return
+                                            }      
+                                }     
+                    }
+            Catch   {   $_
+                    }
         }
     write-Verbose "The AccessToken is $AccessToken"
-    switch( $GreenlakeType )
-    {   'Dev1'  {   $Global:Base = 'https://scalpha-app.qa.cds.hpe.com'    }
-        'Dev2'  {   $Global:Base = 'https://fleetscale-app.qa.cds.hpe.com' }
-        'Dev3'  {   $Global:Base = 'https://scint-app.qa.cds.hpe.com'      }
-        'Asia'  {   $Global:Base = "https://jp1.data.cloud.hpe.com"        }
-        'EU'    {   $Global:Base = 'https://eu1.data.cloud.hpe.com'        }
-        'USA'   {   $Global:Base = 'https://us1.data.cloud.hpe.com'        }
-    }
-    $Global:CloudRoot = "/api/v1/"
-    $Global:BaseUri   = $Base+$CloudRoot
-    $Global:MyHeaders = @{  Authorization = 'Bearer '+$AccessToken
-
-                         }
-    $Global:TestUri = $BaseUri + "host-initiators/"
+    switch( $GreenlakeType )    {   'Dev1'  {   $CloudAddr = 'scalpha-app.qa.cds.hpe.com'    }
+                                    'Dev2'  {   $CloudAddr = 'fleetscale-app.qa.cds.hpe.com' }
+                                    'Dev3'  {   $CloudAddr = 'scint-app.qa.cds.hpe.com'      }
+                                    'Asia'  {   $CloudAddr = "jp1.data.cloud.hpe.com"        }
+                                    'EU'    {   $CloudAddr = 'eu1.data.cloud.hpe.com'        }
+                                    'USA'   {   $CloudAddr = 'us1.data.cloud.hpe.com'        }
+                                }
+    if ( Resolve-DNSName $CloudAddr )   {   write-verbose "Able to DNS Resolve the Cloud Server Successfully : $CloudAddr"  
+                                        }
+        else                            {   write-error "The $CloudAddr Server was not DNS Resolvable./r/n Please fix the network enviornment before re-running this command."
+                                            return 
+                                        }
+    if ( ( test-connection $CloudAddr -TcpPort 443 ) -or ( ($PSVersionTable.PSVersion).Major -ge 7 ) )
+                {   write-verbose "Able to successfully connect to the $CloudAddr Server."
+                }
+        else   
+                {   Write-Error "The $CloudAddr Server Cannot be connected to. /r/n Please fix the network enviornment before re-running this command."
+                    return
+                }
+    $Global:Base        = 'https://' + $CloudAddr
+    $Global:CloudRoot   = "/api/v1/"
+    $Global:BaseUri     = $Base+$CloudRoot
+    $Global:TestUri     = $BaseUri + "audit-events/"
+    $Global:MyHeaders   = @{  Authorization = 'Bearer '+$AccessToken
+                           }
     if ( $AccessToken -or $whatifGreenLakeType )
             {   Try     {   if ( $WhatifGreenLakeType )
-                                    {   Write-Warning 'This operation will run a Get-DSCCStorageSystem to test if the Cloud Type is set right'
-                                        $ReturnData = Get-DsccStorageSystem -whatif
+                                    {   Write-Warning 'This operation will run a Get-DSCCAuditEvent to test if the Cloud Type is set right'
+                                        $ReturnData = Get-DsccAuditEvent -whatif
                                         write-warning ''
                                     } 
                                 else 
-                                    {   Write-Verbose 'This operation will run a Get-DSCCStorageSystem to test if the Cloud Type is set right'
-                                        $ReturnData = Get-DSCCStorageSystem
+                                    {   Write-Verbose 'This operation will run a Get-DSCCAuditEvent to test if the Cloud Type is set right'
+                                        $ReturnData = Get-DsccAuditEvent
                                     }
                         }
                 Catch   {   $_
@@ -140,15 +148,14 @@ Process{
                         } 
                     else 
                         {   if (-not $whatifGreenLakeType) 
-                                    {   Write-Error "No HPE DSSC target Detected or wrong port used at that address"
+                                    {   Write-Error "No HPE DSCC target Detected or wrong port used at that address"
                                     }
                                 else 
                                     {   Write-Warning "Since WhatIF option was used, no expected return data is expected."
-                                    
                                     }
                         }
             }
-        else    
+        else
             {   Write-warning "The request for a Token was not successful using the supplied Client-ID and CLient-Secret."            
             }
 }
@@ -206,7 +213,7 @@ function ThrowHTTPError
     {   $Response =   ((($ErrorResponse).Exception).Response | convertto-json )
         $ECode =      (((($ErrorResponse).Exception).Response).StatusCode).value__
         $EText =      ((($ErrorResponse).Exception).Response).StatusDescription + ((($ErrorResponse).Exception).Response).ReasonPhrase 
-        write-warning "The RestAPI Request failed with the following Status: `r`n`tHTTPS Return Code = $ECode`r`n`tHTTPS Return Code Description = $EText"
+        write-verbose "The RestAPI Request failed with the following Status: `r`n`tHTTPS Return Code = $ECode`r`n`tHTTPS Return Code Description = $EText"
         Write-Debug   "Raw Response  = $Response"
         return
     }
