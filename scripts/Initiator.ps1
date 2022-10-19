@@ -7,8 +7,6 @@ function Get-DSCCInitiator
     Returns the HPE Data Services Cloud Console Data Operations Manager Initiators Collections;
 .PARAMETER SystemID
     If the Target Device to detect the Initiators from is a Nimble Storage or Alletra 6K, you will need to supply a System ID.
-.PARAMETER InitiatorID
-    If a single Host ID is specified the output will be limited to that single record.
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
@@ -47,13 +45,13 @@ function Get-DSCCInitiator
     010814bed01b4258871fa834368c9796 c0:77:3f:58:5f:19:00:48 Host Path C0773F585F190048 (1:3:3) FC       initiator {2M2042059V}
     01ca788a6b244069a295d86dee748867 c0:77:3f:58:5f:19:00:2e Host Path C0773F585F19002E (1:3:2) FC       initiator {2M2042059V}
 .EXAMPLE
-    PS:> Get-DSCCInitiator -InitiatorID 46eaf545bf80404d8e479ec8d6871c97
+    PS:> Get-DSCCInitiator | where {$_.id -like '46eaf545bf80404d8e479ec8d6871c97'
     
     id                               address                 name                               protocol type      systems
     --                               -------                 ----                               -------- ----      -------
     46eaf545bf80404d8e479ec8d6871c97 c0:77:3f:58:5f:19:00:0a Host Path C0773F585F19000A (1:3:2) FC       initiator {2M2019018G}
 .EXAMPLE
-    PS:> Get-DSCCInitiator -InitiatorID 46eaf545bf80404d8e479ec8d6871c97  -WhatIf
+    PS:> Get-DSCCInitiator -WhatIf
     
     WARNING: You have selected the What-IF option, so the call will note be made to the array,
         instead you will see a preview of the RestAPI call
@@ -72,7 +70,6 @@ function Get-DSCCInitiator
 #>   
 [CmdletBinding()]
 param(  [parameter( ValueFromPipeLineByPropertyName=$true )][Alias('id')]   [string]    $SystemId,
-                                                                            [string]    $InitiatorID,
                                                                             [boolean]   $WhatIf=$false
      )
 process
@@ -103,13 +100,7 @@ process
                 write-verbose "About to make main call to retrieve Initiators"
                 $SysColOnly = Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Get' -WhatIfBoolean $WhatIf
                 $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Initiator"
-                if ( $PSBoundParameters.ContainsKey('InitiatorID') )
-                        {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                            return ( $ReturnData | where-object { $_.id -eq $InitiatorID } )
-                        }
-                    else
-                        {   return $ReturnData
-                    }
+                return $ReturnData
             }
 }
 }
@@ -138,7 +129,7 @@ function Remove-DSCCInitiator
 [CmdletBinding()]
 param(  [Parameter(Mandatory)]  [string]    $InitiatorID,
                                 [switch]    $Force,
-                                [boolean]    $WhatIf=$false
+                                [boolean]   $WhatIf=$false
      )
 process
     {   Invoke-DSCCAutoReconnect
@@ -159,7 +150,7 @@ Function New-DSCCInitiator
     Creates a HPE Data Services Cloud Console Data Operations Manager Host Initiator Record; This will create either a Device-Type1 type Initiator,
     or if a SystemID is specified, then it will make a Device-Type2 type initiator
 .PARAMETER systemID
-    This is required for Device-Type2, and references a specific system ID. This can be passed in as a pipeline variable.
+    This is required for Device-Type2, and references a specific system ID.
 .PARAMETER Address
     Used only for Device-Type1. The Address of the initiator and is required.
 .PARAMETER wwpn
@@ -198,31 +189,65 @@ Function New-DSCCInitiator
         "taskUri": "/rest/vega/v1/tasks/4969a568-6fed-4915-bcd5-e4566a75e00c"
     }
 #>   
-[CmdletBinding()]
-param(  [Parameter(Mandatory)]          [string]    $address,
-                                        [string]    $driverVersion,
-                                        [string]    $firmwareVersion,
-                                        [string]    $hbaModel,
-                                        [int64]     $hostSpeed,
-                                        [string]    $ipAddress,
-                                        [string]    $name,  
-        [Parameter(Mandatory)]  
-        [ValidateSet('FC','iSCSI','NMVe')][string]  $protocol,
-                                        [string]    $vendor,
-                                        [switch]    $WhatIf
+[CmdletBinding(DefaultParameterSetName = 'type1')]
+param(  [Parameter(Mandatory, ParameterSetName = 'type2iscsi')]
+        [Parameter(Mandatory, ParameterSetName = 'type2fc')]                             [string]    $SystemId,
+        [Parameter(Mandatory, ParameterSetName = 'type2isci')]
+        [Parameter(Mandatory, ParameterSetName = 'type2fc')][ValidateSet('fc','iscsi')]  [string]    $access_protocol,
+        [Parameter(           ParameterSetName = 'type2fc')]                             [string]    $alias,
+        [Parameter(           ParameterSetName = 'type2iscsi')]                          [string]    $label,
+        [Parameter(           ParameterSetName = 'type2iscsi')]                          [string]    $chapuser_id,
+        [Parameter(Mandatory, ParameterSetName = 'type2iscsi')]
+        [Parameter(Mandatory, ParameterSetName = 'type2fc')]                             [string]    $initiator_group_id,
+        [Parameter(           ParameterSetName = 'type2iscsi')]                          [string]    $ip_address,
+        [Parameter(           ParameterSetName = 'type2iscsi')]                          [string]    $iqn,
+        [Parameter(           ParameterSetName = 'type2')]                               [boolean]   $override_existing_alias,
+        [Parameter(           ParameterSetName = 'type2fc')]                             [string]   $wwpn,
+
+        
+        [Parameter(Mandatory, parameterSetName = 'type1')]          [string]    $address,
+        [Parameter(ParameterSetName = 'type1')]                     [string]    $driverVersion,
+        [Parameter(ParameterSetName = 'type1')]                     [string]    $firmwareVersion,
+        [Parameter(ParameterSetName = 'type1')]                     [string]    $hbaModel,
+        [Parameter(ParameterSetName = 'type1')]                     [int64]     $hostSpeed,
+        [Parameter(ParameterSetName = 'type1')]                     [string]    $ipAddress,
+        [Parameter(ParameterSetName = 'type1')]                     [string]    $name,  
+        [Parameter(ParameterSetName = 'type1', Mandatory)]  
+        [ValidateSet('FC','iSCSI','NMVe')]                          [string]    $protocol,
+        [Parameter(ParameterSetName = 'type1')]                     [string]    $vendor,
+        [Parameter(ParameterSetName = 'type1')]                     [switch]    $WhatIf
      )
 process
     {   Invoke-DSCCAutoReconnect
-        $MyAdd = 'initiators'
-                                    $MyBody += [ordered]@{ address = $address           } 
-        if ($driverVerson)      {   $MyBody += @{ driverVersion = $driverVersion     }  }
-        if ($firmwareVersion)   {   $MyBody += @{ firmwareVersion = $firmwareVersion }  }
-        if ($hbaModel)          {   $MyBody += @{ hbaModel = $hbaModel               }  }
-        if ($hostSpeed)         {   $MyBody += @{ hostSpeed = $hostSpeed             }  }
-        if ($ipAddress)         {   $MyBody += @{ ipAddress = $ipAddress             }  }
-        if ($name)              {   $MyBody += @{ name = $name                       }  }
-                                    $MyBody += @{ protocol = $protocol                  }
-        if ($vendor)            {   $MyBody += @{ vendor = $vendor                   }  }
-        Invoke-DSCCRestMethod -UriAdd $MyAdd - Method 'POST' -body $MyBody -whatifBoolean $WhatIf
+        Switch($PSCmdlet.ParameterSetName)
+            {   'type1'     {   $MyAdd = 'initiators'
+                                $MyBody += [ordered]@{                    address  = $address           } 
+                                if ($driverVerson)      {   $MyBody += @{ driverVersion = $driverVersion     }  }
+                                if ($firmwareVersion)   {   $MyBody += @{ firmwareVersion = $firmwareVersion }  }
+                                if ($hbaModel)          {   $MyBody += @{ hbaModel = $hbaModel               }  }
+                                if ($hostSpeed)         {   $MyBody += @{ hostSpeed = $hostSpeed             }  }
+                                if ($ipAddress)         {   $MyBody += @{ ipAddress = $ipAddress             }  }
+                                if ($name)              {   $MyBody += @{ name = $name                       }  }
+                                                            $MyBody += @{ protocol = $protocol                  }
+                                if ($vendor)            {   $MyBody += @{ vendor = $vendor                   }  }
+                            }
+                'type2iscsi'{   $MyAdd = 'storage-systems/device-type2/' + $SystemId + 'host-initiators'
+                                $MyBody += [ordered]@{                         access_protocol         = $access_protocol            } 
+                                if ($chapuser_id)            {   $MyBody += @{ chapuser_id             = $chapuser_id             }  }
+                                                                 $MyBody += @{ initiator_group_id      = $initiator_group_id         }  
+                                if ($ip_address)             {   $MyBody += @{ ip_address              = $ip_address              }  }
+                                if ($iqn)                    {   $MyBody += @{ iqn                     = $iqn                     }  }
+                                if ($label)                  {   $MyBody += @{ vendor                  = $vendor                  }  }
+                                if ($override_existing_alias){   $MyBody += @{ override_existing_alias = $override_existing_alias }  }
+                            }
+                'type2fc'   {   $MyAdd = 'storage-systems/device-type2/' + $SystemId + 'host-initiators'
+                                $MyBody += [ordered]@{                         access_protocol         = $access_protocol            } 
+                                if ($alias)                  {   $MyBody += @{ alias                   = $alias                   }  }
+                                                                 $MyBody += @{ initiator_group_id      = $initiator_group_id         }  
+                                if ($override_existing_alias){   $MyBody += @{ override_existing_alias = $override_existing_alias }  }
+                                if ($wwpn)                   {   $MyBody += @{ vendor = $vendor                                   }  }
+                            }
+            }
+        return Invoke-DSCCRestMethod -UriAdd $MyAdd - Method 'POST' -body $MyBody -whatifBoolean $WhatIf
     }       
 }   
