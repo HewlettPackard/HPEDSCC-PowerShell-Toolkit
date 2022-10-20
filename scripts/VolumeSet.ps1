@@ -240,7 +240,7 @@ process
                                     if ($vcenterUsername )      {   $MyBody += @{ vcenter_username      = $vcenterUsername }        }
                                 }
             }
-        return Invoke-DSCCRestMethod -uriadd $MyAdd -method 'POST' -body $MyBody -whatifBoolean $WhatIf
+        return Invoke-DSCCRestMethod -uriadd $MyAdd -method 'POST' -body ( $MyBody | ConvertTo-Json ) -whatifBoolean $WhatIf
     }      
 } 
 Function Set-DSCCVolumeSet
@@ -375,6 +375,6 @@ process
                                     if ($vcenterUsername )      {   $MyBody += @{ vcenter_username      = $vcenterUsername }        }
                                 }
             }
-        return Invoke-DSCCRestMethod -uriadd $MyAdd -method 'PUT' -body $MyBody -whatifBoolean $WhatIf
+        return Invoke-DSCCRestMethod -uriadd $MyAdd -method 'PUT' -body ( $MyBody | ConvertTo-Json ) -whatifBoolean $WhatIf
      }      
 } 

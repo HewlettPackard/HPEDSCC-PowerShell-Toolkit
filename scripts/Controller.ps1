@@ -245,7 +245,7 @@ process
                     return
                 }
         $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/nodes/' + $NodeId
-        return ( invoke-DSCCrestmethod -uriadd $MyAdd -body $MyBody -method Post -whatifBoolean $WhatIf )
+        return ( invoke-DSCCrestmethod -uriadd $MyAdd -body ( $MyBody | convertto-json ) -method Post -whatifBoolean $WhatIf )
     }       
 } 
 function Invoke-DSCCControllerLocatePCBM
@@ -281,6 +281,6 @@ process
         if ( $DeviceType -eq 'Device-Type2' )   { Write-warning "This command only works on Device-Type1 which include 3par/Primera/Alletra9K devices"; return }
         if ( -not $DeviceType )                 { Write-Warning "No array was detected using the SystemID $SystemId"; return }
         $MyAdd = 'storage-systems/device-type1/' + $SystemId + '/nodes/' + $NodeId + '/Powers/' + $PowerId
-        return ( invoke-restmethod -uriadd $MyAdd -body $MyBody -method Post -whatifBoolean $WhatIf )
+        return ( invoke-restmethod -uriadd $MyAdd -body ( $MyBody | convertto-json ) -method Post -whatifBoolean $WhatIf )
     }       
 } 

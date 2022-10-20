@@ -237,7 +237,7 @@ Process
     $ECode =      (((($ErrorResponse).Exception).Response).StatusCode).value__
     $EText =      ((($ErrorResponse).Exception).Response).StatusDescription + ((($ErrorResponse).Exception).Response).ReasonPhrase 
     write-verbose "The RestAPI Request failed with the following Status: `r`n`tHTTPS Return Code = $ECode`r`n`tHTTPS Return Code Description = $EText"
-    Write-Debug   "Raw Response  = $Response"
+    Write-verbose "Raw Response  = $Response"
     return
 }
 }
@@ -298,7 +298,7 @@ process
         }  
     if ( $Body )
         {   write-host "The Body of this call will be:"
-            write-host -foregroundcolor green ($Body | ConvertTo-JSON | Out-String)
+            write-host -foregroundcolor green ($Body | Out-String)
         }
 }
 }

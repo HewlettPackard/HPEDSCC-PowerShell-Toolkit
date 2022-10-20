@@ -147,7 +147,7 @@ process
         if ( $Force )
                 {   $MyBody += ( @{ force = $true } | convertTo-json )
                 }
-        return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Delete' -body $MyBody -WhatIfBoolean $WhatIf )
+        return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Delete' -body ( $MyBody | convertto-json ) -WhatIfBoolean $WhatIf )
     }       
 }   
 Function New-DSCCHostGroup
@@ -213,7 +213,7 @@ process
         if ($hostIds)           {   $MyBody +=          @{ hostIds       = $hostIds       }  }
         if ($hostsToCreate )    {   $MyBody +=          @{ hostsToCreate = $hostsToCreate }  }
                                     $MyBody +=          @{ userCreated   = $userCreated      }
-        return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -method 'POST' -body $MyBody -WhatIfBoolen $WhatIf )
+        return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -method 'POST' -body ( $MyBody | convertto-json ) -WhatIfBoolen $WhatIf )
      }      
 } 
 Function Set-DSCCHostGroup
@@ -256,6 +256,6 @@ process
         if ($name)              {   $MyBody += @{ name          = $name}  }
         if ($updatedHosts)      {   $MyBody += @{ updatedHosts  = $updatedHosts }  }
         if ($updatedHosts)      {   $MyBody += @{ HostsToCreate = $hostsToCreate }  }
-        return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -body $MyBody -Method 'Put' -WhatIfBoolean $WhatIf )
+        return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -body ( $MyBody | ConvertTo-json ) -Method 'Put' -WhatIfBoolean $WhatIf )
     }       
 } 

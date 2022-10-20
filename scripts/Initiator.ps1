@@ -71,10 +71,9 @@ function Get-DSCCInitiator
 [CmdletBinding()]
 param(  [parameter( ValueFromPipeLineByPropertyName=$true )][Alias('id')]   [string]    $SystemId,
                                                                             [boolean]   $WhatIf=$false
-     )
+    )
 process
-{   Invoke-DSCCAutoReconnect
-    if ( -not $SystemId )
+{   if ( -not $SystemId )
             {   $ReturnCol= @()
                 write-verbose "No SystemID was given, so running against all system IDs"
                 foreach ( $Sys in Get-DSCCStorageSystem )
@@ -89,9 +88,11 @@ process
         else
             {
                 switch(Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId)
-                    {   'device-type1'  {   $MyAdd = 'initiators'  
+                    {   'device-type1'  {   $MyAdd = 'initiators'
+                                            write-verbose "Getting a Type1 Initiator List $MyAdd"  
                                         }    
-                        'device-type2'  {   $MyAdd = 'storage-systems/device-type2/'+$SystemId+'/host-initiators'  
+                        'device-type2'  {   $MyAdd = 'storage-systems/device-type2/'+$SystemId+'/host-initiators'
+                                            write-verbose "Getting a Type2 Initiator List $MyAdd"
                                         }    
                         default         {   Write-warning "The System ID passed in does not register as a valid SystemId"
                                             return
@@ -130,14 +131,14 @@ function Remove-DSCCInitiator
 param(  [Parameter(Mandatory)]  [string]    $InitiatorID,
                                 [switch]    $Force,
                                 [boolean]   $WhatIf=$false
-     )
+    )
 process
     {   $MyAdd = 'initiators/' + $InitiatorID
         $MyBody = ''
         if ($Force)
                 {   $MyBody = @{force=$true}
                 }
-        return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Delete' -Body $MyBody -WhatIfBoolean $WhatIf )
+        return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Delete' -Body ( $MyBody | convertto-json ) -WhatIfBoolean $WhatIf )
     }       
 }   
 Function New-DSCCInitiator
@@ -191,7 +192,7 @@ Function New-DSCCInitiator
 [CmdletBinding(DefaultParameterSetName = 'type1')]
 param(  [Parameter(Mandatory, ParameterSetName = 'type2iscsi')]
         [Parameter(Mandatory, ParameterSetName = 'type2fc')]                             [string]    $SystemId,
-        [Parameter(Mandatory, ParameterSetName = 'type2isci')]
+        [Parameter(Mandatory, ParameterSetName = 'type2iscsi')]
         [Parameter(Mandatory, ParameterSetName = 'type2fc')][ValidateSet('fc','iscsi')]  [string]    $access_protocol,
         [Parameter(           ParameterSetName = 'type2fc')]                             [string]    $alias,
         [Parameter(           ParameterSetName = 'type2iscsi')]                          [string]    $label,
@@ -201,7 +202,7 @@ param(  [Parameter(Mandatory, ParameterSetName = 'type2iscsi')]
         [Parameter(           ParameterSetName = 'type2iscsi')]                          [string]    $ip_address,
         [Parameter(           ParameterSetName = 'type2iscsi')]                          [string]    $iqn,
         [Parameter(           ParameterSetName = 'type2')]                               [boolean]   $override_existing_alias,
-        [Parameter(           ParameterSetName = 'type2fc')]                             [string]   $wwpn,
+        [Parameter(           ParameterSetName = 'type2fc')]                             [string]    $wwpn,
 
         
         [Parameter(Mandatory, parameterSetName = 'type1')]          [string]    $address,
@@ -214,8 +215,10 @@ param(  [Parameter(Mandatory, ParameterSetName = 'type2iscsi')]
         [Parameter(ParameterSetName = 'type1', Mandatory)]  
         [ValidateSet('FC','iSCSI','NMVe')]                          [string]    $protocol,
         [Parameter(ParameterSetName = 'type1')]                     [string]    $vendor,
+        [Parameter(ParameterSetName = 'type2iscsi')]                
+        [Parameter(ParameterSetName = 'type2fc')]                
         [Parameter(ParameterSetName = 'type1')]                     [switch]    $WhatIf
-     )
+    )
 process
     {   Switch($PSCmdlet.ParameterSetName)
             {   'type1'     {   $MyAdd = 'initiators'
@@ -229,23 +232,23 @@ process
                                                             $MyBody += @{ protocol = $protocol                  }
                                 if ($vendor)            {   $MyBody += @{ vendor = $vendor                   }  }
                             }
-                'type2iscsi'{   $MyAdd = 'storage-systems/device-type2/' + $SystemId + 'host-initiators'
-                                $MyBody += [ordered]@{                         access_protocol         = $access_protocol            } 
-                                if ($chapuser_id)            {   $MyBody += @{ chapuser_id             = $chapuser_id             }  }
-                                                                 $MyBody += @{ initiator_group_id      = $initiator_group_id         }  
-                                if ($ip_address)             {   $MyBody += @{ ip_address              = $ip_address              }  }
-                                if ($iqn)                    {   $MyBody += @{ iqn                     = $iqn                     }  }
-                                if ($label)                  {   $MyBody += @{ vendor                  = $vendor                  }  }
-                                if ($override_existing_alias){   $MyBody += @{ override_existing_alias = $override_existing_alias }  }
+                'type2iscsi'{   $MyAdd = 'storage-systems/device-type2/' + $SystemId + '/host-initiators'
+                                $MyBody += [ordered]@{                        access_protocol         = $access_protocol            } 
+                                if ($chapuser_id)            {  $MyBody += @{ chapuser_id             = $chapuser_id             }  }
+                                                                $MyBody += @{ initiator_group_id      = $initiator_group_id         }  
+                                if ($ip_address)             {  $MyBody += @{ ip_address              = $ip_address              }  }
+                                if ($iqn)                    {  $MyBody += @{ iqn                     = $iqn                     }  }
+                                if ($label)                  {  $MyBody += @{ label                   = $label                   }  }
+                                if ($override_existing_alias){  $MyBody += @{ override_existing_alias = $override_existing_alias }  }
                             }
-                'type2fc'   {   $MyAdd = 'storage-systems/device-type2/' + $SystemId + 'host-initiators'
-                                $MyBody += [ordered]@{                         access_protocol         = $access_protocol            } 
-                                if ($alias)                  {   $MyBody += @{ alias                   = $alias                   }  }
-                                                                 $MyBody += @{ initiator_group_id      = $initiator_group_id         }  
-                                if ($override_existing_alias){   $MyBody += @{ override_existing_alias = $override_existing_alias }  }
-                                if ($wwpn)                   {   $MyBody += @{ vendor = $vendor                                   }  }
+                'type2fc'   {   $MyAdd = 'storage-systems/device-type2/' + $SystemId + '/host-initiators'
+                                $MyBody += [ordered]@{                        access_protocol         = $access_protocol            } 
+                                if ($alias)                  {  $MyBody += @{ alias                   = $alias                   }  }
+                                                                $MyBody += @{ initiator_group_id      = $initiator_group_id         }  
+                                if ($override_existing_alias){  $MyBody += @{ override_existing_alias = $override_existing_alias }  }
+                                if ($wwpn)                   {  $MyBody += @{ vendor = $vendor                                   }  }
                             }
             }
-        return ( Invoke-DSCCRestMethod -UriAdd $MyAdd - Method 'POST' -body $MyBody -whatifBoolean $WhatIf )
+        return ( Invoke-DSCCRestMethod -UriAdd $MyAdd - Method 'POST' -body ($MyBody | convertto-json) -whatifBoolean $WhatIf )
     }       
 }   

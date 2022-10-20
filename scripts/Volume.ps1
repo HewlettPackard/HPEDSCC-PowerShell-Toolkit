@@ -474,7 +474,7 @@ process
                             }
           }
         $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes'
-        return ( invoke-DSCCrestmethod -uri $MyAdd -method POST -body ( $MyBody | convertTo-Json) -whatifBoolean $WhatIf ) 
+        return ( invoke-DSCCrestmethod -uri $MyAdd -method POST -body ( $MyBody | ConvertTo-Json) -whatifBoolean $WhatIf ) 
     }       
 } 
 

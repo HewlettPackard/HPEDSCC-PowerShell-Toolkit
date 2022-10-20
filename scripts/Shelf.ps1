@@ -119,8 +119,7 @@ param(  [parameter(mandatory,ValueFromPipeLineByPropertyName=$true )][Alias('id'
                                                         [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         if ( $DeviceType )
             {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/shelves/' + $ShelfId + '/action/locate'
                 $MyBody = @{    cid     = $CId 

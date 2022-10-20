@@ -184,6 +184,6 @@ process
                                             else                {   $MyBody = $MyBody + @{ 'readOnly'    = $false }       }
                                     }
                 }
-            return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -method POST -body $MyBody -whatifBoolean $WhatIf )
+            return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -method POST -body ( $MyBody | ConvertTo-Json ) -whatifBoolean $WhatIf )
     }       
 } 

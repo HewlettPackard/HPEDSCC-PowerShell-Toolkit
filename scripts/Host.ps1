@@ -339,6 +339,6 @@ process
         if ($name)                  {   $MyBody += @{ name = $name                              }  }
         if ($updatedInitiators)     {   $MyBody += @{ updatedInitiators  = $updatedInitiators   }  }
         if ($initiatorsToCreate)    {   $MyBody += @{ initiatorsToCreate = $initiatorsToCreate  }  }
-        return (Invoke-DSCCRestMethod -uri $MyUri -body $MyBody -Method 'PUT' -WhatIfBoolean $WhatIf )
+        return (Invoke-DSCCRestMethod -uri $MyUri -body ( $MyBody | convertto-json) -Method 'PUT' -WhatIfBoolean $WhatIf )
     }       
 } 

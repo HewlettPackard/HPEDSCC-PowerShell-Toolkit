@@ -230,7 +230,12 @@ process
                 $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "StorageSystem.Combined"   
                 $BigCollection+= $ReturnData 
             }
-        return $BigCollection
+        if ( $systemId )
+                {   return ( $BigCollection | where {$_.id -like $SystemId })
+                }
+            else 
+                {   return $BigCollection
+                }
     }   
 }   
 
@@ -274,6 +279,6 @@ param(  [parameter(mandatory)]  [string]    $SystemId,
 process
     {   $MyAdd = 'storage-systems/device-type1/' + $SystemId 
         $MyBody = @{    locateEnabled = $true   }
-        return ( invoke-restmethod -UriAdd $MyAdd -body $MyBody -method Post -whatifBoolean $WhatIf )
+        return ( invoke-restmethod -UriAdd $MyAdd -body ( $MyBody | ConvertTo-Json ) -method Post -whatifBoolean $WhatIf )
     }       
 }   
