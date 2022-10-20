@@ -41,11 +41,9 @@ param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('i
                                                                                     [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         if ( $DeviceType )
-            {   $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $SystemId + '/ports'
-                $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/ports'
+            {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/ports'
                 $SysColOnly = invoke-DSCCRestMethod -UriAdd $MyAdd -Method Get -WhatIfBoolean $WhatIf
                 if ( $DeviceType -eq 'device-type2')
                     {   $SysColOnly1 = (( $SysColOnly ).network_interfaces )

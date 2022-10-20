@@ -6,7 +6,7 @@ function Get-DSCCCertificate
 .DESCRIPTION
     Returns the HPE Data Services Cloud Console Data Operations Manager Certificate data for a storage system {DeviceType-1} 
 .PARAMETER systemID
-    The required system ID to query for the alerts
+    The singular system to run the query against, if unset will run against all systems
 .PARAMETER CertificateID
     A Specific Certificate to retrieve from the System ID specific. 
 .PARAMETER select
@@ -64,20 +64,32 @@ function Get-DSCCCertificate
 
 #>
 [CmdletBinding(DefaultParameterSetName='Default')]
-param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
-                                                                                        [string]   $SystemId,
-                                                                                        [string]   $CertificateID,
-                                                                                        [switch]   $whatIf
+param(  [parameter( ValueFromPipeLineByPropertyName=$true )][Alias('id')]   [string]   $SystemId,
+                                                                            [string]   $CertificateID,
+                                                                            [boolean]  $whatIf=$false
         )
 process
-    {   Invoke-DSCCAutoReconnect
-        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-        $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemID + '/certificates'
-        if ( $CertificateID )
-                {   $MyURI = $MyURI + '/' + $CertificateId
+    {   if ( -not $PSBoundParameters.ContainsKey('SystemId' ) )
+                {   write-verbose "No SystemID Given, running all SystemIDs"
+                    $ReturnCol=@()
+                    foreach( $Sys in Get-DSCCStorageSystem )
+                        {   write-verbose "Walking Through Multiple Systems"
+                            If ( ($Sys).Id )
+                                {   write-verbose "Found a system with a System.id"
+                                    $ReturnCol += ( Get-DSCCCertificate -SystemId ($Sys).Id -WhatIf $WhatIf )
+                                }
+                        }
+                    write-verbose "Returning the Multiple System Id Certificates."
+                    return $ReturnCol
+                }
+            else 
+                {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+                    $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemID + '/certificates'
+                    if ( $CertificateID )
+                        {   $MyURI = $MyURI + '/' + $CertificateId
+                        }   
+                    $SysColOnly = invoke-DSCCrestmethod -uriAdd $MyAdd -method 'Get' -WhatIfBoolean $WhatIf
+                    return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Certificate.$DeviceType" )
                 }   
-        $SysColOnly = invoke-DSCCrestmethod -uriAdd $MyAdd -method 'Get' -WhatIfBoolean $WhatIf
-        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Certificate.$DeviceType"
-        return $ReturnData
-    }       
+    }    
 }   

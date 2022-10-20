@@ -57,8 +57,7 @@ param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('i
                                 [switch]   $whatIf
         )
 process
-    {   Invoke-DSCCAutoReconnect
-        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         if ( $DeviceType -eq 'device-type1' )
                 {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/application-summary'
                     $MyBody=@{}
@@ -66,8 +65,7 @@ process
                     if ( $range  )          { $MyBody += @{ range = $range } } 
                     if ( $timeIntervalMin ) { $MyBody += @{ timeIntervalMin = $TimeIntervalMin } } 
                     $SysColOnly = Invoke-DSCCRestMethod -uriAdd $MyAdd -method 'Get' -whatifBoolean $WhatIf 
-                    $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Disk.$DeviceType"
-                    return $ReturnData
+                    return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Disk.$DeviceType" )
                 }
     }       
 }   
@@ -130,16 +128,14 @@ param(  [Parameter(Mandatory)]  [string]   $SystemID,
                                 [switch]   $whatIf
     )
 process
-    {   Invoke-DSCCAutoReconnect
-        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         if ( $DeviceType -eq 'device-type1' )
                 {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/capacity-history'
                     $MyBody=@{}
                     if ( $select )          { $MyBody += @{ select = $select } } 
                     if ( $range  )          { $MyBody += @{ range = $range } } 
                     if ( $timeIntervalMin ) { $MyBody += @{ timeIntervalMin = $TimeIntervalMin } } 
-                    $FullObjSet = Invoke-DSCCRestMethod -uriAdd $MyAdd -method 'Get' -WhatIfBoolean $WhatIf
-                    return $FullObjSet
+                    return ( Invoke-DSCCRestMethod -uriAdd $MyAdd -method 'Get' -WhatIfBoolean $WhatIf )
                 }
     }       
 }              
@@ -189,16 +185,14 @@ param(  [Parameter(Mandatory=$true)]    [string]   $SystemID,
                                         [switch]   $whatIf
         )
 process
-{   Invoke-DSCCAutoReconnect
-    $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+{   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
     if ( $DeviceType -eq 'device-type1' )
             {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/capacity-summary'
                 $MyBody=@{}
                 if ( $select )          { $MyBody += @{ select = $select } } 
                 if ( $range  )          { $MyBody += @{ range = $range } } 
                 if ( $timeIntervalMin ) { $MyBody += @{ timeIntervalMin = $TimeIntervalMin } } 
-                $FullObjSet = Invoke-DSCCRestMethod -uriAdd $MyAdd -method 'Get' -WhatIfBoolean $WhatIf 
-                return $FullObjSet
+                return ( Invoke-DSCCRestMethod -uriAdd $MyAdd -method 'Get' -WhatIfBoolean $WhatIf ) 
             }
 }            
 }    

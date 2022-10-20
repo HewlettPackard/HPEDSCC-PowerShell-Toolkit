@@ -49,36 +49,32 @@ WARNING: Null value sent to create object type.
 .LINK
     The API call for this operation is file:///api/v1/storage-systems/{systemid}/device-type1/appplicationsets
     The API call for this operation is file:///api/v1/storage-systems/{systemid}/device-type1/volume-collections    
-#>   
+#>
 [CmdletBinding()]
-param(  [Parameter(ValueFromPipeLineByPropertyName=$true,Mandatory=$true )][Alias('id')]    [string]    $SystemId,  
-        [alias('ApplicationSetId','VolumeCollectionId')]                                    [string]    $VolumeSetId,    
+param(  [Parameter(ValueFromPipeLineByPropertyName=$true,Mandatory=$true )][Alias('id')]    [string]    $SystemId,
+        [alias('ApplicationSetId','VolumeCollectionId')]                                    [string]    $VolumeSetId,
                                                                                             [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         switch ( $devicetype )
             {   'device-type1'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/applicationsets'
                                     if ( $VolumeSetId )
                                             {   $MyAdd = $MyAdd + '/' + $VolumeSetId
                                             }
-                                    $SysColOnly = @()  
-                                    $MyCol = invoke-Dsccrestmethod -uriadd $MyAdd -method Get -whatifBoolean $WhatIf    
-                                    $ReturnData = Invoke-RepackageObjectWithType -RawObject $MyCol -ObjectName ( "VolumeSet")
-                                    return $ReturnData
+                                    $MyCol = invoke-Dsccrestmethod -uriadd $MyAdd -method Get -whatifBoolean $WhatIf 
+                                    return ( Invoke-RepackageObjectWithType -RawObject $MyCol -ObjectName "VolumeSet" )
                                 }
-                'device-type2'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volume-collections' 
+                'device-type2'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volume-collections'
                                     if ( $VolumeSetId )
                                         {   $MyAdd = $MyAdd + '/' + $VolumeSetId
                                         }
-                                    $MyCol = invokeDscc-restmethod -uriadd $MyAdd -method Get    
-                                    $ReturnData = Invoke-RepackageObjectWithType -RawObject $MyCol -ObjectName "VolumeSet"
-                                    return $ReturnData          
+                                    $MyCol = invokeDscc-restmethod -uriadd $MyAdd -method Get -WhatIfBoolean $WhatIf
+                                    return ( Invoke-RepackageObjectWithType -RawObject $MyCol -ObjectName "VolumeSet" )
                                 }
-            }     
-    }       
-}   
+            }  
+    }
+}
 function Remove-DSCCVolumeSet
 {
 <#
@@ -100,8 +96,7 @@ param(  [Parameter(ValueFromPipeLineByPropertyName=$true,Mandatory=$true )][Alia
                                                                                             [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         switch ( $devicetype )
             {   'device-type1'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/applicationsets' + '/' + $VolumeSetId
                                     return invoke-DSCCRestmethod -uriadd $MyAdd -method Delete -whatifBoolean $WhatIf
@@ -109,9 +104,9 @@ process
                 'device-type2'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volume-collections' + '/' + $VolumeSetId
                                     return invoke-DSCCRestmethod -uriadd $MyAdd -method Delete -whatifBoolean $WhatIf
                                 }
-            }     
-    }       
-}     
+            }
+    }
+}
 Function New-DSCCVolumeSet
 {
 <#
@@ -190,7 +185,7 @@ Function New-DSCCVolumeSet
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 .LINK
     The API call for this operation is file:///api/v1/storage-systems/{systemid}/device-type1/access-control-records
-#>   
+#>
 [CmdletBinding()]
 param(  [Parameter(ValueFromPipeLineByPropertyName=$true,Mandatory=$true,ParameterSetName=('device-type1','device-type2'))]
                                                                                                 [Alias('id')]   [string]    $SystemId,
@@ -217,8 +212,7 @@ param(  [Parameter(ValueFromPipeLineByPropertyName=$true,Mandatory=$true,Paramet
                                                                                                                 [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         switch ( $devicetype )
             {   'device-type1'  {   $MyAdd = 'storage-systems/' + $devicetype + '/' + $SystemId + '/applicationsets'
                                     $MyBody =  @{}
@@ -246,7 +240,7 @@ process
                                     if ($vcenterUsername )      {   $MyBody += @{ vcenter_username      = $vcenterUsername }        }
                                 }
             }
-        return Invoke-DSCCRestMethod -uriadd $MyAdd -method 'POST' -body ( $MyBody | ConvertTo-Json ) -whatifBoolean $WhatIf
+        return Invoke-DSCCRestMethod -uriadd $MyAdd -method 'POST' -body $MyBody -whatifBoolean $WhatIf
     }      
 } 
 Function Set-DSCCVolumeSet
@@ -355,8 +349,7 @@ param(  [Parameter(ValueFromPipeLineByPropertyName=$true,Mandatory=$true,Paramet
                                                                                                                     [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         switch ( $devicetype )
             {   'device-type1'  {   $MyAdd = 'storage-systems/' + $devicetype + '/' + $SystemId + '/applicationsets/' + $volumeCollectionId
                                     $MyBody =  @{}
@@ -382,6 +375,6 @@ process
                                     if ($vcenterUsername )      {   $MyBody += @{ vcenter_username      = $vcenterUsername }        }
                                 }
             }
-        return Invoke-DSCCRestMethod -uriadd $MyAdd -method 'PUT' -body ( $MyBody | ConvertTo-Json ) -whatifBoolean $WhatIf
+        return Invoke-DSCCRestMethod -uriadd $MyAdd -method 'PUT' -body $MyBody -whatifBoolean $WhatIf
      }      
 } 

@@ -7,8 +7,6 @@ function Get-DSCCPool
     Returns the HPE DSSC DOM Storage Systems Pools for a specific storage system and pool 
 .PARAMETER StorageSystemID
     A single Storage System ID is specified and required, the pools defined will be returned unless a specific PoolID is requested.
-.PARAMETER PoolID
-    If a single Storage System Pool ID is specified, only that pools will be returned.
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
@@ -38,7 +36,7 @@ function Get-DSCCPool
     090849204632ec0d70000000000000000000000001 0a0849204632ec0d70000000000000000000000001 default Default pool 33682373222400   RAID-TripleParity
     093be9f65d5b1de4fd000000000000000000000001 0a3be9f65d5b1de4fd000000000000000000000001 default Default pool 32499810201600   RAID-TripleParity
 .EXAMPLE
-    PS:> Get-DSCCStoragePool -StorageSystemId 2M202205GG -StoragePoolId 3ff8fa3d971f16948fd9cff800775b9d | format-list
+    PS:> Get-DSCCStoragePool -StorageSystemId 2M202205GG | where { $_.id -like '3ff8fa3d971f16948fd9cff800775b9d' } | format-list
 
     allocationSettings   : @{HA=; RAIDType=RAID_SIX; chunkletPosPref=; deviceSpeed=; deviceType=DEVICE_TYPE_SSD;
                            diskFilter=; requestedHA=; setSize=6 data, 2 parity; stepSize=-1}
@@ -71,7 +69,7 @@ function Get-DSCCPool
                            @{type=volumes; resourceUri=/api/v1/storage-systems/device-type1/2M202205GG/storage-pools/3ff
                            8fa3d971f16948fd9cff800775b9d/volumes}}
 .EXAMPLE
-    PS:> Get-DSCCStoragePool -StorageSystemId 2M202205GG -StoragePoolId 3ff8fa3d971f16948fd9cff800775b9d -DeviceType device-type1 -whatif
+    PS:> Get-DSCCStoragePool -StorageSystemId 2M202205GG -whatif
     
     WARNING: You have selected the What-IF option, so the call will note be made to the array,
     instead you will see a preview of the RestAPI call
@@ -90,22 +88,14 @@ function Get-DSCCPool
 [CmdletBinding()]
 param(  [parameter(mandatory,ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
                                                                             [string]    $SystemId, 
-                                                                            [string]    $PoolId,
                                                                             [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         if ( $DeviceType )
             {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/storage-pools'
                 $SysColOnly = Invoke-DSCCRestMethod -UriAdd $MyAdd -method Get -whatifBoolean $WhatIf
-                $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Pool.combined"
-                if ( $PoolId )
-                        {   return ( $ReturnData | where-object { $_.id -eq $PoolId } )
-                        } 
-                    else 
-                        {   return $ReturnData
-                        }
+                return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Pool.combined" )
             }
     }       
 }   
@@ -118,8 +108,6 @@ function Get-DSCCPoolVolume
     Returns the HPE DSSC DOM Storage Systems Pools for a specific storage system and pool 
 .PARAMETER StorageSystemID
     A single Storage System ID is specified and required, the pools defined will be returned unless a specific PoolID is requested.
-.PARAMETER StoragePoolID
-    A single Storage System Pool ID is specified and required, and all volumes in that pool will be returned if a single volume is not specified.
 .PARAMETER StoragePoolID
     A single Storage System Pool ID is specified and required, and all volumes in that pool will be returned if a single volume is not specified.
 .PARAMETER WhatIf
@@ -228,12 +216,10 @@ function Get-DSCCPoolVolume
 [CmdletBinding()]
 param(  [parameter(mandatory,ValueFromPipeLineByPropertyName=$true )][Alias('id')]  [string]    $SystemId, 
         [parameter(mandatory)]                                                      [string]    $PoolId,
-                                                                                    [string]    $VolumeId,
                                                                                     [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         if ( $DeviceType -eq 'device-type2')
                 {   Write-Warning "This command only operates against Device-Type1 Storage Devices."
                     return 
@@ -243,15 +229,8 @@ process
                     $SysColOnly = Invoke-DSCCRestMethod -UriAdd $MyAdd -method Get -WhatIfBoolean $WhatIf
                     if ($SysColOnly)
                         {   $SysColOnly = (($SysColOnly).volumes).items
-                            $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "PoolVolume.$DeviceType"
+                            return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "PoolVolume.$DeviceType" )
                         }
-                }
-        if ( $VolumeId )
-                {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                    return ( $ReturnData | where-object { $_.id -eq $VolumeId } )
-                } 
-            else 
-                {   return $ReturnData
                 }
     }       
 }   

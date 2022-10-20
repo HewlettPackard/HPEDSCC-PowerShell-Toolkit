@@ -5,8 +5,6 @@ function Get-DSCCHost
     Returns the HPE DSSC DOM Hosts Collection    
 .DESCRIPTION
     Returns the HPE Data Services Cloud Console Data Operations Manager Host Collections;
-.PARAMETER HostID
-    If a single Host ID is specified the output will be limited to that single record.
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
@@ -77,9 +75,7 @@ function Get-DSCCHost
     --                               ----               --------------- -------- ----
     733b0e0808c3469d8a8650974cac8847 TestHostInitiator1 Windows Server           host-initiator
 .EXAMPLE
-    PS:> Get-DSCCHostServiceHost -HostID f0b1edd8f8984c8db9e596f25de0bdf4
-
-    PS:> Get-DSCCHost
+    PS:> Get-DSCCHostServiceHost | where { $_.id -like 'f0b1edd8f8984c8db9e596f25de0bdf4' )
 
     id                               name               operatingSystem protocol type
     --                               ----               --------------- -------- ----
@@ -92,17 +88,9 @@ param(  [string]    $HostID,
         [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $MyAdd = 'host-initiators'
+    {   $MyAdd = 'host-initiators'
         $SysColOnly = Invoke-DSCCRestMethod -UriAdd $MyAdd -method Get -WhatIfBoolean $WhatIf
-        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Host"
-        if ( $HostID )
-                    {   Write-verbose "The results of the complete collection have been limited to just the supplied ID"
-                        return ( $ReturnData | where-object { $_.id -eq $HostId } )
-                    } 
-                else 
-                    {   return $ReturnData
-                    }
+        return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Host" )
     }       
 }   
 function Remove-DSCCHost
@@ -148,12 +136,11 @@ param(  [Parameter(Mandatory)]  [string]    $HostID,
                                 [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $MyAdd = 'host-initiators/' + $HostID
+    {   $MyAdd = 'host-initiators/' + $HostID
         if ($Force)
             {   $MyBody = ( @{force=$true} | convertto-json )
             }
-        return Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Delete' -body $MyBody -WhatIfBoolean $WhatIf
+        return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Delete' -body $MyBody -WhatIfBoolean $WhatIf )
     }       
 }   
 function Get-DSCCHostVolume
@@ -214,16 +201,8 @@ param(  [string]    $HostID,
         [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $MyAdd = 'host-initiators/' + $HostID + '/volumes'
-        $ReturnData = Invoke-DSCCRestMethod -UriAdd $MyAdd -Method Get -WhatIfBoolean $WhatIf
-        if ( $HostID )
-                {   Write-verbose "The results of the complete collection have been limited to just the supplied ID"
-                    return ( $ReturnData | where-object { $_.id -eq $HostId } )
-                } 
-            else 
-                {   return $ReturnData
-                }
+    {   $MyAdd = 'host-initiators/' + $HostID + '/volumes'
+        return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -Method Get -WhatIfBoolean $WhatIf )
     }       
 } 
 Function New-DSCCHost
@@ -300,8 +279,7 @@ param(                              [string]    $comment,
                                     [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $MyAdd = 'host-initiators'
+    {   $MyAdd = 'host-initiators'
                                         $MyBody= [ordered]@{}
         if ($comment)               {   $MyBody += @{ comment = $comment                        }  }
         if ($contact)               {   $MyBody += @{ contact = $contact                        }  }
@@ -319,7 +297,7 @@ process
         if ($protocol)              {   $MyBody += @{ protocol = $protocol                      }  }
         if ($subnet)                {   $MyBody += @{ subnet = $subnet                          }  }
                                         $MyBody += @{ userCreated = $userCreated                   }
-        return Invoke-DSCCRestMethod -uri $MyUri -method 'POST' -body ( $MyBody | convertTo-json ) -WhatIfBoolean $WhatIf
+        return ( Invoke-DSCCRestMethod -uri $MyUri -method 'POST' -body ( $MyBody | convertTo-json ) -WhatIfBoolean $WhatIf )
     }      
 } 
 Function Set-DSCCHost
@@ -356,12 +334,11 @@ param(  [Parameter(Mandatory)]  [string]    $hostID,
                                 [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $MyAdd = 'host-initiator/' + $hostID
+    {   $MyAdd = 'host-initiator/' + $hostID
                                         $MyBody += @{} 
         if ($name)                  {   $MyBody += @{ name = $name                              }  }
         if ($updatedInitiators)     {   $MyBody += @{ updatedInitiators  = $updatedInitiators   }  }
         if ($initiatorsToCreate)    {   $MyBody += @{ initiatorsToCreate = $initiatorsToCreate  }  }
-        return Invoke-DSCCRestMethod -uri $MyUri -body $MyBody -Method 'PUT' -WhatIfBoolean $WhatIf
+        return (Invoke-DSCCRestMethod -uri $MyUri -body $MyBody -Method 'PUT' -WhatIfBoolean $WhatIf )
     }       
 } 

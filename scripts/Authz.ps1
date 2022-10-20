@@ -30,11 +30,8 @@ function Get-DSCCAccessControl
 param(  [switch]    $whatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $MyAdd = 'access-controls'
-        $FullObjSet = Invoke-DSCCRestMethod -uriAdd $MyAdd -method 'Get' -WhatIfBoolean $WhatIf 
-        return $FullObjSet   
-    }       
+{   return ( Invoke-DSCCRestMethod -uriAdd 'access-controls' -method 'Get' -WhatIfBoolean $WhatIf ) 
+}       
 }   
 function Get-DSCCResourceType
 {
@@ -68,9 +65,6 @@ function Get-DSCCResourceType
 param(  [switch]    $whatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $MyAdd = 'resource-types'
-        $FullObjSet = Invoke-DSCCRestMethod -uriadd $MyAdd -method 'Get' -whatifBoolean $WhatIf 
-        return $FullObjSet   
-    }       
+{   return ( Invoke-DSCCRestMethod -uriadd 'resource-types' -method 'Get' -whatifBoolean $WhatIf ) 
+}       
 }   

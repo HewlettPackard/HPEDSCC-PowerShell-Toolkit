@@ -32,8 +32,7 @@ param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('i
                                                                             [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         switch($DeviceType)
                 {   'Device-Type1'  { $ControllerWord = '/nodes'        }
                     'Device-Type2'  { $ControllerWord = '/controllers'  }
@@ -43,11 +42,7 @@ process
                 {   $MyURI = $MyURI + '/' + $ControllerId 
                 }
         $SysColOnly = invoke-DSCCrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf
-        if ( ($SysColOnly).items ) 
-                {   $SysColOnly = ($SysColOnly).items 
-                }
-        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Controller.$DeviceType"        
-        return $ReturnData
+        return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Controller.$DeviceType" )
     }       
 } 
 function Get-DSCCControllerSubComponent
@@ -119,12 +114,10 @@ param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('i
                                                                             [string]    $NodeId,
         [parameter(mandatory)][validateset('cards','cpus','drives','mcus','mems','powers','batteries')]
                                                                             [string]    $SubComponent,
-                                                                            [string]    $SubComponentID,
                                                                             [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         clear-varibable -name ControllerWord -ErrorAction SilentlyContinue
         switch($DeviceType)
                 {   'Device-Type1'  {   $ControllerWord = 'nodes'        }
@@ -139,14 +132,7 @@ process
         if ($SubComponent -eq 'batteries' )
                 { $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/' + $ControllerWord + '/' + $NodeId + '/nodes-' + $SubComponent
                 }
-        $SysColOnly = invoke-DSCCrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf
-        if ( $SubComponentId )
-                {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                    return ( $SysColOnly | where-object { $_.id -eq $SubComponentId } )
-                } 
-            else 
-                {   return $SysColOnly
-                }
+        return ( invoke-DSCCrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf )
     }       
 } 
 function Get-DSCCControllerPerf
@@ -208,8 +194,7 @@ param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )]     [str
                                                                             [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $systemId )
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $systemId )
         if ($DeviceType -eq 'device-type2' )
                 {   Write-warning "This command only works on Device-Type1 which include 3par/Primera/Alletra9K devices"
                     return  
@@ -219,8 +204,7 @@ process
                     return
                 }
         $MyAdd = 'storage-systems/device-type1/' + $systemId + '/nodes/' + $id + '/component-performance-statistics'
-        $SysColOnly = invoke-DSCCrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf
-        return $SysColOnly
+        return ( invoke-DSCCrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf )
     }       
 }
 function Invoke-DSCCControllerLocate
@@ -249,8 +233,7 @@ param(  [parameter(mandatory)][string]    $SystemId,
                               [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $MyBody = @{ locate = $Locate
+    {   $MyBody = @{ locate = $Locate
                    }
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         if ($DeviceType -eq 'Device-Type2')  
@@ -262,8 +245,7 @@ process
                     return
                 }
         $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/nodes/' + $NodeId
-        $SysColOnly = invoke-DSCCrestmethod -uriadd $MyAdd -body $MyBody -method Post -whatifBoolean $WhatIf
-        return $SysColOnly
+        return ( invoke-DSCCrestmethod -uriadd $MyAdd -body $MyBody -method Post -whatifBoolean $WhatIf )
     }       
 } 
 function Invoke-DSCCControllerLocatePCBM
@@ -295,11 +277,10 @@ param(  [parameter(mandatory)][string]    $SystemId,
                               [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $MyBody = ( @{ locate = $Locate } | convertto-json )
+    {   $MyBody = ( @{ locate = $Locate } | convertto-json )
         if ( $DeviceType -eq 'Device-Type2' )   { Write-warning "This command only works on Device-Type1 which include 3par/Primera/Alletra9K devices"; return }
         if ( -not $DeviceType )                 { Write-Warning "No array was detected using the SystemID $SystemId"; return }
         $MyAdd = 'storage-systems/device-type1/' + $SystemId + '/nodes/' + $NodeId + '/Powers/' + $PowerId
-        return invoke-restmethod -uriadd $MyAdd -body $MyBody -method Post -whatifBoolean $WhatIf
+        return ( invoke-restmethod -uriadd $MyAdd -body $MyBody -method Post -whatifBoolean $WhatIf )
     }       
 } 

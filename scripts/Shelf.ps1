@@ -5,11 +5,9 @@ function Get-DSCCShelf
     Returns the HPE DSSC DOM Shelves for a specific storage system     
 .DESCRIPTION
     Returns the HPE DSSC DOM Shelves for a specific storage system 
-.PARAMETER StorageSystemID
+.PARAMETER SystemID
     A single Storage System ID is specified and required, the pools defined will be returned unless a specific Shelf ID is requested.
     You can feed the output of the Get-DSCCStorageSystems command to this command to specify the required parameter.
-.PARAMETER ShelfID
-    If a single Storage System Disk ID is specified, only that Disk will be returned.
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
@@ -53,12 +51,10 @@ function Get-DSCCShelf
 [CmdletBinding()]
 param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
                                                                             [string]    $SystemId, 
-                                                                            [string]    $ShelfId,
                                                                             [switch]    $WhatIf
      )
 process
-    { Invoke-DSCCAutoReconnect
-      $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    { $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
       if ( $DeviceType )
             {   $ShelfWord = '/shelves'
                 if ( $DeviceType -eq 'Device-Type1')
@@ -66,14 +62,7 @@ process
                     }
                 $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + $ShelfWord
                 $SysColOnly = Invoke-DSCCRestMethod -UriAdd $MyAdd -method Get -WhatIfBoolean $WhatIf                
-                $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Shelf.Combined"
-                if ( $ShelfId )
-                        {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                            return ( $ReturnData | where-object { $_.id -eq $ShelfId } )
-                        } 
-                    else 
-                        {   return $ReturnData
-                        }
+                return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Shelf.Combined" )
             }
         else 
             {   write-warning "The Storage System ID presented was not detected."
@@ -133,7 +122,7 @@ process
     {   Invoke-DSCCAutoReconnect
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         if ( $DeviceType )
-            {   $MyAdd = 'storage-systems/' + $DeviceType2 + '/' + $SystemId + '/shelves/' + $ShelfId + '/action/locate'
+            {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/shelves/' + $ShelfId + '/action/locate'
                 $MyBody = @{    cid     = $CId 
                                 status  = $Status
                            } 

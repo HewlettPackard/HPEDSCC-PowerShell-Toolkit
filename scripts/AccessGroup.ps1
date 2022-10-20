@@ -8,8 +8,9 @@ function Get-DSCCAccessControlRecord
 .PARAMETER SystemID
     If a single System ID is specified the output will be limited to that single set of records. If no System ID is 
     given, the command will be run against all Storage Systems Ids
-.PARAMETER AccessControlRecordID
-    If a single Access Control Record ID is specified the output will be limited to that single record.
+.PARAMETER VolumeId 
+    With device-type1 devices you must specify the volumeID that you want access control records for, if left unset, it will 
+    return the access control records for all volumes.
 .PARAMETER WhatIf
     The WhatIf can be either $true or $false and will show you the RAW RestAPI call that would be made to DSCC instead of actually 
     sending the request. This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
@@ -30,14 +31,12 @@ function Get-DSCCAccessControlRecord
     test-now          0d3a78e8778c204dc2000000000000000000000029            access-control-record jpnhost04
 #>   
 [CmdletBinding()]
-param(  [Parameter(ValueFromPipeLineByPropertyName=$true)]                  [Alias('id')]   [string]    $SystemId,  
-                                                                                            [string]    $AccessControlRecordId,    
-                                                                                            [string]    $VolumeId,  
-                                                                                            [boolean]   $WhatIf=$false
-     )
+param   (  [Parameter(ValueFromPipeLineByPropertyName=$true)]   [Alias('id')]   [string]    $SystemId,  
+                                                                                [string]    $VolumeId,  
+                                                                                [boolean]   $WhatIf=$false
+        )
 process
-{   Invoke-DSCCAutoReconnect
-    if ( -not $PSBoundParameters.ContainsKey('SystemId' ) )
+{   if ( -not $PSBoundParameters.ContainsKey('SystemId' ) )
             {   write-verbose "No SystemID Given, running all SystemIDs"
                 $ReturnCol=@()
                 foreach( $Sys in Get-DSCCStorageSystem )
@@ -67,27 +66,11 @@ process
                                                     $SysColOnly += $MyCol                                                        
                                                 } 
                                             $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName ( "AccessControlRecord")
-                                            return $ReturnData
+                                            return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "AccessControlRecord" ) 
                                         }
-                        'device-type2'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/access-control-records/' + $AccessControlRecordId
+                        'device-type2'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/access-control-records'
                                             $SysColOnly = invoke-Dsccrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf
-                                            if ( ( $SysColOnly ).items )
-                                                    {   $SysColOnly = $SysColOnly.items 
-                                                    }
-                                            if ( ( $SysColOnly ).total -eq 0 )
-                                                    {   Write-Warning "The Call to SystemID $SystemId returned no Access ControlRecord Records."
-                                                        return                                                
-                                                    }
-                                            if ( -not $SysColOnly )
-                                                    {   Write-Warning "No Access Control Records found for this system"
-                                                        return
-                                                    }
-                                            if ( $AccessControlRecordId )
-                                                    {   return ( $ReturnData | where-object { $_.id -eq $AccessControlRecordId } )
-                                                    } 
-                                                else 
-                                                    {   return $ReturnData
-                                                    }
+                                            return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "AccessControlRecord" )
                                         }
                     }     
             }       
@@ -113,13 +96,13 @@ function Remove-DSCCAccessControlRecord
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 #>    
 [CmdletBinding()]
-param(  [Parameter(ParameterSetName=('device-type1','device-type2'),ValueFromPipeLineByPropertyName=$true,Mandatory=$true )]
-                                                                            [Alias('id')]       [string]    $SystemId,  
-        [Parameter(ParameterSetName=('device-type1'),Mandatory=$true )]                         [string]    $volumeId,      
-        [Parameter(ParameterSetName=('device-type1'),Mandatory=$true )]                         [string]    $vLunId,      
-        [Parameter(ParameterSetName=('device-type2'),Mandatory=$true )]                         [string]    $AccessControlRecordId,      
-                                                                                                [switch]    $WhatIf
-     )
+param   (   [Parameter(ParameterSetName=('device-type1','device-type2'),ValueFromPipeLineByPropertyName=$true,Mandatory=$true )]
+                                                                        [Alias('id')]   [string]    $SystemId,  
+            [Parameter(ParameterSetName=('device-type1'),Mandatory=$true )]             [string]    $volumeId,      
+            [Parameter(ParameterSetName=('device-type1'),Mandatory=$true )]             [string]    $vLunId,      
+            [Parameter(ParameterSetName=('device-type2'),Mandatory=$true )]             [string]    $AccessControlRecordId,      
+                                                                                        [switch]    $WhatIf
+        )
 process
     {   Invoke-DSCCAutoReconnect
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
@@ -204,10 +187,9 @@ param(  [Parameter(ParameterSetName=('device-type1','device-type2'),ValueFromPip
         [Parameter(ParameterSetName=('device-type2'))]                                      [string]    $pe_ids,
         [Parameter(ParameterSetName=('device-type2'))]                                      [string]    $snapId,
         [Parameter(ParameterSetName=('device-type','device-type2'))]                        [switch]    $WhatIf
-     )
+    )
 process
-    {   Invoke-DSCCAutoReconnect
-        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         switch ( $devicetype )
             {   'device-type1'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes/' + $VolId + '/vluns'
                                                                 $MyBody =  @{}
@@ -231,5 +213,5 @@ process
                                 }
             }
         return Invoke-DSCCRestMethod -uriadd $MyAdd -method 'POST' -body ( $MyBody | ConvertTo-Json ) -whatifBoolean $WhatIf
-     }      
+    }      
 } 

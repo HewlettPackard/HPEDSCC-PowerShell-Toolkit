@@ -38,10 +38,7 @@ function Get-DSCCAuditEvent
 param(  [switch]    $whatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $MyAdd = 'audit-events'
-        $SysColOnly = Invoke-DSCCRestMethod -uriadd $MyAdd -method 'Get' -whatifBoolean $WhatIf 
-        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Audit"
-        return $ReturnData  
+    {   $SysColOnly = Invoke-DSCCRestMethod -uriadd 'audit-events' -method 'Get' -whatifBoolean $WhatIf 
+        return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Audit" )
     }       
 }   

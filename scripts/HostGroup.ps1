@@ -5,8 +5,6 @@ function Get-DSCCHostGroup
     Returns the HPE DSSC DOM Host Group Collection    
 .DESCRIPTION
     Returns the HPE Data Services Cloud Console Data Operations Manager Host Groups Collections;
-.PARAMETER HostGroupID
-    If a single Host Group ID is specified the output will be limited to that single record.
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
@@ -70,7 +68,7 @@ function Get-DSCCHostGroup
             }
     ]
 .EXAMPLE
-    PS:> Get-DSCCHostGroup -HostGroupId e987ef683c27403e96caa51816ddc72c
+    PS:> Get-DSCCHostGroup | where { $_.id -like 'e987ef683c27403e96caa51816ddc72c' }
 
     id                               name           type                 hosts              systems
     --                               ----           ----                 -----              -------
@@ -93,21 +91,12 @@ function Get-DSCCHostGroup
     The API call for this operation is file:///api/v1/host-initiator-groups
 #>   
 [CmdletBinding()]
-param(  [string]    $HostGroupId,        
-        [boolean]    $WhatIf=$false
+param(  [boolean]    $WhatIf=$false
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $MyAdd = 'host-initiator-groups'
+    {   $MyAdd = 'host-initiator-groups'
         $SysColOnly = invoke-DSCCRestMethod -UriAdd $MyAdd -method Get -WhatIfBoolean $WhatIf
-        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "HostGroup"
-        if ( $HostGroupID )
-                {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                    return ( $ReturnData | where-object { $_.id -eq $HostGroupId } )
-                } 
-            else 
-                {   return $ReturnData
-                }
+        return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "HostGroup" )
     }       
 }   
 function Remove-DSCCHostGroup
@@ -150,16 +139,15 @@ function Remove-DSCCHostGroup
 [CmdletBinding()]
 param(  [Parameter(Mandatory)]  [string]    $HostGroupID,
                                 [switch]    $Force,
-                                [boolean]    $WhatIf=$false
+                                [boolean]   $WhatIf=$false
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $MyAdd = 'host-initiator-groups/' + $HostGroupID
+    {   $MyAdd = 'host-initiator-groups/' + $HostGroupID
         $MyBody = ''
         if ( $Force )
                 {   $MyBody += ( @{ force = $true } | convertTo-json )
                 }
-        return Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Delete' -body $MyBody -WhatIfBoolean $WhatIf
+        return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Delete' -body $MyBody -WhatIfBoolean $WhatIf )
     }       
 }   
 Function New-DSCCHostGroup
@@ -219,14 +207,13 @@ param(  [Parameter(Mandatory=$true)]    [string]    $name,
                                         [boolean]    $WhatIf=$false
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $MyAdd = 'host-initiator-groups'
+    {   $MyAdd = 'host-initiator-groups'
                                     $MyBody  = [ordered]@{ name          = $name             }
         if ($comment)           {   $MyBody +=          @{ comment       = $comment       }  }
         if ($hostIds)           {   $MyBody +=          @{ hostIds       = $hostIds       }  }
         if ($hostsToCreate )    {   $MyBody +=          @{ hostsToCreate = $hostsToCreate }  }
                                     $MyBody +=          @{ userCreated   = $userCreated      }
-        return Invoke-DSCCRestMethod -UriAdd $MyAdd -method 'POST' -body $MyBody -WhatIfBoolen $WhatIf
+        return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -method 'POST' -body $MyBody -WhatIfBoolen $WhatIf )
      }      
 } 
 Function Set-DSCCHostGroup
@@ -264,12 +251,11 @@ param(  [Parameter(Mandatory)]  [string]    $hostGroupID,
                                 [Boolean]    $WhatIf=$false
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $MyAdd = 'host-initiator-groups/' + $hostGroupID
+    {   $MyAdd = 'host-initiator-groups/' + $hostGroupID
                                     $MyBody += @{}
         if ($name)              {   $MyBody += @{ name          = $name}  }
         if ($updatedHosts)      {   $MyBody += @{ updatedHosts  = $updatedHosts }  }
         if ($updatedHosts)      {   $MyBody += @{ HostsToCreate = $hostsToCreate }  }
-        return Invoke-DSCCRestMethod -UriAdd $MyAdd -body ( $MyBody | ConvertTo-Json ) -Method 'Put' -WhatIfBoolean $WhatIf
+        return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -body $MyBody -Method 'Put' -WhatIfBoolean $WhatIf )
     }       
 } 

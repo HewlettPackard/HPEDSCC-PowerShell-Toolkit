@@ -132,13 +132,12 @@ param(  [Parameter(Mandatory)]  [string]    $InitiatorID,
                                 [boolean]   $WhatIf=$false
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $MyAdd = 'initiators/' + $InitiatorID
+    {   $MyAdd = 'initiators/' + $InitiatorID
         $MyBody = ''
         if ($Force)
                 {   $MyBody = @{force=$true}
                 }
-        return Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Delete' -Body $MyBody -WhatIfBoolean $WhatIf
+        return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Delete' -Body $MyBody -WhatIfBoolean $WhatIf )
     }       
 }   
 Function New-DSCCInitiator
@@ -218,8 +217,7 @@ param(  [Parameter(Mandatory, ParameterSetName = 'type2iscsi')]
         [Parameter(ParameterSetName = 'type1')]                     [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        Switch($PSCmdlet.ParameterSetName)
+    {   Switch($PSCmdlet.ParameterSetName)
             {   'type1'     {   $MyAdd = 'initiators'
                                 $MyBody += [ordered]@{                    address  = $address           } 
                                 if ($driverVerson)      {   $MyBody += @{ driverVersion = $driverVersion     }  }
@@ -248,6 +246,6 @@ process
                                 if ($wwpn)                   {   $MyBody += @{ vendor = $vendor                                   }  }
                             }
             }
-        return Invoke-DSCCRestMethod -UriAdd $MyAdd - Method 'POST' -body $MyBody -whatifBoolean $WhatIf
+        return ( Invoke-DSCCRestMethod -UriAdd $MyAdd - Method 'POST' -body $MyBody -whatifBoolean $WhatIf )
     }       
 }   

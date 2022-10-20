@@ -15,8 +15,7 @@ function Get-DSCCFolder
 #>   
 [CmdletBinding()]
 param(  [parameter(mandatory,ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
-                                                                            [string]    $systemId, 
-                                                                            [string]    $folderId,
+                                                                            [string]    $systemId,
                                                                             [switch]    $WhatIf
      )
 process
@@ -29,12 +28,7 @@ process
             'device-type2'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $systemId + '/folders'
                                 $SysColOnly = invoke-DSCCrestmethod -uriadd $MyAdd -method Get -whatifBoolean
                                 $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Folder"
-                                if ( $folderId )
-                                        {   return ( $ReturnData | where-object { $_.id -eq $folderId } )
-                                        } 
-                                    else 
-                                        {   return $ReturnData
-                                        }
+                                return $ReturnData
                             }
         }       
     }       

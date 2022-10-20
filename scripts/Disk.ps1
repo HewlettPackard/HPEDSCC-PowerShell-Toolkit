@@ -69,39 +69,24 @@ function Get-DSCCDisk
 [CmdletBinding()]
 param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
                                                                             [string]    $SystemId,
-                                                                            [string]    $DiskId,
                                                                             [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         if ( $DeviceType )
             {   switch ( $DeviceType )
                 {   'device-type2'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/disks'
                                         $SysColOnly = invoke-DSCCrestmethod -uriadd $MyAdd -method Get -whatifBoolean $WhatIf
-                                        $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Disk.Combined"
-                                        if ( $DiskId )
-                                                {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                                                    return ( $ReturnData | where-object { $_.id -eq $DiskId } )
-                                                } 
-                                            else 
-                                                {   return $ReturnData
-                                                }   
+                                        return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Disk.Combined" )          
                                     }
-                    'device-type1'  {   $Shelflist = Get-DSCCShelf -systemId $SystemID  
-                                        foreach ( $Shelfid in $Shelflist )
+                    'device-type1'  {   $ReturnData = @()
+                                        foreach ( $Shelfid in ( Get-DSCCShelf -systemId $SystemID ) )
                                             {   $Shelfid = $Shelfid.Id
                                                 $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/enclosures/' + $Shelfid +'/enclosure-disks'
                                                 $SysColOnly = invoke-DSCCrestmethod -uriAdd $MyAdd  -method Get -whatifBoolean $WhatIf
-                                                $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Disk.Combined"
-                                                if ( $DiskId )
-                                                        {   Write-host "The results of the complete collection have been limited to just the supplied ID"
-                                                            return ( $ReturnData | where-object { $_.id -eq $DiskId } )
-                                                        } 
-                                                    else 
-                                                        {   return $ReturnData
-                                                        }         
+                                                $ReturnData += Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Disk.Combined"         
                                             } 
+                                        return $ReturnData
                                     }
                 }  
             }

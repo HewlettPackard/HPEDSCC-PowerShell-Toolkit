@@ -5,7 +5,8 @@
     Connects to an HPE DSCC Endpoint.
 .DESCRIPTION
     Connect-HPEDSCC is an advanced function that provides the initial connection to a HPE Data Storage Cloud Services
-    so that other subsequent commands can be run without having to authenticate individually.
+    so that other subsequent commands can be run without having to authenticate individually. This command will take your credentials and attempt to get 
+    and authorization token, or will take an authorization token and connect 
 .PARAMETER Client_id
     The Client ID that is given to the user from the DSCC service. This can be found on the DSCC GUI. If the Client ID is specified, so must the Client_Secret.
 .PARAMETER client_secret
@@ -13,19 +14,22 @@
     not available anywhere in the DSCC gui. If the Client_Secret is specified the Client_Id must also be provided.
 .PARAMETER AccessToken
     If the Access Token can be gathered seperately, you can use this to authenticate your RestAPI Calls. 
-    If no AccessToken is specified a Client_Id or Client_Secret need be specified.
+    If no AccessToken is specified a Client_Id or Client_Secret need be specified. The Access token will expire after 2 hours of issue, and 
+    since credentials are not offered, there is no ability to autorenew them.
 .PARAMETER GreenlakeType
-    This can either be the Production Instance of DSSC or it can be the Prototype/Dev instance of the DSSC. The values can either be Production or Dev.
+    This can either be the Production Instance of DSSC or it can be the Prototype/Dev instance of the DSSC. The values can either be Production either
+    in the USA, the EU, or Asia or multiple Devevlopment sites. 
 .PARAMETER AutoRenew
     This switch will allow the Toolkit to reconnect automatically once a successfull connection has been made every 1h and 45 minutes.
 .PARAMETER WhatIfToken
-    This option shows you the command that will be sent to the DSCC, will include the URI being sent to, the Header, Method, and the Body of the message.
+    This option shows you the command that will be sent to DSCC, will include the URI being sent to, the Header, Method, and the Body of the message.
     Since this command has two parts, the use of this will show you the what-if option for the call to the single-sign-on service which returns the authorization
-    token only.
+    token only. This will show you ONLY how the authentication call is made, and will not tryin and connect to the end-user cloud.
 .PARAMETER WhatIfGreenLakeType
     This option shows you the command that will be sent to the DSCC, will include the URI being sent to, the Header, Method, and the Body of the message.
     Since this command has two parts, the use of this will obtain the authorization token from the single-sign-on server, and then attemp to make a standard 
-    call to the defined cloud. If the cloud choosen is incorrect, the SSO server would still succeed, but the following command would fail.
+    call to the defined cloud. This command is useful to determine if your authentication token is returned correctly
+    If the cloud choosen is incorrect, the SSO server would still succeed, but the following command would fail.
     .EXAMPLE
     PS:> Connect-HPEDSCC -AccessToken 'ABC123XYZ' -GreenlakeType Dev
 .EXAMPLE
@@ -40,11 +44,11 @@
     The Body of this call will be:
         "No Body"   
 .EXAMPLE
-    PS:> Connect-DSCC -Client_Id '1234abcd' -Client_Secret 'ABC123XYZ' -GreenlakeType Dev
+    PS:> Connect-DSCC -Client_Id '1234abcd' -Client_Secret 'ABC123XYZ' -GreenlakeType Dev1 -autorenew
 .EXAMPLE
-    PS:> Connect-DSCC -Client_Id '1234abcd' -Client_Secret 'ABC123XYZ' -GreenlakeType Dev -whatifToken
+    PS:> Connect-DSCC -Client_Id '1234abcd' -Client_Secret 'ABC123XYZ' -GreenlakeType Dev1 -autorenew -whatifToken
 .EXAMPLE
-    PS:> Connect-DSCC -Client_Id '1234abcd' -Client_Secret 'ABC123XYZ' -GreenlakeType Dev -whatifGreenLakeType        
+    PS:> Connect-DSCC -Client_Id '1234abcd' -Client_Secret 'ABC123XYZ' -GreenlakeType Dev1 -whatifGreenLakeType        
 #>
 [CmdletBinding()]
 param ( [Parameter(Mandatory,ParameterSetName='ByClientCreds')]                         [string]    $Client_Id,
@@ -54,25 +58,32 @@ param ( [Parameter(Mandatory,ParameterSetName='ByClientCreds')]                 
         [Parameter(ParameterSetName='ByClientCreds')]                                   [switch]    $AutoRenew, 
         [Parameter(ParameterSetName='ByClientCreds')]                                   [switch]    $WhatIfToken, 
                                                                                         [switch]    $WhatIfGreenLakeType 
-      )
+    )
 Process
 {   $Global:AuthUri = "https://sso.common.cloud.hpe.com/as/token.oauth2"
     write-verbose "Changing default TLS to 1.2 from 1.0"
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     if ( $PsCmdlet.ParameterSetName -eq 'ByClientCreds')
         {   if ( Resolve-DNSName 'sso.common.cloud.hpe.com' )
-                    {   write-verbose "Able to DNS Resolve the Single Sign In Server Successfully"
+                    {   write-verbose "Able to DNS Resolve the Single Sign On (SSO) Server Successfully : SSO.Common.Cloud.HPE.com"
                     }
                 else 
                     {   write-error "The Single Sign In (SSO) Server was not DSN Resolvable./r/n Please fix the network enviornment before re-running this command."
                         return 
                     }
-            if ( (test-connection 'sso.common.cloud.hpe.com' -TcpPort 443) -or ( ($PSVersionTable.PSVersion).Major -ge 7 ) )
-                    {   write-verbose "Able to successfully connect to the SSO Server."
-                    }
-                else   
-                    {   Write-Error "The Single Sign-In Server 'sso.common.cloud.hpe.com' Cannot be connected to. /r/n Please fix the network enviornment before re-running this command."
-                        return
+            if ( ($PSVersionTable.PSVersion).Major -ge 7 )
+                    {   write-verbose "Detected PowerShell 7, so can test-connection. Testing SSO.Common.Cloud.HPE.com"
+                        if ( ( test-connection 'sso.common.cloud.hpe.com' -TcpPort 443 ) )
+                                {   # the Test-Connection by port feature is only available in PowerShell 7 and newer, so the test only if 7+
+                                    write-verbose "Able to successfully connect to the SSO Server: SSO.Common.Cloud.HPE.com."
+                                }
+                            else   
+                                {   Write-Error "The Single Sign-In Server SSO.Common.Cloud.HPE.com Cannot be connected to. /r/n Please fix the network enviornment before re-running this command."
+                                    return
+                                }
+                    } 
+                else 
+                    {   write-verbose "PowerShell 7 not detected, so unable to run the Test-Connection to ensure connectivity to SSO.Common.Cloud.HPE.com"
                     }
             write-verbose 'Obtaining Access Token using Passed Client_Id and Client_Secrets.'
             $Global:AuthHeaders =  @{  'Content-Type' = 'application/x-www-form-urlencoded'
@@ -97,7 +108,7 @@ Process
             Catch   {   $_
                     }
         }
-    write-Verbose "The AccessToken is $AccessToken"
+    write-Verbose "Successfully gathered new AccessToken : $AccessToken"
     switch( $GreenlakeType )    {   'Dev1'  {   $CloudAddr = 'scalpha-app.qa.cds.hpe.com'    }
                                     'Dev2'  {   $CloudAddr = 'fleetscale-app.qa.cds.hpe.com' }
                                     'Dev3'  {   $CloudAddr = 'scint-app.qa.cds.hpe.com'      }
@@ -105,33 +116,39 @@ Process
                                     'EU'    {   $CloudAddr = 'eu1.data.cloud.hpe.com'        }
                                     'USA'   {   $CloudAddr = 'us1.data.cloud.hpe.com'        }
                                 }
-    if ( Resolve-DNSName $CloudAddr )   {   write-verbose "Able to DNS Resolve the Cloud Server Successfully : $CloudAddr"  
-                                        }
-        else                            {   write-error "The $CloudAddr Server was not DNS Resolvable./r/n Please fix the network enviornment before re-running this command."
-                                            return 
-                                        }
-    if ( ( test-connection $CloudAddr -TcpPort 443 ) -or ( ($PSVersionTable.PSVersion).Major -ge 7 ) )
-                {   write-verbose "Able to successfully connect to the $CloudAddr Server."
-                }
-        else   
-                {   Write-Error "The $CloudAddr Server Cannot be connected to. /r/n Please fix the network enviornment before re-running this command."
-                    return
-                }
+    if ( Resolve-DNSName $CloudAddr )   
+            {   write-verbose "Able to DNS Resolve the Cloud Server Successfully : $CloudAddr"  
+            }
+        else
+            {   write-error "The $CloudAddr Server was not DNS Resolvable./r/n Please fix the network enviornment before re-running this command."
+                return 
+            }
+    if ( ($PSVersionTable.PSVersion).Major -ge 7 )
+            {   write-verbose "Detected PowerShell 7, so can test-connection. Testing SSO.Common.Cloud.HPE.com"
+                if ( ( test-connection $CloudAddr -TcpPort 443 ) -or ( ($PSVersionTable.PSVersion).Major -ge 7 ) )
+                        {   # the Test-Connection by port feature is only available in PowerShell 7 and newer, so the test only if 7+
+                            write-verbose "Able to successfully connect to the $CloudAddr Server."
+                        }
+                    else   
+                        {   Write-Error "The $CloudAddr Server Cannot be connected to. /r/n Please fix the network enviornment before re-running this command."
+                            return
+                        }
+            }
+        else 
+            {   write-verbose "PowerShell 7 not detected, so unable to run the Test-Connection to ensure connectivity to $CloudAddr"
+            }
     $Global:Base        = 'https://' + $CloudAddr
     $Global:CloudRoot   = "/api/v1/"
     $Global:BaseUri     = $Base+$CloudRoot
-    $Global:TestUri     = $BaseUri + "audit-events/"
-    $Global:MyHeaders   = @{  Authorization = 'Bearer '+$AccessToken
-                           }
+    $Global:MyHeaders   =  @{  Authorization = 'Bearer '+ $AccessToken
+                            }
     if ( $AccessToken -or $whatifGreenLakeType )
             {   Try     {   if ( $WhatifGreenLakeType )
-                                    {   Write-Warning 'This operation will run a Get-DSCCAuditEvent to test if the Cloud Type is set right'
-                                        $ReturnData = Get-DsccAuditEvent -whatif
-                                        write-warning ''
+                                    {   $ReturnData = invoke-restmethodwhatif -uri ( $BaseUri + 'audit-events') -Headers $MyHeaders 
                                     } 
                                 else 
                                     {   Write-Verbose 'This operation will run a Get-DSCCAuditEvent to test if the Cloud Type is set right'
-                                        $ReturnData = Get-DsccAuditEvent
+                                        $ReturnData = invoke-restmethod -uri ( $BaseUri + 'audit-events') -Headers $MyHeaders
                                     }
                         }
                 Catch   {   $_
@@ -164,11 +181,15 @@ Process
 function Find-DSCCDeviceTypeFromStorageSystemID
 {
 [CmdletBinding()]
-    param ( [Parameter(Mandatory)]
-            [string]    $SystemId,         
-
-            [switch]    $WhatIf 
-          )
+param   ( [Parameter(Mandatory)][AllowEmptyString()]    [string]    $SystemId, 
+                                                        [switch]    $WhatIf
+        )
+Process
+{   if ( $SystemId -eq '')
+        {   # This makes sure if an empty string is sent, no response is given
+            write-verbose 'Empty String sent in as a SystemId'
+            Return
+        }
     if ( ( Get-DSCCStorageSystem -SystemId $SystemId -DeviceType Device-Type1 ) )
             {   write-verbose "The DeviceType Detected was Device-Type1"
                 return 'device-type1'
@@ -181,6 +202,7 @@ function Find-DSCCDeviceTypeFromStorageSystemID
                     else 
                         {   return
                         }
+            }
 }
 }
 function Invoke-DSCCAutoReconnect
@@ -207,33 +229,37 @@ function Invoke-DSCCAutoReconnect
     return
 }
 function ThrowHTTPError 
-{   Param ( $ErrorResponse
-          )
-    Process 
-    {   $Response =   ((($ErrorResponse).Exception).Response | convertto-json )
-        $ECode =      (((($ErrorResponse).Exception).Response).StatusCode).value__
-        $EText =      ((($ErrorResponse).Exception).Response).StatusDescription + ((($ErrorResponse).Exception).Response).ReasonPhrase 
-        write-verbose "The RestAPI Request failed with the following Status: `r`n`tHTTPS Return Code = $ECode`r`n`tHTTPS Return Code Description = $EText"
-        Write-Debug   "Raw Response  = $Response"
-        return
-    }
+{  
+Param   ( $ErrorResponse
+        )
+Process 
+{   $Response =   ((($ErrorResponse).Exception).Response | convertto-json -depth 10 )
+    $ECode =      (((($ErrorResponse).Exception).Response).StatusCode).value__
+    $EText =      ((($ErrorResponse).Exception).Response).StatusDescription + ((($ErrorResponse).Exception).Response).ReasonPhrase 
+    write-verbose "The RestAPI Request failed with the following Status: `r`n`tHTTPS Return Code = $ECode`r`n`tHTTPS Return Code Description = $EText"
+    Write-Debug   "Raw Response  = $Response"
+    return
+}
 }
 function Invoke-DSCCRestMethod
-{   Param(  $UriAdd,
+{  
+Param   (   $UriAdd,
             $Body='',
             $Method='Get',
             $WhatIfBoolean=$false
-         )
-    Process
-    {   $MyURI = $BaseURI + $UriAdd
-        Clear-Variable -Name InvokeReturnData -ErrorAction SilentlyContinue
-        if ( $WhatIfBoolean )
+        )
+Process
+{   Invoke-DSCCAutoReconnect
+    $MyURI = $BaseURI + $UriAdd
+    Clear-Variable -Name InvokeReturnData -ErrorAction SilentlyContinue
+    if ( $WhatIfBoolean )
                 {   invoke-RestMethodWhatIf -Uri $MyUri -Method $Method -Headers $MyHeaders -Body $Body -ContentType 'application/json'
-                } 
-            else 
-                {   try     {   $InvokeReturnData = invoke-restmethod -Uri $MyUri -Method $Method -Headers $MyHeaders -Body $Body -ContentType 'application/json'
+                }
+            else
+                {   try     {   write-verbose "About to make rest call to URL $MyUri."
+                                $InvokeReturnData = invoke-restmethod -Uri $MyUri -Method $Method -Headers $MyHeaders -Body $Body -ContentType 'application/json'
                                 if (($InvokeReturnData).items)
-                                    {   $InvokeReturnData = ($InvokeReturnData).items 
+                                    {   $InvokeReturnData = ($InvokeReturnData).items
                                     }
                                 if (($InvokeReturnData).Total -eq 0)
                                     {   Write-warning "The call succeeded however zero items were returned"
@@ -243,18 +269,20 @@ function Invoke-DSCCRestMethod
                     catch   {   ThrowHTTPError -ErrorResponse $_
                             }
                 }   
-        return $InvokeReturnData
-    }
+    return $InvokeReturnData
+}
 }
 
 function Invoke-RestMethodWhatIf
-{   Param(  $Uri,
+{   
+Param   (   $Uri,
             $Method,
             $Headers,
             $ContentType,
             $Body
-         )
-    if ( -not $Body ) 
+        )
+process
+{   if ( -not $Body ) 
         {   $Body = 'No Body'
         }
     write-warning "You have selected the What-IF option, so the call will not be made to the array, `ninstead you will see a preview of the RestAPI call"
@@ -273,13 +301,16 @@ function Invoke-RestMethodWhatIf
             write-host -foregroundcolor green ($Body | ConvertTo-JSON | Out-String)
         }
 }
+}
 
 function Invoke-RepackageObjectWithType 
-{   Param(  $RawObject,
+{   
+Param   (   $RawObject,
             $ObjectName
-         )
-    if ( $RawObject )
-           {   $OutputObject = @()
+        )
+process
+{   if ( $RawObject )
+            {   $OutputObject = @()
                 foreach ( $RawElementObject in $RawObject )
                     {   $Z=$RawElementObject
                         $DataSetType = "DSCC.$ObjectName"
@@ -289,10 +320,10 @@ function Invoke-RepackageObjectWithType
                         $OutputObject += $Z
                     }
                 return $OutputObject
-           }
-           else
-           {    write-warning "Null value sent to create object type."
+            }
+        else
+            {   write-warning "Null value sent to create object type."
                 return
-           }
-    
+            }
+}   
 }

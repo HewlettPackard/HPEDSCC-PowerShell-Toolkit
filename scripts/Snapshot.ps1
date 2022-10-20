@@ -59,18 +59,12 @@ param(  [Parameter(ValueFromPipeLineByPropertyName=$true,mandatory=$true )][Alia
         [Parameter(                                                      )]                                 [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $systemId = $( $systemId + $owned_by_group_id )
+    {   $systemId = $( $systemId + $owned_by_group_id )
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $systemId )
         $MyAdd = 'storage-systems/' + $DeviceType + '/' + $systemId + '/volumes/' + $Id + '/snapshots'
         $SysColOnly = Invoke-DSCCRestMethod -UriAdd $MyAdd -method Get -WhatIfBoolean $WhatIf
         $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Snapshot.$DeviceType"
-        if ( $VolumeId )
-                {   return ( $ReturnData | where-object { $_.id -eq $VolumeId } )
-                } 
-            else 
-                {   return $ReturnData
-                }
+        $ReturnData
     }       
 } 
 function Remove-DSCCSnapshot{
@@ -100,14 +94,13 @@ param(  [Parameter(ValueFromPipeLineByPropertyName=$true,mandatory=$true )][Alia
                                                                                                             [switch]    $WhatIf
      )
 process
-    {       Invoke-DSCCAutoReconnect
-            $systemId = $( $systemId + $owned_by_group_id )
+    {       $systemId = $( $systemId + $owned_by_group_id )
             $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $systemId )
             $MyAdd = 'storage-systems/' + $DeviceType + '/' + $systemId + '/volumes/' + $Id + '/snapshots/' + $snapshotId 
             if ( $force )   
                 {   $MyAdd = $MyAdd + '?force=true' 
                 }
-            return Invoke-DSCCRestMethod -UriAdd $MyAdd -method DELETE -WhatIfBoolean $WhatIf
+            return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -method DELETE -WhatIfBoolean $WhatIf )
     }       
 } 
     
@@ -160,8 +153,7 @@ param(      [Parameter(ValueFromPipeLineByPropertyName=$true,mandatory=$true,Par
                                                                                                                             [switch]    $WhatIf
          )
 process
-    {       Invoke-DSCCAutoReconnect
-            $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $systemId )
+    {       $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $systemId )
             $MyURI = $BaseURI + 'storage-systems/' + $DeviceType + '/' + $systemId + '/volumes/' + $Id + '/snapshots'
             switch ( $DeviceType )
                 {   'device-type1'  {   if ( Get-DSCCVolume -systemId $systemId -volumeid $id )
@@ -192,6 +184,6 @@ process
                                             else                {   $MyBody = $MyBody + @{ 'readOnly'    = $false }       }
                                     }
                 }
-            return Invoke-DSCCRestMethod -UriAdd $MyAdd -method POST -body $MyBody -whatifBoolean $WhatIf
+            return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -method POST -body $MyBody -whatifBoolean $WhatIf )
     }       
 } 

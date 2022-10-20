@@ -218,8 +218,7 @@ param(                                                                      [str
                                                                             [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        if ( $DeviceType ) 
+    {   if ( $DeviceType ) 
             {   $DevTypes = $DeviceType 
             } else
             {   $DevTypes = @( 'device-type1', 'device-type2')
@@ -231,13 +230,7 @@ process
                 $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "StorageSystem.Combined"   
                 $BigCollection+= $ReturnData 
             }
-        if ( $SystemId)
-            {   return ( $BigCollection | where-object { $_.id -eq $SystemId } )
-            } 
-          else 
-            {   return $BigCollection
-            }
-
+        return $BigCollection
     }   
 }   
 
@@ -249,15 +242,15 @@ function Invoke-DSCCStorageSystemLocate
 .DESCRIPTION
     Initiates the HPE Data Services Cloud Console Data Operations Manager Systems Beacon for a specific Storage System. 
     Only valid for Type1 Storage Systems (3PAR/Primera/Alletra9K)  
-.PARAMETER StorageSystemID
+.PARAMETER SystemID
     The single storage systems beacon light will be illuminated
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 .EXAMPLE
-    PS:> Invoke-DSCCStorageSystemLocate -StorageSystemId 2M234353456TZ
+    PS:> Invoke-DSCCStorageSystemLocate | where { $_.id -like 2M234353456TZ }
 .EXAMPLE
-    PS:> InvokeDSCCStorageSystemLocate -StorageSystemId 2M234353456TZ -whatif
+    PS:> InvokeDSCCStorageSystemLocate -whatif
 
     WARNING: You have selected the What-IF option, so the call will note be made to the array,
     instead you will see a preview of the RestAPI call
@@ -275,14 +268,12 @@ function Invoke-DSCCStorageSystemLocate
 .LINK
 #>   
 [CmdletBinding()]
-param(  [parameter(mandatory)]  [string]    $StorageSystemId,        
+param(  [parameter(mandatory)]  [string]    $SystemId,        
                                 [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $MyAdd = 'storage-systems/device-type1/' + $StorageSystemId 
+    {   $MyAdd = 'storage-systems/device-type1/' + $SystemId 
         $MyBody = @{    locateEnabled = $true   }
-        invoke-restmethod -UriAdd $MyAdd -body $MyBody -method Post -whatifBoolean $WhatIf
-        return $SysColOnly
+        return ( invoke-restmethod -UriAdd $MyAdd -body $MyBody -method Post -whatifBoolean $WhatIf )
     }       
 }   
