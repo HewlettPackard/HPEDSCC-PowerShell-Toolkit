@@ -297,7 +297,7 @@ process
         if ($protocol)              {   $MyBody += @{ protocol = $protocol                      }  }
         if ($subnet)                {   $MyBody += @{ subnet = $subnet                          }  }
                                         $MyBody += @{ userCreated = $userCreated                   }
-        return ( Invoke-DSCCRestMethod -uri $MyUri -method 'POST' -body ( $MyBody | convertTo-json ) -WhatIfBoolean $WhatIf )
+        return ( Invoke-DSCCRestMethod -uriadd $MyAdd -method 'POST' -body ( $MyBody | convertTo-json ) -WhatIfBoolean $WhatIf )
     }      
 } 
 Function Set-DSCCHost

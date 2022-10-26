@@ -167,31 +167,35 @@ Function New-DSCCAccessControlRecord
     The API call for this operation is file:///api/v1/storage-systems/{systemid}/device-type1/access-control-records
 #>   
 [CmdletBinding()]
-param(  [Parameter(ParameterSetName=('device-type1','device-type2'),ValueFromPipeLineByPropertyName=$true,Mandatory=$true )]
-                                                                            [Alias('id')]   [string]    $SystemId, 
-        [Parameter(ParameterSetName=('device-type1'),mandatory=$true)]  
-        [Parameter(ParameterSetName=('device-type2'))]               [Alias('VolumeId')]    [string]    $volId,
+param(  [Parameter(ParameterSetName=('type1'),ValueFromPipeLineByPropertyName=$true,Mandatory=$true )]
+        [Parameter(ParameterSetName=('type2'),ValueFromPipeLineByPropertyName=$true,Mandatory=$true )]
+        [Alias('id')]   [string]    $SystemId, 
+        [Parameter(ParameterSetName=('type1'),mandatory=$true)]  
+        [Parameter(ParameterSetName=('type2'))]               [Alias('VolumeId')]    [string]    $vol_id,
 
-        [Parameter(ParameterSetName=('device-type1'))]                                      [string]    $position,
-        [Parameter(ParameterSetName=('device-type1'))]                                      [boolean]   $autoLun,
-        [Parameter(ParameterSetName=('device-type1'))]                                      [int]       $maxAutoLun,
-        [Parameter(ParameterSetName=('device-type1'))]                                      [boolean]   $override,
-        [Parameter(ParameterSetName=('device-type1'))]                                      [boolean]   $noVcn,
-        [Parameter(ParameterSetName=('device-type1'))]                                      [string[]] $hostGroupId,
-        [Parameter(ParameterSetName=('device-type1'))]
-        [Parameter(ParameterSetName=('device-type2'))]                                      [int]       $lun,
-        [ValidateSet('volume','pe','vvol_volume','vvol_snapshot','snapshot','both') ]       [string]    $applyTo,
-        [Parameter(ParameterSetName=('device-type2'))]                                      [string]    $chapUserId,
-        [Parameter(ParameterSetName=('device-type2'))]                                      [string]    $initiatorGroupId,
-        [Parameter(ParameterSetName=('device-type2'))]                                      [string]    $pe_id,
-        [Parameter(ParameterSetName=('device-type2'))]                                      [string]    $pe_ids,
-        [Parameter(ParameterSetName=('device-type2'))]                                      [string]    $snapId,
-        [Parameter(ParameterSetName=('device-type','device-type2'))]                        [switch]    $WhatIf
+        [Parameter(ParameterSetName=('type1'))]                                      [string]    $position,
+        [Parameter(ParameterSetName=('type1'))]                                      [boolean]   $autoLun,
+        [Parameter(ParameterSetName=('type1'))]                                      [int]       $maxAutoLun,
+        [Parameter(ParameterSetName=('type1'))]                                      [boolean]   $override,
+        [Parameter(ParameterSetName=('type1'))]                                      [boolean]   $noVcn,
+        [Parameter(ParameterSetName=('type1'))]
+        [ValidateSet('PRIMARY','SECONDARY','ALL')]                                   [string]   $proximity,
+        [Parameter(ParameterSetName=('type1'))]                                      [string[]]  $hostGroupIds,
+
+        [Parameter(ParameterSetName=('type2'))]                                      [int]       $lun,
+        [ValidateSet('volume','pe','vvol_volume','vvol_snapshot','snapshot','both') ][string]    $applyTo,
+        [Parameter(ParameterSetName=('type2'))]                                      [string]    $chapUserId,
+        [Parameter(ParameterSetName=('type2'))]                                      [string]    $initiatorGroupId,
+        [Parameter(ParameterSetName=('type2'))]                                      [string]    $pe_id,
+        [Parameter(ParameterSetName=('type2'))]                                      [string]    $pe_ids,
+        [Parameter(ParameterSetName=('type2'))]                                      [string]    $snapId,
+        [Parameter(ParameterSetName=('type1'))]
+        [Parameter(ParameterSetName=('type2'))]                                      [boolean]   $WhatIf = $false
     )
 process
     {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         switch ( $devicetype )
-            {   'device-type1'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes/' + $VolId + '/vluns'
+            {   'device-type1'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes/' + $vol_id + '/export'
                                                                 $MyBody =  @{}
                                     if ($autoLun)           {   $MyBody += @{ autoLun       = $autoLun      }  }
                                     if ($hostGroupIds)      {   $MyBody += @{ hostGroupIds  = $hostGroupIds }  }
@@ -199,6 +203,7 @@ process
                                     if ($noVcn )            {   $MyBody += @{ noVcn         = $noVcn        }  }
                                     if ($override )         {   $MyBody += @{ override      = $override     }  }
                                     if ($position )         {   $MyBody += @{ position      = $position     }  }
+                                    if ($proximity )        {   $MyBody += @{ proximity     = $proximity    }  }
                                 }
                 'device-type2'  {   $MyAdd = 'storage-systems/' + $devicetype + '/' + $SystemId + '/access-control-records'
                                                                 $MyBody =  @{}
@@ -209,7 +214,7 @@ process
                                     if ($pe_id )            {   $MyBody += @{ pe_id              = $pe_id            }  }
                                     if ($pe_ids )           {   $MyBody += @{ pe_ids             = $pe_ids           }  }
                                     if ($snapId )           {   $MyBody += @{ snap_id            = $snapId           }  }
-                                    if ($volId )            {   $MyBody += @{ vol_id             = $volId            }  }
+                                    if ($vol_id )           {   $MyBody += @{ vol_id             = $vol_id           }  }
                                 }
             }
         return Invoke-DSCCRestMethod -uriadd $MyAdd -method 'POST' -body ( $MyBody | ConvertTo-Json ) -whatifBoolean $WhatIf

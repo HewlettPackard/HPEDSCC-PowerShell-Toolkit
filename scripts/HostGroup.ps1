@@ -265,7 +265,7 @@ process
                                             }
                                 }
             }
-        return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -method 'POST' -body ( $MyBody | convertto-json ) -WhatIfBoolen $WhatIf )
+        return (Invoke-DSCCRestMethod -UriAdd $MyAdd -method 'POST' -body ($MyBody | convertto-json) -WhatIfBoolean $WhatIf)
      }      
 } 
 Function Set-DSCCHostGroup
