@@ -5,6 +5,9 @@ function Get-DSCCHostGroup
     Returns the HPE DSSC DOM Host Group Collection    
 .DESCRIPTION
     Returns the HPE Data Services Cloud Console Data Operations Manager Host Groups Collections;
+.PARAMETER SystemId 
+    This will limit the output to only a single SystemId, this parameter is only valid for Device-Type2. 
+    With this parameter not set, the command will return ALL host groups.
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
@@ -91,13 +94,30 @@ function Get-DSCCHostGroup
     The API call for this operation is file:///api/v1/host-initiator-groups
 #>   
 [CmdletBinding()]
-param(  [boolean]    $WhatIf=$false
+param(  [parameter( ValueFromPipeLineByPropertyName=$true )][Alias('id')]   [string]    $SystemId,
+                                                                            [boolean]    $WhatIf=$false
      )
 process
-    {   $MyAdd = 'host-initiator-groups'
-        $SysColOnly = invoke-DSCCRestMethod -UriAdd $MyAdd -method Get -WhatIfBoolean $WhatIf
-        return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "HostGroup" )
-    }       
+    {   $ReturnCol= @()
+        write-verbose "No SystemID was given, so running against all system IDs"
+        if ( -not $SystemId )
+                {   foreach ( $Sys in Get-DSCCStorageSystem -devicetype Device-Type2 )
+                        {   write-verbose "Running discover on a singular System ID"
+                            If ( ($Sys).id )
+                                {   $ReturnCol += Get-DSCCHostGroup -SystemId ($Sys).id  -WhatIf $WhatIf
+                                }
+                        }
+                    $ReturnCol = invoke-DSCCRestMethod -UriAdd 'host-initiator-groups' -method Get -WhatIfBoolean $WhatIf
+                    $ReturnFinal += Invoke-RepackageObjectWithType -RawObject $ReturnCol -ObjectName "HostGroup"
+                } 
+            else 
+                {   $MyAdd = 'storage-systems/device-type2/'+$Systemid+'/host-groups'
+                    $ReturnCol = invoke-DSCCRestMethod -UriAdd $MyAdd -method Get -WhatIfBoolean $WhatIf
+                    $ReturnFinal = Invoke-RepackageObjectWithType -RawObject $ReturnCol -ObjectName "HostGroup"
+                }
+
+        return $ReturnCol
+    }        
 }   
 function Remove-DSCCHostGroup
 {
@@ -199,20 +219,52 @@ Function New-DSCCHostGroup
     }
 #>   
 [CmdletBinding()]
-param(  [Parameter(Mandatory=$true)]    [string]    $name,
-                                        [string]    $comment,
-                                        [array]     $hostIds,
-                                        [array]     $hostsToCreate,
-                                        [boolean]   $userCreated=$true,
-                                        [boolean]    $WhatIf=$false
-     )
+param(  [parameter(ParameterSetName='Type2', ValueFromPipeLineByPropertyName=$true )][Alias('id')]      [string]    $SystemId,
+        [Parameter(ParameterSetName='Type1',Mandatory)]
+        [Parameter(ParameterSetName='Type2',Mandatory)]                                                 [string]    $name,
+        [Parameter(ParameterSetName='Type1')]                                                           [string]    $comment,
+        [Parameter(ParameterSetName='Type1')]                                                           [array]     $hostIds,
+        [Parameter(ParameterSetName='Type1')]                                                           [array]     $hostsToCreate,
+        [Parameter(ParameterSetName='Type1')]                                                           [boolean]   $userCreated=$true,
+        
+        [Parameter(ParameterSetName='Type2',Mandatory)][ValidateSet('fc','iscsi')]                      [string]    $access_protocol,
+        [Parameter(ParameterSetName='Type2')]                                                           [string]    $app_uuid,
+        [Parameter(ParameterSetName='Type2')]                                                           [string]    $description,
+        [Parameter(ParameterSetName='Type2')]                                                                       $fc_initiators,
+        [Parameter(ParameterSetName='Type2')]                                                                       $iscsi_initiators,
+        [Parameter(ParameterSetName='Type2')]                                                                       $fc_tdz_ports,
+        [Parameter(ParameterSetName='Type2')]                                                           [string]    $host_type,
+        [Parameter(ParameterSetName='Type2')]                                                                       $target_subnets,
+        
+        [Parameter(ParameterSetName='Type1')][Parameter(ParameterSetName='Type2')]                      [boolean]   $WhatIf=$false
+    )
 process
-    {   $MyAdd = 'host-initiator-groups'
-                                    $MyBody  = [ordered]@{ name          = $name             }
-        if ($comment)           {   $MyBody +=          @{ comment       = $comment       }  }
-        if ($hostIds)           {   $MyBody +=          @{ hostIds       = $hostIds       }  }
-        if ($hostsToCreate )    {   $MyBody +=          @{ hostsToCreate = $hostsToCreate }  }
-                                    $MyBody +=          @{ userCreated   = $userCreated      }
+    {   $MyBody  = [ordered]@{ name = $name }
+        switch( $PsCmdlet.ParameterSetName )
+            {   'Type1'         {   $MyAdd = 'host-initiator-groups'
+                                    write-verbose "Creating a type1 device request using the API location $MyAdd"
+                                    if ($comment)           {   $MyBody +=          @{ comment       = $comment       }  }
+                                    if ($hostIds)           {   $MyBody +=          @{ hostIds       = $hostIds       }  }
+                                    if ($hostsToCreate )    {   $MyBody +=          @{ hostsToCreate = $hostsToCreate }  }
+                                                                $MyBody +=          @{ userCreated   = $userCreated      }
+                                }
+                'Type2'         {   if ($app_uuid)          {   $MyBody +=          @{ app_uuid             = $app_uuid      }  }
+                                    if ($description)       {   $MyBody +=          @{ description          = $description   }  }
+                                    if ($host_type)         {   $MyBody +=          @{ host_type            = $host_type     }  }
+                                    $myAdd = 'storage-systems/device-type2/'+$SystemId+'/host-groups'
+                                    write-verbose "Creating a type2 device request using the API location $MyAdd"
+                                    if ($access_protocol -like 'fc')           
+                                            {                               $MyBody +=          @{ access_protocl       = 'fc'          }
+                                                if ($fc_initiators)     {   $MyBody +=          @{ fc_initiators        = $fc_initiators }  }
+                                                if ($fc_tdz_ports)      {   $MyBody +=          @{ fc_tdz_ports         = $fc_tdz_ports  }  }
+                                            }
+                                        else 
+                                            {                               $MyBody +=          @{ access_protocl       = 'iscsi'           }
+                                                if ($iscsi_initiators)  {   $MyBody +=          @{ iscsi_initiators     = $iscsi_initiators }  }
+                                                if ($target_subnets)    {   $MyBody +=          @{ target_subnets       = $target_subnets }  }
+                                            }
+                                }
+            }
         return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -method 'POST' -body ( $MyBody | convertto-json ) -WhatIfBoolen $WhatIf )
      }      
 } 

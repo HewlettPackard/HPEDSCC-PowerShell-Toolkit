@@ -220,16 +220,31 @@ param(  [parameter(mandatory,ValueFromPipeLineByPropertyName=$true )][Alias('id'
                                                                                     [switch]    $WhatIf
      )
 process
-    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-        Clear-Variable -Name ReturnData -ErrorAction SilentlyContinue
-        if ( $DeviceType -eq 'device-type2')
-                {   Write-Warning "This command only operates against Device-Type1 Storage Devices."
+    {   if ( -not $PSBoundParameters.ContainsKey('SystemId' ) )
+                {   write-verbose "No SystemID Given, running all SystemIDs"
+                    $ReturnCol=@()
+                    foreach( $Sys in Get-DSCCStorageSystem )
+                        {   write-verbose "Walking Through Multiple Systems"
+                            If ( ($Sys).Id )
+                                {   write-verbose "Found a system with a System.id"
+                                    $ReturnCol += Get-DSCCAccessControlRecord -SystemId ($Sys).Id -WhatIf $WhatIf
+                                }
+                        }
+                    write-verbose "Returning the Multiple System Id Access Controll Groups."
+                    return $ReturnCol
                 }
             else 
-                {   $MyAdd = 'storage-systems/' + $SystemId + '/storage-pools/' + $PoolId + '/volumes'
-                    invoke-DSCCrestmethod -UriAdd $MyAdd -method Get -whatifBoolean $WhatIf
-                    $SysColOnly = (($SysColOnly).volumes).items
-                    return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "PoolVolume.$DeviceType" -whatifboolean $whatif )
-                }
+                {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+                    Clear-Variable -Name ReturnData -ErrorAction SilentlyContinue
+                    if ( $DeviceType -eq 'device-type2')
+                            {   Write-Warning "This command only operates against Device-Type2 Storage Devices. The System with ID $SystemId reports as Device-Type1"
+                            }
+                        else 
+                            {   $MyAdd = 'storage-systems/' + $SystemId + '/storage-pools/' + $PoolId + '/volumes'
+                                invoke-DSCCrestmethod -UriAdd $MyAdd -method Get -whatifBoolean $WhatIf
+                                $SysColOnly = (($SysColOnly).volumes).items
+                                return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "PoolVolume.$DeviceType" -whatifboolean $whatif )
+                            }
+                }           
     }       
 }   

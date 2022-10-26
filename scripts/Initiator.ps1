@@ -128,17 +128,24 @@ function Remove-DSCCInitiator
 .LINK
 #>   
 [CmdletBinding()]
-param(  [Parameter(Mandatory)]  [string]    $InitiatorID,
-                                [switch]    $Force,
-                                [boolean]   $WhatIf=$false
+param(  [parameter(ValueFromPipeLineByPropertyName=$true )][Alias('id')]    [string]    $SystemId,
+        [Parameter(Mandatory)]                                              [string]    $InitiatorId,
+                                                                            [switch]    $Force,
+                                                                            [boolean]   $WhatIf=$false
     )
 process
-    {   $MyAdd = 'initiators/' + $InitiatorID
-        $MyBody = ''
-        if ($Force)
-                {   $MyBody = @{force=$true}
+    {   if ( -not $SystemId )
+                {   $MyAdd = 'initiators/' + $InitiatorID
+                    $MyBody = ''
+                    if ($Force)
+                        {   $MyBody = @{force=$true}
+                        }
+                    return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Delete' -Body ( $MyBody | convertto-json ) -WhatIfBoolean $WhatIf )
                 }
-        return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Delete' -Body ( $MyBody | convertto-json ) -WhatIfBoolean $WhatIf )
+            else 
+                {   $MyAdd = 'storage-systems/device-type2/'+$SystemId+'/host-initiators/'+$InitiatorId
+                    return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Delete' -WhatIfBoolean $WhatIf )
+                }
     }       
 }   
 Function New-DSCCInitiator
@@ -191,33 +198,33 @@ Function New-DSCCInitiator
 #>   
 [CmdletBinding(DefaultParameterSetName = 'type1')]
 param(  [Parameter(Mandatory, ParameterSetName = 'type2iscsi')]
-        [Parameter(Mandatory, ParameterSetName = 'type2fc')]                             [string]    $SystemId,
+        [Parameter(Mandatory, ParameterSetName = 'type2fc')]                                    [string]    $SystemId,
         [Parameter(Mandatory, ParameterSetName = 'type2iscsi')]
-        [Parameter(Mandatory, ParameterSetName = 'type2fc')][ValidateSet('fc','iscsi')]  [string]    $access_protocol,
-        [Parameter(           ParameterSetName = 'type2fc')]                             [string]    $alias,
-        [Parameter(           ParameterSetName = 'type2iscsi')]                          [string]    $label,
-        [Parameter(           ParameterSetName = 'type2iscsi')]                          [string]    $chapuser_id,
+        [Parameter(Mandatory, ParameterSetName = 'type2fc')][ValidateSet('fc','iscsi')]         [string]    $access_protocol,
+        [Parameter(           ParameterSetName = 'type2fc')]                                    [string]    $alias,
+        [Parameter(           ParameterSetName = 'type2iscsi')]                                 [string]    $label,
+        [Parameter(           ParameterSetName = 'type2iscsi')]                                 [string]    $chapuser_id,
         [Parameter(Mandatory, ParameterSetName = 'type2iscsi')]
-        [Parameter(Mandatory, ParameterSetName = 'type2fc')]                             [string]    $initiator_group_id,
-        [Parameter(           ParameterSetName = 'type2iscsi')]                          [string]    $ip_address,
-        [Parameter(           ParameterSetName = 'type2iscsi')]                          [string]    $iqn,
-        [Parameter(           ParameterSetName = 'type2')]                               [boolean]   $override_existing_alias,
-        [Parameter(           ParameterSetName = 'type2fc')]                             [string]    $wwpn,
+        [Parameter(Mandatory, ParameterSetName = 'type2fc')]                                    [string]    $initiator_group_id,
+        [Parameter(           ParameterSetName = 'type2iscsi')]                                 [string]    $ip_address,
+        [Parameter(Mandatory, ParameterSetName = 'type2iscsi')]                                 [string]    $iqn,
+        [Parameter(           ParameterSetName = 'type2iscsi')]        
+        [Parameter(           ParameterSetName = 'type2fc')]                                    [boolean]   $override_existing_alias,
+        [Parameter(Mandatory, ParameterSetName = 'type2fc')]                                    [string]    $wwpn,
 
         
-        [Parameter(Mandatory, parameterSetName = 'type1')]          [string]    $address,
-        [Parameter(ParameterSetName = 'type1')]                     [string]    $driverVersion,
-        [Parameter(ParameterSetName = 'type1')]                     [string]    $firmwareVersion,
-        [Parameter(ParameterSetName = 'type1')]                     [string]    $hbaModel,
-        [Parameter(ParameterSetName = 'type1')]                     [int64]     $hostSpeed,
-        [Parameter(ParameterSetName = 'type1')]                     [string]    $ipAddress,
-        [Parameter(ParameterSetName = 'type1')]                     [string]    $name,  
-        [Parameter(ParameterSetName = 'type1', Mandatory)]  
-        [ValidateSet('FC','iSCSI','NMVe')]                          [string]    $protocol,
-        [Parameter(ParameterSetName = 'type1')]                     [string]    $vendor,
-        [Parameter(ParameterSetName = 'type2iscsi')]                
-        [Parameter(ParameterSetName = 'type2fc')]                
-        [Parameter(ParameterSetName = 'type1')]                     [switch]    $WhatIf
+        [Parameter(Mandatory, parameterSetName = 'type1')]                                      [string]    $address,
+        [Parameter(ParameterSetName = 'type1')]                                                 [string]    $driverVersion,
+        [Parameter(ParameterSetName = 'type1')]                                                 [string]    $firmwareVersion,
+        [Parameter(ParameterSetName = 'type1')]                                                 [string]    $hbaModel,
+        [Parameter(ParameterSetName = 'type1')]                                                 [int64]     [int]$hostSpeed,
+        [Parameter(ParameterSetName = 'type1')]                                                 [string]    $ipAddress,
+        [Parameter(ParameterSetName = 'type1')]                                                 [string]    $name,  
+        [Parameter( Mandatory,ParameterSetName = 'type1')][ValidateSet('FC','iSCSI','NMVe')]    [string]    $protocol,
+        [Parameter(ParameterSetName = 'type1')]                                                 [string]    $vendor,
+        [Parameter(ParameterSetName = 'type2iscsi' )]                               
+        [Parameter(ParameterSetName = 'type2fc' )]                               
+        [Parameter(ParameterSetName = 'type1')]                                                 [boolean]    $WhatIf = $false
     )
 process
     {   Switch($PSCmdlet.ParameterSetName)
@@ -249,6 +256,6 @@ process
                                 if ($wwpn)                   {  $MyBody += @{ vendor = $vendor                                   }  }
                             }
             }
-        return ( Invoke-DSCCRestMethod -UriAdd $MyAdd - Method 'POST' -body ($MyBody | convertto-json) -whatifBoolean $WhatIf )
+        return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -Method POST -body ($MyBody | convertto-json) -whatifBoolean $WhatIf )
     }       
 }   

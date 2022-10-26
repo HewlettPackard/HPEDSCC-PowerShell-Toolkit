@@ -49,23 +49,42 @@ function Get-DSCCCapacity
         }
 #>   
 [CmdletBinding()]
-param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('id')]
-                                [string]   $SystemID,
-                                [string]   $select,
-                                [string]   $range,
-                                [int]      $timeIntervalMin,
-                                [switch]   $whatIf
+param(  [parameter( ValueFromPipeLineByPropertyName=$true )][Alias('id')]
+            [string]   $SystemID,
+            [string]   $select,
+            [string]   $range,
+            [int]      $timeIntervalMin,
+            [boolean]  $whatIf = $false
         )
 process
-    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-        if ( $DeviceType -eq 'device-type1' )
-                {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/application-summary'
-                    $MyBody=@{}
-                    if ( $select )          { $MyBody += @{ select = $select } } 
-                    if ( $range  )          { $MyBody += @{ range = $range } } 
-                    if ( $timeIntervalMin ) { $MyBody += @{ timeIntervalMin = $TimeIntervalMin } } 
-                    $SysColOnly = Invoke-DSCCRestMethod -uriAdd $MyAdd -method 'Get' -whatifBoolean $WhatIf 
-                    return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Disk.$DeviceType" )
+    {   if ( -not $PSBoundParameters.ContainsKey('SystemId' ) )
+                {   write-verbose "No SystemID Given, running all SystemIDs"
+                    $ReturnCol=@()
+                    foreach( $Sys in Get-DSCCStorageSystem )
+                        {   write-verbose "Walking Through Multiple Systems"
+                            If ( ($Sys).Id )
+                                    {   write-verbose "Found a system with a System.id"
+                                        $ReturnCol += Get-DSCCCapacity -SystemId ($Sys).Id -WhatIf $WhatIf
+                                    }
+                        }
+                    write-verbose "Returning the Multiple System Id Capacity Histories."
+                    return $ReturnCol
+                }
+            else 
+                {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+                    if ( $DeviceType -eq 'device-type1' )
+                            {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/application-summary'
+                                $MyBody=@{}
+                                if ( $select )          { $MyBody += @{ select = $select } } 
+                                if ( $range  )          { $MyBody += @{ range = $range } } 
+                                if ( $timeIntervalMin ) { $MyBody += @{ timeIntervalMin = $TimeIntervalMin } } 
+                                $SysColOnly = Invoke-DSCCRestMethod -uriAdd $MyAdd -method 'Get' -whatifBoolean $WhatIf 
+                                return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Disk.$DeviceType" )
+                            }
+                        else 
+                            {   Write-Warning "This command may only be run agaisnt Device-Type1 type arrays, the System ID $SystemID is a Device-Type2."
+                                return
+                            }
                 }
     }       
 }   
@@ -121,21 +140,40 @@ function Get-DSCCCapacityHistory
 
 #>   
 [CmdletBinding()]
-param(  [Parameter(Mandatory)]  [string]   $SystemID,
-                                [string]   $select,
-                                [string]   $range,
-                                [int]      $timeIntervalMin,
-                                [switch]   $whatIf
+param(  [string]   $SystemID,
+        [string]   $select,
+        [string]   $range,
+        [int]      $timeIntervalMin,
+        [boolean]  $whatIf = $false
     )
 process
-    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-        if ( $DeviceType -eq 'device-type1' )
-                {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/capacity-history'
-                    $MyBody=@{}
-                    if ( $select )          { $MyBody += @{ select = $select } } 
-                    if ( $range  )          { $MyBody += @{ range = $range } } 
-                    if ( $timeIntervalMin ) { $MyBody += @{ timeIntervalMin = $TimeIntervalMin } } 
-                    return ( Invoke-DSCCRestMethod -uriAdd $MyAdd -method 'Get' -WhatIfBoolean $WhatIf )
+    {   if ( -not $PSBoundParameters.ContainsKey('SystemId' ) )
+                {   write-verbose "No SystemID Given, running all SystemIDs"
+                    $ReturnCol=@()
+                    foreach( $Sys in Get-DSCCStorageSystem )
+                        {   write-verbose "Walking Through Multiple Systems"
+                            If ( ($Sys).Id )
+                                    {   write-verbose "Found a system with a System.id"
+                                        $ReturnCol += Get-DSCCCapacityHistory -SystemId ($Sys).Id -WhatIf $WhatIf
+                                    }
+                        }
+                    write-verbose "Returning the Multiple System Id Capacity Histories."
+                    return $ReturnCol
+                }
+            else 
+                {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+                    if ( $DeviceType -eq 'device-type1' )
+                            {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/capacity-history'
+                                $MyBody=@{}
+                                if ( $select )          { $MyBody += @{ select = $select } } 
+                                if ( $range  )          { $MyBody += @{ range = $range } } 
+                                if ( $timeIntervalMin ) { $MyBody += @{ timeIntervalMin = $TimeIntervalMin } } 
+                                return ( Invoke-DSCCRestMethod -uriAdd $MyAdd -method 'Get' -WhatIfBoolean $WhatIf )
+                            }
+                        else 
+                            {   Write-Warning "This command may only be run agaisnt Device-Type1 type arrays, the System ID $SystemID is a Device-Type2."
+                                return
+                            }
                 }
     }       
 }              
@@ -178,21 +216,36 @@ function Get-DSCCCapacitySummary
 
 #>   
 [CmdletBinding()]
-param(  [Parameter(Mandatory=$true)]    [string]   $SystemID,
+param(                                  [string]   $SystemID,
                                         [string]   $select,
                                         [string]   $range,
                                         [int]      $timeIntervalMin,
-                                        [switch]   $whatIf
+                                        [boolean]  $whatIf = $false
         )
 process
-{   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-    if ( $DeviceType -eq 'device-type1' )
-            {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/capacity-summary'
-                $MyBody=@{}
-                if ( $select )          { $MyBody += @{ select = $select } } 
-                if ( $range  )          { $MyBody += @{ range = $range } } 
-                if ( $timeIntervalMin ) { $MyBody += @{ timeIntervalMin = $TimeIntervalMin } } 
-                return ( Invoke-DSCCRestMethod -uriAdd $MyAdd -method 'Get' -WhatIfBoolean $WhatIf ) 
+{   if ( -not $PSBoundParameters.ContainsKey('SystemId' ) )
+            {   write-verbose "No SystemID Given, running all SystemIDs"
+                $ReturnCol=@()
+                foreach( $Sys in Get-DSCCStorageSystem )
+                    {   write-verbose "Walking Through Multiple Systems"
+                        If ( ($Sys).Id )
+                            {   write-verbose "Found a system with a System.id"
+                                $ReturnCol += Get-DSCCCapacitySummary -SystemId ($Sys).Id -WhatIf $WhatIf
+                            }
+                    }
+                write-verbose "Returning the Multiple System Id Access Controll Groups."
+                return $ReturnCol
             }
-}            
+        else 
+            {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+                if ( $DeviceType -eq 'device-type1' )
+                        {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/capacity-summary'
+                            $MyBody=@{}
+                            if ( $select )          { $MyBody += @{ select = $select } } 
+                            if ( $range  )          { $MyBody += @{ range = $range } } 
+                            if ( $timeIntervalMin ) { $MyBody += @{ timeIntervalMin = $TimeIntervalMin } } 
+                            return ( Invoke-DSCCRestMethod -uriAdd $MyAdd -method 'Get' -WhatIfBoolean $WhatIf ) 
+                        }
+            }            
 }    
+}

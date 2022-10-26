@@ -119,17 +119,32 @@ param(  [parameter(mandatory,ValueFromPipeLineByPropertyName=$true )][Alias('id'
                                                         [switch]    $WhatIf
      )
 process
-    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-        if ( $DeviceType )
-            {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/shelves/' + $ShelfId + '/action/locate'
-                $MyBody = @{    cid     = $CId 
-                                status  = $Status
-                           } 
-                return Invoke-DSCCRestMethod -UriAdd $MyAdd -body ( $MyBody | ConvertTo-json ) -method Post -WhatIfBoolean $WhatIf
-            } 
+    {   if ( -not $PSBoundParameters.ContainsKey('SystemId' ) )
+                {   write-verbose "No SystemID Given, running all SystemIDs"
+                    $ReturnCol=@()
+                    foreach( $Sys in Get-DSCCStorageSystem )
+                        {   write-verbose "Walking Through Multiple Systems"
+                            If ( ($Sys).Id )
+                                {   write-verbose "Found a system with a System.id"
+                                    $ReturnCol += Get-DSCCAccessControlRecord -SystemId ($Sys).Id -WhatIf $WhatIf
+                                }
+                        }
+                    write-verbose "Returning the Multiple System Id Access Controll Groups."
+                    return $ReturnCol
+                }
             else 
-            {   Write-Warning "No StorageSystem detected with a valid that valid System ID"  
-                return          
-            }
+                {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+                    if ( $DeviceType )
+                            {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/shelves/' + $ShelfId + '/action/locate'
+                                $MyBody = @{    cid     = $CId 
+                                                status  = $Status
+                                            } 
+                                return Invoke-DSCCRestMethod -UriAdd $MyAdd -body ( $MyBody | ConvertTo-json ) -method Post -WhatIfBoolean $WhatIf
+                            }
+                        else 
+                            {   Write-Warning "No StorageSystem detected with a valid that valid System ID"  
+                                return          
+                            }
+                }
     }       
 }   

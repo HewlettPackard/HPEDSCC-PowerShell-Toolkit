@@ -19,17 +19,32 @@ param(  [parameter(mandatory,ValueFromPipeLineByPropertyName=$true )][Alias('id'
                                                                             [switch]    $WhatIf
      )
 process
-    {   Invoke-DSCCAutoReconnect
-        $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -systemId $systemId )
-        switch ( $DeviceType )
-        {   'device-type1'  {   write-warning "This command only works on Device-Type 2 devices." 
-                                return
-                            }
-            'device-type2'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $systemId + '/folders'
-                                $SysColOnly = invoke-DSCCrestmethod -uriadd $MyAdd -method Get -whatifBoolean
-                                $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Folder"
-                                return $ReturnData
-                            }
-        }       
+    {   if ( -not $PSBoundParameters.ContainsKey('SystemId' ) )
+                {   write-verbose "No SystemID Given, running all SystemIDs"
+                    $ReturnCol=@()
+                    foreach( $Sys in Get-DSCCStorageSystem )
+                        {   write-verbose "Walking Through Multiple Systems"
+                            If ( ($Sys).Id )
+                                {   write-verbose "Found a system with a System.id"
+                                    $ReturnCol += ( Get-DSCCFolder -SystemId ($Sys).Id -WhatIf $WhatIf )
+                                }
+                        }
+                    write-verbose "Returning the Multiple System Id Certificates."
+                    return $ReturnCol
+                }
+            else 
+                {   Invoke-DSCCAutoReconnect
+                    $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -systemId $systemId )
+                    switch ( $DeviceType )
+                        {   'device-type1'  {   write-warning "This command only works on Device-Type 2 devices." 
+                                                return
+                                            }
+                            'device-type2'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $systemId + '/folders'
+                                                $SysColOnly = invoke-DSCCrestmethod -uriadd $MyAdd -method Get -whatifBoolean
+                                                $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Folder"
+                                                return $ReturnData
+                                            }
+                        }       
+                }
     }       
 }   

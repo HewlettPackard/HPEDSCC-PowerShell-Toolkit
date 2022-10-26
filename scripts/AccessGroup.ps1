@@ -178,7 +178,7 @@ param(  [Parameter(ParameterSetName=('device-type1','device-type2'),ValueFromPip
         [Parameter(ParameterSetName=('device-type1'))]                                      [boolean]   $override,
         [Parameter(ParameterSetName=('device-type1'))]                                      [boolean]   $noVcn,
         [Parameter(ParameterSetName=('device-type1'))]                                      [string[]] $hostGroupId,
-        [Parameter(ParameterSetName=('device-type2'))]
+        [Parameter(ParameterSetName=('device-type1'))]
         [Parameter(ParameterSetName=('device-type2'))]                                      [int]       $lun,
         [ValidateSet('volume','pe','vvol_volume','vvol_snapshot','snapshot','both') ]       [string]    $applyTo,
         [Parameter(ParameterSetName=('device-type2'))]                                      [string]    $chapUserId,
