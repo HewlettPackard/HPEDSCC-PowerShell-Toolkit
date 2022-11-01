@@ -219,24 +219,71 @@ Function New-DSCCHostGroup
     }
 #>   
 [CmdletBinding()]
-param(  [parameter(ParameterSetName='Type2', ValueFromPipeLineByPropertyName=$true )][Alias('id')]      [string]    $SystemId,
+param(  [Parameter(ParameterSetName='Type1')]                                                                       [switch]    $DeviceType1,
+
+        [Parameter(ParameterSetName='Type2iscsi_useExisting')]
+        [Parameter(ParameterSetName='Type2iscsi_createNew')]                                                           
+        [Parameter(ParameterSetName='Type2fc_useExisting')]                                                                     
+        [Parameter(ParameterSetName='Type2fc_createNew')]                                                           [switch]    $DeviceType2,
+
         [Parameter(ParameterSetName='Type1',Mandatory)]
-        [Parameter(ParameterSetName='Type2',Mandatory)]                                                 [string]    $name,
-        [Parameter(ParameterSetName='Type1')]                                                           [string]    $comment,
-        [Parameter(ParameterSetName='Type1')]                                                           [array]     $hostIds,
-        [Parameter(ParameterSetName='Type1')]                                                           [array]     $hostsToCreate,
-        [Parameter(ParameterSetName='Type1')]                                                           [boolean]   $userCreated=$true,
+        [Parameter(ParameterSetName='Type2fc_createNew',Mandatory)]
+        [Parameter(ParameterSetName='Type2fc_useExisting',Mandatory)]
+        [Parameter(ParameterSetName='Type2iscsi_useExisting',Mandatory)]
+        [Parameter(ParameterSetName='Type2iscsi_createNew',Mandatory)]                                              [string]    $name,
+
+        [Parameter(ParameterSetName='Type2iscsi_useExisting',Mandatory)]
+        [Parameter(ParameterSetName='Type2iscsi_createNew',Mandatory)]
+        [parameter(ParameterSetName='Type2fc_useExisting', ValueFromPipeLineByPropertyName=$true, Mandatory )]
+        [parameter(ParameterSetName='Type2fc_createNew', ValueFromPipeLineByPropertyName=$true, Mandatory )]
+        [Alias('id')]                                                                                               [string]    $SystemId,
+
+        [Parameter(ParameterSetName='Type1')]                                                                       [string]    $comment,
+        [Parameter(ParameterSetName='Type1')]                                                                       [array]     $hostIds,
+        [Parameter(ParameterSetName='Type1')]                                                                       [array]     $hostsToCreate,
+        [Parameter(ParameterSetName='Type1')]                                                                       [boolean]   $userCreated=$true,
         
-        [Parameter(ParameterSetName='Type2',Mandatory)][ValidateSet('fc','iscsi')]                      [string]    $access_protocol,
-        [Parameter(ParameterSetName='Type2')]                                                           [string]    $app_uuid,
-        [Parameter(ParameterSetName='Type2')]                                                           [string]    $description,
-        [Parameter(ParameterSetName='Type2')]                                                                       $fc_initiators,
-        [Parameter(ParameterSetName='Type2')]                                                                       $iscsi_initiators,
-        [Parameter(ParameterSetName='Type2')]                                                                       $fc_tdz_ports,
-        [Parameter(ParameterSetName='Type2')]                                                           [string]    $host_type,
-        [Parameter(ParameterSetName='Type2')]                                                                       $target_subnets,
+        [Parameter(ParameterSetName='Type2iscsi_useExisting',Mandatory)]
+        [Parameter(ParameterSetName='Type2iscsi_createNew',Mandatory)]                                              [switch]    $access_protocol_iscsi,
+
+        [Parameter(ParameterSetName='Type2fc_createNew',Mandatory)]                                                 
+        [Parameter(ParameterSetName='Type2fc_useExisting',Mandatory)]                                               [switch]    $access_protocol_fc,
+
+        [Parameter(ParameterSetName='Type2iscsi_useExisting')]
+        [Parameter(ParameterSetName='Type2iscsi_createNew')]
+        [Parameter(ParameterSetName='Type2fc_useExisting')]                                                                     
+        [Parameter(ParameterSetName='Type2fc_createNew')]                                                           [string]    $app_uuid,
+
+        [Parameter(ParameterSetName='Type2iscsi_useExisting')]
+        [Parameter(ParameterSetName='Type2iscsi_createNew')]
+        [Parameter(ParameterSetName='Type2fc_useExisting')]                                                                     
+        [Parameter(ParameterSetName='Type2fc_createNew')]                                                           [string]    $description,
+
+        [Parameter(ParameterSetName='Type2fc_useExisting', Mandatory)]                                              [string]    $fc_initiator_id,
+        [Parameter(ParameterSetName='Type2fc_createNew')]                                                           [string]    $fc_initiator_alias,
+        [Parameter(ParameterSetName='Type2fc_createNew', Mandatory)]                                                [string]    $fc_initiator_wwpn,
+
+        [Parameter(ParameterSetName='Type2iscsi_useExisting', Mandatory)]                                           [string]    $iscsi_initiator_id,
+        [Parameter(ParameterSetName='Type2iscsi_createNew')]                                                        [string]    $iscsi_initiator_iqn,
+        [Parameter(ParameterSetName='Type2iscsi_createNew')]                                                        [string]    $iscsi_initiator_ip,
+        [Parameter(ParameterSetName='Type2iscsi_createNew')]                                                        [string]    $iscsi_initiator_label,
+
+        [Parameter(ParameterSetName='Type2fc_useExisting')]
+        [Parameter(ParameterSetName='Type2fc_createNew')]                                                                       $fc_tdz_ports,
+
+        [Parameter(ParameterSetName='Type2iscsi_useExisting')]
+        [Parameter(ParameterSetName='Type2iscsi_createNew')]
+        [Parameter(ParameterSetName='Type2fc_useExisting')]
+        [Parameter(ParameterSetName='Type2fc_createNew')]                                                           [string]    $host_type,
+
+        [Parameter(ParameterSetName='Type2iscsi_useExisting')]
+        [Parameter(ParameterSetName='Type2iscsi_createNew')]                                                                    $target_subnets,
         
-        [Parameter(ParameterSetName='Type1')][Parameter(ParameterSetName='Type2')]                      [boolean]   $WhatIf=$false
+        [Parameter(ParameterSetName='Type1')]
+        [Parameter(ParameterSetName='Type2fc_useExisting')]
+        [Parameter(ParameterSetName='Type2fc_createNew')]
+        [Parameter(ParameterSetName='Type2iscsi_useExisting')]
+        [Parameter(ParameterSetName='Type2iscsi_createNew')]                                                        [boolean]   $WhatIf=$false
     )
 process
     {   $MyBody  = [ordered]@{ name = $name }
@@ -248,23 +295,57 @@ process
                                     if ($hostsToCreate )    {   $MyBody +=          @{ hostsToCreate = $hostsToCreate }  }
                                                                 $MyBody +=          @{ userCreated   = $userCreated      }
                                 }
-                'Type2'         {   if ($app_uuid)          {   $MyBody +=          @{ app_uuid             = $app_uuid      }  }
-                                    if ($description)       {   $MyBody +=          @{ description          = $description   }  }
-                                    if ($host_type)         {   $MyBody +=          @{ host_type            = $host_type     }  }
+                'Type2fc_useExisting'
+                                {                               $MyBody +=          @{ access_protocol      = 'fc'           }
+                                    if ($app_uuid)          {   $MyBody +=          @{ app_uuid             = $app_uuid      } }
+                                    if ($description)       {   $MyBody +=          @{ description          = $description   } }
+                                    if ($host_type)         {   $MyBody +=          @{ host_type            = $host_type     } }
+                                                                $MyBody +=          @{ fc_initiators        = @( @{ id = $fc_initiators } ) }
+                                    if ($fc_tdz_ports)      {   $MyBody +=          @{ fc_tdz_ports         = $fc_tdz_ports  } }
                                     $myAdd = 'storage-systems/device-type2/'+$SystemId+'/host-groups'
                                     write-verbose "Creating a type2 device request using the API location $MyAdd"
-                                    if ($access_protocol -like 'fc')           
-                                            {                               $MyBody +=          @{ access_protocl       = 'fc'          }
-                                                if ($fc_initiators)     {   $MyBody +=          @{ fc_initiators        = $fc_initiators }  }
-                                                if ($fc_tdz_ports)      {   $MyBody +=          @{ fc_tdz_ports         = $fc_tdz_ports  }  }
-                                            }
-                                        else 
-                                            {                               $MyBody +=          @{ access_protocl       = 'iscsi'           }
-                                                if ($iscsi_initiators)  {   $MyBody +=          @{ iscsi_initiators     = $iscsi_initiators }  }
-                                                if ($target_subnets)    {   $MyBody +=          @{ target_subnets       = $target_subnets }  }
-                                            }
                                 }
-            }
+                'Type2fc_createNew'
+                                {                               $MyBody +=          @{ access_protocol      = 'fc'           }
+                                    if ($app_uuid)          {   $MyBody +=          @{ app_uuid             = $app_uuid      } }
+                                    if ($description)       {   $MyBody +=          @{ description          = $description   } }
+                                    if ($host_type)         {   $MyBody +=          @{ host_type            = $host_type     } }
+                                                                $MySub  =           @{ wwpn                 = $fc_initiator_wwpn } 
+                                    if ($fc_initiator_alias){   $MySub  +=          @{ alias                = $fc_initiator_alias } }
+                                                                $MyBody +=          @{ fc_initiators        = @( $MySub )    }
+                                    if ($fc_tdz_ports)      {   $MyBody +=          @{ fc_tdz_ports         = $fc_tdz_ports  } }
+                                    $myAdd = 'storage-systems/device-type2/'+$SystemId+'/host-groups'
+                                    write-verbose "Creating a type2 device request using the API location $MyAdd"
+                                }
+                'Type2iscsi_useExisting'    
+                                {   $myAdd = 'storage-systems/device-type2/'+$SystemId+'/host-groups'
+                                    write-verbose "Creating a type2 device request using the API location $MyAdd"
+                                                                $MyBody +=          @{ access_protocol      = 'iscsi'          }
+                                    if ($app_uuid)          {   $MyBody +=          @{ app_uuid             = $app_uuid      } }
+                                    if ($description)       {   $MyBody +=          @{ description          = $description   } }
+                                    if ($host_type)         {   $MyBody +=          @{ host_type            = $host_type     } }
+                                    if ($iscsi_initiator_id){   $MyBody +=          @{ iscsi_initiators     = @( @{ id = $iscsi_initiators } )  } }
+                                    if ($target_subnets)    {   $MyBody +=          @{ target_subnets       = $target_subnets } }
+                                }
+                'Type2iscsi_createNew'    
+                                {   $myAdd = 'storage-systems/device-type2/'+$SystemId+'/host-groups'
+                                    write-verbose "Creating a type2 device request using the API location $MyAdd"
+                                                            $MyBody +=            @{ access_protocol = 'iscsi'                }
+                                    if ($app_uuid)          {   $MyBody +=        @{ app_uuid        = $app_uuid              } }
+                                    if ($description)       {   $MyBody +=        @{ description     = $description           } }
+                                    if ($host_type)         {   $MyBody +=        @{ host_type       = $host_type             } }
+                                                                        $MySub =  @{ }
+                                    if ( $iscsi_initiator_iqn )     {   $MySub += @{ iqn             = $iscsi_initiator_iqn   } }
+                                    if ( $iscsi_initiator_ip )      {   $MySub += @{ ip              = $iscsi_initiator_ip    } }
+                                    if ( $iscsi_initiator_label )   {   $MySub += @{ label           = $iscsi_initiator_label } }
+                                    if ( -not ( $iscsi_initiator_iqn -or $iscsi_initiator_ip ) )
+                                        {   write-error "When using a DeviceType2, and creating a Host Group for iSCSI, and createing a New Initiator to populate the group, either an IQN or an IP address must be presented"
+                                            Return 
+                                        }
+                                                                        $MyBody +=       @{ iscsi_initiators     = @( $MySub )     } 
+                                    if ($target_subnets)            {   $MyBody +=       @{ target_subnets       = $target_subnets } }
+                                }
+        }
         return (Invoke-DSCCRestMethod -UriAdd $MyAdd -method 'POST' -body ($MyBody | convertto-json) -WhatIfBoolean $WhatIf)
      }      
 } 
