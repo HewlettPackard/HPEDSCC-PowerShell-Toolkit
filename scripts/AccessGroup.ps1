@@ -85,6 +85,12 @@ function Remove-DSCCAccessControlRecord
     Removes a HPE Data Services Cloud Console Data Operations Manager Access Groups Record or vLUN mapping.
 .PARAMETER SystemID
     This parameter is required for both device-type1 and device-type2; A single System ID is specified and required.
+.PARAMETER DeviceType1
+    This switch is used to tell the command that the end device is the specific device type, and to only allow the correct
+    parameter set that matches this device type.
+.PARAMETER DeviceType2
+    This switch is used to tell the command that the end device is the specific device type, and to only allow the correct
+    parameter set that matches this device type.
 .PARAMETER volumeId
     This parameter is required for device-type1 systems, and representes a volumeId
 .PARAMETER vLunId
@@ -96,20 +102,32 @@ function Remove-DSCCAccessControlRecord
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 #>    
 [CmdletBinding()]
-param   (   [Parameter(ParameterSetName=('device-type1','device-type2'),ValueFromPipeLineByPropertyName=$true,Mandatory=$true )]
-                                                                        [Alias('id')]   [string]    $SystemId,  
-            [Parameter(ParameterSetName=('device-type1'),Mandatory=$true )]             [string]    $volumeId,      
-            [Parameter(ParameterSetName=('device-type1'),Mandatory=$true )]             [string]    $vLunId,      
-            [Parameter(ParameterSetName=('device-type2'),Mandatory=$true )]             [string]    $AccessControlRecordId,      
-                                                                                        [switch]    $WhatIf
+param   (   [Parameter(ParameterSetName=('type1'),ValueFromPipeLineByPropertyName=$true,Mandatory=$true )]
+            [Parameter(ParameterSetName=('type1'),ValueFromPipeLineByPropertyName=$true,Mandatory=$true )]
+                                                        [Alias('id')]   [string]    $SystemId,  
+            [Parameter(ParameterSetName=('type1'))]                     [switch]    $DeviceType1,
+            [Parameter(ParameterSetName=('type2'))]                     [switch]    $DeviceType2,
+                                                                        
+            [Parameter(ParameterSetName=('type1'),Mandatory=$true )]    [string]    $volumeId,      
+            [Parameter(ParameterSetName=('type1'),Mandatory=$true )]    [string]    $vLunId,      
+            [Parameter(ParameterSetName=('type2'),Mandatory=$true )]    [string]    $AccessControlRecordId,      
+                                                                        [switch]    $WhatIf
         )
 process
     {   Invoke-DSCCAutoReconnect
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         switch ( $devicetype )
             {   'device-type1'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes/' + $VolumeId + '/vluns/' + $vLunId
+                                    if ( $DeviceType2 ) 
+                                        {   write-error "The Wrong Device Type was specified"
+                                            Return
+                                        }
                                 }
                 'device-type2'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/access-control-records/' + $AccessControlRecordId
+                                    if ( $DeviceType1 )
+                                        {   write-error "The Wrong Device Type was specified"
+                                            Return
+                                        }
                                 }
             }
         return Invoke-DSCCRestMethod -uriAdd $MyAdd -Method Delete -WhatIfBoolean $WhatIf
@@ -124,6 +142,12 @@ Function New-DSCCAccessControlRecord
     Creates a HPE Data Services Cloud Console Data Operations Manager Access Group Record or LUN Mapping Record.
 .PARAMETER SystemID
     A single System ID is specified and required.
+.PARAMETER DeviceType1
+    This switch is used to tell the command that the end device is the specific device type, and to only allow the correct
+    parameter set that matches this device type.
+.PARAMETER DeviceType2
+    This switch is used to tell the command that the end device is the specific device type, and to only allow the correct
+    parameter set that matches this device type.
 .PARAMETER VolId
     A single Volume must be presented for either a device-type1 or device-type2 to be mapped to a set of hosts.
 .PARAMETER autoLun
@@ -151,7 +175,7 @@ Function New-DSCCAccessControlRecord
     be in the range from 0 to 2047. If this record applies to a Virtual Volume, this attribute is the volume's secondary 
     LUN in the range from 0 to 399999, for both iSCSI and Fibre Channel. If the record applies to a OpenstackV2 volume, 
     the LUN will be in the range from 0 to 2047, for both iSCSI and Fibre Channel. If this record applies to a protocol
-     endpoint or only a snapshot, this attribute is not meaningful and is set to null.
+    endpoint or only a snapshot, this attribute is not meaningful and is set to null.
 .PARAMETER pe_id
     Only valid for Device-Type2 target systems; Identifier for the protocol endpoint this access control record applies to.
 .PARAMETER pe_ids
@@ -169,10 +193,11 @@ Function New-DSCCAccessControlRecord
 [CmdletBinding()]
 param(  [Parameter(ParameterSetName=('type1'),ValueFromPipeLineByPropertyName=$true,Mandatory=$true )]
         [Parameter(ParameterSetName=('type2'),ValueFromPipeLineByPropertyName=$true,Mandatory=$true )]
-        [Alias('id')]   [string]    $SystemId, 
+                                                            [Alias('id')]            [string]    $SystemId, 
         [Parameter(ParameterSetName=('type1'),mandatory=$true)]  
-        [Parameter(ParameterSetName=('type2'))]               [Alias('VolumeId')]    [string]    $vol_id,
-
+        [Parameter(ParameterSetName=('type2'))]             [Alias('VolumeId')]      [string]    $vol_id,
+        [Parameter(ParameterSetName=('type1'))]                                      [switch]    $DeviceType1,
+        [Parameter(ParameterSetName=('type2'))]                                      [switch]    $DeviceType2,
         [Parameter(ParameterSetName=('type1'))]                                      [string]    $position,
         [Parameter(ParameterSetName=('type1'))]                                      [boolean]   $autoLun,
         [Parameter(ParameterSetName=('type1'))]                                      [int]       $maxAutoLun,
@@ -204,6 +229,10 @@ process
                                     if ($override )         {   $MyBody += @{ override      = $override     }  }
                                     if ($position )         {   $MyBody += @{ position      = $position     }  }
                                     if ($proximity )        {   $MyBody += @{ proximity     = $proximity    }  }
+                                    if ( $DeviceType2 ) 
+                                        {   write-error "The Wrong Device Type was specified"
+                                            Return
+                                        }
                                 }
                 'device-type2'  {   $MyAdd = 'storage-systems/' + $devicetype + '/' + $SystemId + '/access-control-records'
                                                                 $MyBody =  @{}
@@ -215,6 +244,10 @@ process
                                     if ($pe_ids )           {   $MyBody += @{ pe_ids             = $pe_ids           }  }
                                     if ($snapId )           {   $MyBody += @{ snap_id            = $snapId           }  }
                                     if ($vol_id )           {   $MyBody += @{ vol_id             = $vol_id           }  }
+                                    if ( $DeviceType1 ) 
+                                        {   write-error "The Wrong Device Type was specified"
+                                            Return
+                                        }
                                 }
             }
         return Invoke-DSCCRestMethod -uriadd $MyAdd -method 'POST' -body ( $MyBody | ConvertTo-Json ) -whatifBoolean $WhatIf

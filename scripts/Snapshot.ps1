@@ -135,22 +135,27 @@ function New-DSCCSnapshot{
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 #>   
 [CmdletBinding()]
-param(      [Parameter(ValueFromPipeLineByPropertyName=$true,mandatory=$true,ParameterSetName='devicetype1','device-type2')]
-            [Alias('owned_by_group_id')]                                                                                    [string]    $systemId, 
-            [Parameter(ValueFromPipeLineByPropertyName=$true,mandatory=$true,ParameterSetName='devicetype1')]
-            [Parameter(ValueFromPipeLineByPropertyName=$true,mandatory=$true,ParameterSetName='devicetype2')]
-            [Alias('volumeId', 'applicationSetId')]                                                                         [string]    $Id,
-
-            [Parameter(ParameterSetName='devicetype1','devicetype2')][Alias('customName')]                                  [string]    $name,
-            [Parameter(ParameterSetName='devicetype1','devicetype2')][Alias('comment')]                                     [string]    $description,            
-            [Parameter(ParameterSetName='devicetype1','devicetype2')][Alias('readonly')]                                    [switch]    $writable,
-            [Parameter(ParameterSetName='devicetype1',mandatory=$true)]
-            [ValidateSet('PARENT_TIMESTAMP','PARENT_SEC_SINCE_EPOCH','CUSTOM')]                                             [string]    $namePattern,
-            [Parameter(ParameterSetName='devicetype1')]                                                                     [int]       $expireSecs,
-            [Parameter(ParameterSetName='devicetype1')]                                                                     [int]       $retainSecs,
-            [Parameter(ParameterSetName='devicetype2')]                                                                     [string]    $app_uuid,
-            [Parameter(ParameterSetName='devicetype2')]                                                                     [switch]    $online,            
-                                                                                                                            [switch]    $WhatIf
+param(      [Parameter(ValueFromPipeLineByPropertyName=$true,mandatory=$true,ParameterSetName='type1')]
+            [Parameter(ValueFromPipeLineByPropertyName=$true,mandatory=$true,ParameterSetName='type1')]
+            [Alias('owned_by_group_id')]                                                                [string]    $systemId, 
+            [Parameter(ParameterSetName='type1')]                                                       [switch]    $DeviceType1,
+            [Parameter(ParameterSetName='type2')]                                                       [switch]    $DeviceType2,
+            [Parameter(ValueFromPipeLineByPropertyName=$true,mandatory=$true,ParameterSetName='type1')]
+            [Parameter(ValueFromPipeLineByPropertyName=$true,mandatory=$true,ParameterSetName='type2')]
+            [Alias('volumeId', 'applicationSetId')]                                                     [string]    $Id,
+            [Parameter(ParameterSetName='type1')]
+            [Parameter(ParameterSetName='type2')][Alias('customName')]                                  [string]    $name,
+            [Parameter(ParameterSetName='type1')]                                           
+            [Parameter(ParameterSetName='type2')][Alias('comment')]                                     [string]    $description,            
+            [Parameter(ParameterSetName='type1')]
+            [Parameter(ParameterSetName='type2')][Alias('readonly')]                                    [switch]    $writable,
+            [Parameter(ParameterSetName='type1',mandatory=$true)]
+            [ValidateSet('PARENT_TIMESTAMP','PARENT_SEC_SINCE_EPOCH','CUSTOM')]                         [string]    $namePattern,
+            [Parameter(ParameterSetName='type1')]                                                       [int]       $expireSecs,
+            [Parameter(ParameterSetName='type1')]                                                       [int]       $retainSecs,
+            [Parameter(ParameterSetName='type2')]                                                       [string]    $app_uuid,
+            [Parameter(ParameterSetName='type2')]                                                       [switch]    $online,            
+                                                                                                        [switch]    $WhatIf
          )
 process
     {       $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $systemId )
@@ -174,6 +179,9 @@ process
                                         if ( $writeable )       {   $MyBody = $MyBody + @{ 'readOnly'    = $true }        }
                                             else                {   $MyBody = $MyBody + @{ 'readOnly'    = $false }       }
                                         if ( $retainSecs )      {   $MyBody = $MyBody + @{ 'retainSecs'  = $name }        }
+                                        if ( $DeviceType2 )     {   write-error "The Wrong Device Type was specified"
+                                                                    Return
+                                                                }
                                     }
                     'device-type2'  {                               $MyBody + @{ 'name'  = $name } 
                                         if ( $app_uuid )        {   $MyBody = $MyBody + @{ 'app_uuid'    = $app_uuid }    }
@@ -182,6 +190,9 @@ process
                                             else                {   $MyBody = $MyBody + @{ 'online'      = $false }       }
                                         if ( $writeable )       {   $MyBody = $MyBody + @{ 'readOnly'    = $true }        }
                                             else                {   $MyBody = $MyBody + @{ 'readOnly'    = $false }       }
+                                        if ( $DeviceType2 )     {   write-error "The Wrong Device Type was specified"
+                                                                    Return
+                                                                }
                                     }
                 }
             return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -method POST -body ( $MyBody | ConvertTo-Json ) -whatifBoolean $WhatIf )

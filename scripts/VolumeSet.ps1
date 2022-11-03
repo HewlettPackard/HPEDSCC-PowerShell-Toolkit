@@ -116,6 +116,12 @@ Function New-DSCCVolumeSet
     Creates a HPE Data Services Cloud Console Data Operations Manager Volume Collection or Application Set.
 .PARAMETER SystemID
     A single System ID is specified and required.
+.PARAMETER DeviceType1
+    This switch is used to tell the command that the end device is the specific device type, and to only allow the correct
+    parameter set that matches this device type.
+.PARAMETER DeviceType2
+    This switch is used to tell the command that the end device is the specific device type, and to only allow the correct
+    parameter set that matches this device type.
 .PARAMETER appSetBuisnessUnit
     This paramentere is only valid for device-type1 type storage systems.  App set business unit
 .PARAMETER appSetComments
@@ -187,57 +193,67 @@ Function New-DSCCVolumeSet
     The API call for this operation is file:///api/v1/storage-systems/{systemid}/device-type1/access-control-records
 #>
 [CmdletBinding()]
-param(  [Parameter(ValueFromPipeLineByPropertyName=$true,Mandatory=$true,ParameterSetName=('device-type1','device-type2'))]
-                                                                                                [Alias('id')]   [string]    $SystemId,
-        [Parameter(ParameterSetName=('device-type1') )]                                                         [string]    $appSetBuisnessUnit,
-        [Parameter(ParameterSetName=('device-type1','device-type2'))] [Alias('appSetComments')]                 [string]    $description,
-        [Parameter(Mandatory=$true,ParameterSetName=('device-type1','device-type2'))][Alias('appSetName')]      [string]    $name,
-        [Parameter(Mandatory=$true,ParameterSetName=('device-type1') )]                                         [string]    $appSetType,
-        [Parameter(ParameterSetName=('device-type1') )]                                                         [string]    $appSetImportance,
-        [Parameter(ParameterSetName=('device-type1') )]                                                         [string[]]  $members,
+param(  [Parameter(ValueFromPipeLineByPropertyName=$true,Mandatory=$true,ParameterSetName=('type1'))]
+        [Parameter(ValueFromPipeLineByPropertyName=$true,Mandatory=$true,ParameterSetName=('type2'))] [Alias('id')] [string]    $SystemId,
 
-        [Parameter(ParameterSetName=('device-type2') )]                                                         [string]    $agentHostname,
-        [Parameter(ParameterSetName=('device-type2') )]                                                         [string]    $agentUsername,
-        [Parameter(ParameterSetName=('device-type2') )]                                                         [string]    $appClusterName,
-        [Parameter(ParameterSetName=('device-type2') )][ValidateSet('inval','exchange','exchange_dag','hyperv','sql2005','sql2005','sql2012','sql2014','sql2016','sql2017')]
-                                                                                                                [string]    $appId,
-        [Parameter(ParameterSetName=('device-type2') )]                                                         [string]    $appServer,
-        [Parameter(ParameterSetName=('device-type2') )]                                                         [string]    $appServiceName,
-        [Parameter(ParameterSetName=('device-type2') )][ValidateSet('none','vss','vmware','generic')]           [string]    $appSync,
-        [Parameter(ParameterSetName=('device-type2') )]                                                         [boolean]   $isStandaloneVolColl,
-        [Parameter(ParameterSetName=('device-type2') )]                                                         [string]    $prottmplId,
-        [Parameter(ParameterSetName=('device-type2') )][ValidateSet('periodic_snapshot','synchronous')]         [string]    $replicationType,
-        [Parameter(ParameterSetName=('device-type2') )]                                                         [string]    $vcenterHostname,
-        [Parameter(ParameterSetName=('device-type2') )]                                                         [string]    $vcenterUsername,
-                                                                                                                [switch]    $WhatIf
+        [Parameter(ParameterSetName=('type1'))]                                                                     [switch]    $DeviceType1,
+        [Parameter(ParameterSetName=('type2'))]                                                                     [switch]    $DeviceType2,
+        [Parameter(ParameterSetName=('type1'))]                                                                     [string]    $appSetBuisnessUnit,
+        [Parameter(ParameterSetName=('type1'))]
+        [Parameter(ParameterSetName=('type2'))]                                          [Alias('appSetComments')]  [string]    $description,
+        [Parameter(Mandatory=$true,ParameterSetName=('type1'))]
+        [Parameter(Mandatory=$true,ParameterSetName=('type2'))]                              [Alias('appSetName')]  [string]    $name,
+        [Parameter(Mandatory=$true,ParameterSetName=('type1') )]                                                    [string]    $appSetType,
+        [Parameter(ParameterSetName=('type1') )]                                                                    [string]    $appSetImportance,
+        [Parameter(ParameterSetName=('type1') )]                                                                    [string[]]  $members,
+
+        [Parameter(ParameterSetName=('type2') )]                                                                    [string]    $agentHostname,
+        [Parameter(ParameterSetName=('type2') )]                                                                    [string]    $agentUsername,
+        [Parameter(ParameterSetName=('type2') )]                                                                    [string]    $appClusterName,
+        [Parameter(ParameterSetName=('type2') )][ValidateSet('inval','exchange','exchange_dag','hyperv','sql2005','sql2005','sql2012','sql2014','sql2016','sql2017')]
+                                                                                                                    [string]    $appId,
+        [Parameter(ParameterSetName=('type2') )]                                                                    [string]    $appServer,
+        [Parameter(ParameterSetName=('type2') )]                                                                    [string]    $appServiceName,
+        [Parameter(ParameterSetName=('type2') )][ValidateSet('none','vss','vmware','generic')]                      [string]    $appSync,
+        [Parameter(ParameterSetName=('type2') )]                                                                    [boolean]   $isStandaloneVolColl,
+        [Parameter(ParameterSetName=('type2') )]                                                                    [string]    $prottmplId,
+        [Parameter(ParameterSetName=('type2') )][ValidateSet('periodic_snapshot','synchronous')]                    [string]    $replicationType,
+        [Parameter(ParameterSetName=('type2') )]                                                                    [string]    $vcenterHostname,
+        [Parameter(ParameterSetName=('type2') )]                                                                    [string]    $vcenterUsername,
+                                                                                                                    [switch]    $WhatIf
      )
 process
     {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         switch ( $devicetype )
             {   'device-type1'  {   $MyAdd = 'storage-systems/' + $devicetype + '/' + $SystemId + '/applicationsets'
                                     $MyBody =  @{}
-                                    if ($appSetBuisnessUnit)    {   $MyBody += @{ appSetBuisnessUnit    = $appSetBuisnessUnit }    }
-                                    if ($decription)            {   $MyBody += @{ appSetComments        = $description }           }
-                                    if ($appSetImportance )     {   $MyBody += @{ appSetImportance      = $appSetImportance }      }
+                                    if ( $appSetBuisnessUnit )  {   $MyBody += @{ appSetBuisnessUnit    = $appSetBuisnessUnit }    }
+                                    if ( $decription )          {   $MyBody += @{ appSetComments        = $description }           }
+                                    if ( $appSetImportance )    {   $MyBody += @{ appSetImportance      = $appSetImportance }      }
                                                                     $MyBody += @{ appSetName            = $name                    }  
                                                                     $MyBody += @{ appSetType            = $appSetType              }
-                                    if ($members)               {   $MyBody += @{ members               = $members }               }
-                                    return 
+                                    if ( $members )             {   $MyBody += @{ members               = $members }               }
+                                    if ( $DeviceType2 )         {   write-error "The Wrong Device Type was specified"
+                                                                    Return
+                                                                }
                                 }
                 'device-type2'  {   $MyAdd = 'storage-systems/' + $devicetype + '/' + $SystemId + '/volume-collections'
                                                                     $MyBody =  @{ name                  = $name                     }
-                                    if ($agentHostname)         {   $MyBody += @{ agent_hostname        = $agentHostname }          }
-                                    if ($agentUsername)         {   $MyBody += @{ agent_username        = $agentUsername }          }
-                                    if ($appClusterName )       {   $MyBody += @{ app_cluster_ame       = $appClusterName}          }
-                                    if ($appId)                 {   $MyBody += @{ app_id                = $appId }                  }
-                                    if ($appServer)             {   $MyBody += @{ app_server            = $appServer }              }
-                                    if ($appServiceName)        {   $MyBody += @{ app_service_name      = $appServiceName }         }
-                                    if ($description)           {   $MyBody += @{ description           = $description }            }
-                                    if ($isStandaloneVolColl )  {   $MyBody += @{ is_standalone_volcoll = $isStandaloneVolColl }    }
-                                    if ($prottmplId)            {   $MyBody += @{ prottmpl_id           = $prottmplId }             }
-                                    if ($replicationType )      {   $MyBody += @{ replication_type      = $replicationType }        }
-                                    if ($vcenterHostname )      {   $MyBody += @{ vcenter_hostname      = $vcenterHostname }        }
-                                    if ($vcenterUsername )      {   $MyBody += @{ vcenter_username      = $vcenterUsername }        }
+                                    if ( $agentHostname )       {   $MyBody += @{ agent_hostname        = $agentHostname }          }
+                                    if ( $agentUsername )       {   $MyBody += @{ agent_username        = $agentUsername }          }
+                                    if ( $appClusterName )      {   $MyBody += @{ app_cluster_ame       = $appClusterName}          }
+                                    if ( $appId )               {   $MyBody += @{ app_id                = $appId }                  }
+                                    if ( $appServer )           {   $MyBody += @{ app_server            = $appServer }              }
+                                    if ( $appServiceName )      {   $MyBody += @{ app_service_name      = $appServiceName }         }
+                                    if ( $description )         {   $MyBody += @{ description           = $description }            }
+                                    if ( $isStandaloneVolColl ) {   $MyBody += @{ is_standalone_volcoll = $isStandaloneVolColl }    }
+                                    if ( $prottmplId )          {   $MyBody += @{ prottmpl_id           = $prottmplId }             }
+                                    if ( $replicationType )     {   $MyBody += @{ replication_type      = $replicationType }        }
+                                    if ( $vcenterHostname )     {   $MyBody += @{ vcenter_hostname      = $vcenterHostname }        }
+                                    if ( $vcenterUsername )     {   $MyBody += @{ vcenter_username      = $vcenterUsername }        }
+                                    if ( $DeviceType1 )         {   write-error "The Wrong Device Type was specified"
+                                                                    Return
+                                                                }
                                 }
             }
         return Invoke-DSCCRestMethod -uriadd $MyAdd -method 'POST' -body ( $MyBody | ConvertTo-Json ) -whatifBoolean $WhatIf
@@ -252,6 +268,12 @@ Function Set-DSCCVolumeSet
     Creates a HPE Data Services Cloud Console Data Operations Manager Volume Collection or Application Set.
 .PARAMETER SystemID
     A single System ID is specified and required.
+.PARAMETER DeviceType1
+    This switch is used to tell the command that the end device is the specific device type, and to only allow the correct
+    parameter set that matches this device type.
+.PARAMETER DeviceType2
+    This switch is used to tell the command that the end device is the specific device type, and to only allow the correct
+    parameter set that matches this device type.
 .PARAMETER appSetId
     A Single Application Set ID is required and only valid for device-type1 storage systems.
 .PARAMETER volumeCollectionId
@@ -324,28 +346,33 @@ Function Set-DSCCVolumeSet
     The API call for this operation is file:///api/v1/storage-systems/{systemid}/device-type1/access-control-records
 #>   
 [CmdletBinding()]
-param(  [Parameter(ValueFromPipeLineByPropertyName=$true,Mandatory=$true,ParameterSetName=('device-type1','device-type2'))]
-                                                                                                [Alias('id')]       [string]    $SystemId,
-
-        [Parameter(Mandatory=$true,ParameterSetName=('device-type1','device-type2') )][Alias('applicationSetId')]  [string]    $volumeCollectionId,                                               
-        [Parameter(ParameterSetName=('device-type1') )]                                                             [string]    $appSetBuisnessUnit,
-        [Parameter(ParameterSetName=('device-type1','device-type2'))][Alias('appSetComment')]                      [string]    $description,
-        [Parameter(ParameterSetName=('device-type1','device-type2'))][Alias('appSetName')]                         [string]    $name,
-        [Parameter(ParameterSetName=('device-type1') )]                                                             [string]    $appSetType,
-        [Parameter(ParameterSetName=('device-type1') )]                                                             [string[]]  $addMembers,
-        [Parameter(ParameterSetName=('device-type1') )]                                                             [string[]]  $removeMembers,
-        [Parameter(ParameterSetName=('device-type2') )]                                                             [string]    $agentHostname,
-        [Parameter(ParameterSetName=('device-type2') )]                                                             [string]    $agentUsername,
-        [Parameter(ParameterSetName=('device-type2') )]                                                             [string]    $appClusterName,
-        [Parameter(ParameterSetName=('device-type2') )][ValidateSet('inval','exchange','exchange_dag','hyperv','sql2005','sql2005','sql2012','sql2014','sql2016','sql2017')]
+param(  [Parameter(ValueFromPipeLineByPropertyName=$true,Mandatory=$true,ParameterSetName=('type1'))][Alias('id')]  
+        [Parameter(ValueFromPipeLineByPropertyName=$true,Mandatory=$true,ParameterSetName=('type2'))][Alias('id')]  [string]    $SystemId,
+        
+        [Parameter(ParameterSetName=('type1'))]                                                              [switch]   $DeviceType1,
+        [Parameter(ParameterSetName=('type2'))]                                                              [switch]   $DeviceType2,
+        [Parameter(Mandatory=$true,ParameterSetName=('type1') )]                                                  
+        [Parameter(Mandatory=$true,ParameterSetName=('type2') )][Alias('applicationSetId')]                  [string]    $volumeCollectionId,                                               
+        [Parameter(ParameterSetName=('type1') )]                                                             [string]    $appSetBuisnessUnit,
+        [Parameter(ParameterSetName=('type1'))]
+        [Parameter(ParameterSetName=('type2'))][Alias('appSetComment')]                                      [string]    $description,
+        [Parameter(ParameterSetName=('type1'))]
+        [Parameter(ParameterSetName=('type2','device-type2'))][Alias('appSetName')]                          [string]    $name,
+        [Parameter(ParameterSetName=('type1') )]                                                             [string]    $appSetType,
+        [Parameter(ParameterSetName=('type1') )]                                                             [string[]]  $addMembers,
+        [Parameter(ParameterSetName=('type1') )]                                                             [string[]]  $removeMembers,
+        [Parameter(ParameterSetName=('type2') )]                                                             [string]    $agentHostname,
+        [Parameter(ParameterSetName=('type2') )]                                                             [string]    $agentUsername,
+        [Parameter(ParameterSetName=('type2') )]                                                             [string]    $appClusterName,
+        [Parameter(ParameterSetName=('type2') )][ValidateSet('inval','exchange','exchange_dag','hyperv','sql2005','sql2005','sql2012','sql2014','sql2016','sql2017')]
                                                                                                                     [string]    $appId,
-        [Parameter(ParameterSetName=('device-type2') )]                                                             [string]    $appServer,
-        [Parameter(ParameterSetName=('device-type2') )]                                                             [string]    $appServiceName,
-        [Parameter(ParameterSetName=('device-type2') )][ValidateSet('none','vss','vmware','generic')]               [string]    $appSync,
-        [Parameter(ParameterSetName=('device-type2') )]                                                             [boolean]   $isStandaloneVolColl,
-        [Parameter(ParameterSetName=('device-type2') )]                                                             [string]    $prottmplId,
-        [Parameter(ParameterSetName=('device-type2') )]                                                             [string]    $vcenterHostname,
-        [Parameter(ParameterSetName=('device-type2') )]                                                             [string]    $vcenterUsername,
+        [Parameter(ParameterSetName=('type2') )]                                                             [string]    $appServer,
+        [Parameter(ParameterSetName=('type2') )]                                                             [string]    $appServiceName,
+        [Parameter(ParameterSetName=('type2') )][ValidateSet('none','vss','vmware','generic')]               [string]    $appSync,
+        [Parameter(ParameterSetName=('type2') )]                                                             [boolean]   $isStandaloneVolColl,
+        [Parameter(ParameterSetName=('type2') )]                                                             [string]    $prottmplId,
+        [Parameter(ParameterSetName=('type2') )]                                                             [string]    $vcenterHostname,
+        [Parameter(ParameterSetName=('type2') )]                                                             [string]    $vcenterUsername,
                                                                                                                     [switch]    $WhatIf
      )
 process
@@ -353,26 +380,31 @@ process
         switch ( $devicetype )
             {   'device-type1'  {   $MyAdd = 'storage-systems/' + $devicetype + '/' + $SystemId + '/applicationsets/' + $volumeCollectionId
                                     $MyBody =  @{}
-                                    if ($appSetBuisnessUnit)    {   $MyBody += @{ appSetBuisnessUnit    = $appSetBuisnessUnit }    }
-                                    if ($description)           {   $MyBody += @{ appSetComments        = $description }           }
-                                    if ($name )                 {   $MyBody += @{ appSetName            = $name }                  }
-                                    if ($removeMembers )        {   $MyBody += @{ removeMembers         = $removeMembers }         } 
-                                    if ($addMembers )           {   $MyBody += @{ addMembers            = $addMembers }            }
-                                    return 
+                                    if ( $appSetBuisnessUnit )  {   $MyBody += @{ appSetBuisnessUnit    = $appSetBuisnessUnit }    }
+                                    if ( $description )         {   $MyBody += @{ appSetComments        = $description }           }
+                                    if ( $name )                {   $MyBody += @{ appSetName            = $name }                  }
+                                    if ( $removeMembers )       {   $MyBody += @{ removeMembers         = $removeMembers }         } 
+                                    if ( $addMembers )          {   $MyBody += @{ addMembers            = $addMembers }            }
+                                    if ( $DeviceType2 )         {   write-error "The Wrong Device Type was specified"
+                                                                    Return
+                                                                }
                                 }
                 'device-type2'  {   $MyAdd = 'storage-systems/' + $devicetype + '/' + $SystemId + '/volume-collections/' + $volumeCollectionId
-                                    if ($name)                  {   $MyBody =  @{ name                  = $name }                   }   
-                                    if ($agentHostname)         {   $MyBody += @{ agent_hostname        = $agentHostname }          }
-                                    if ($agentUsername)         {   $MyBody += @{ agent_username        = $agentUsername }          }
-                                    if ($appClusterName)        {   $MyBody += @{ app_cluster_ame       = $appClusterName }         }
-                                    if ($appId)                 {   $MyBody += @{ app_id                = $appId }                  }
-                                    if ($appServer)             {   $MyBody += @{ app_server            = $appServer }              }
-                                    if ($appServiceName)        {   $MyBody += @{ app_service_name      = $appServiceName }         }
-                                    if ($description)           {   $MyBody += @{ description           = $description }            }
-                                    if ($isStandaloneVolColl)   {   $MyBody += @{ is_standalone_volcoll = $isStandaloneVolColl }    }
-                                    if ($prottmplId)            {   $MyBody += @{ prottmpl_id           = $prottmplId }             }
-                                    if ($vcenterHostname )      {   $MyBody += @{ vcenter_hostname      = $vcenterHostname }        }
-                                    if ($vcenterUsername )      {   $MyBody += @{ vcenter_username      = $vcenterUsername }        }
+                                    if ( $name )                {   $MyBody =  @{ name                  = $name }                   }   
+                                    if ( $agentHostname )       {   $MyBody += @{ agent_hostname        = $agentHostname }          }
+                                    if ( $agentUsername )       {   $MyBody += @{ agent_username        = $agentUsername }          }
+                                    if ( $appClusterName )      {   $MyBody += @{ app_cluster_ame       = $appClusterName }         }
+                                    if ( $appId )               {   $MyBody += @{ app_id                = $appId }                  }
+                                    if ( $appServer )           {   $MyBody += @{ app_server            = $appServer }              }
+                                    if ( $appServiceName )      {   $MyBody += @{ app_service_name      = $appServiceName }         }
+                                    if ( $description )         {   $MyBody += @{ description           = $description }            }
+                                    if ( $isStandaloneVolColl ) {   $MyBody += @{ is_standalone_volcoll = $isStandaloneVolColl }    }
+                                    if ( $prottmplId )          {   $MyBody += @{ prottmpl_id           = $prottmplId }             }
+                                    if ( $vcenterHostname )     {   $MyBody += @{ vcenter_hostname      = $vcenterHostname }        }
+                                    if ( $vcenterUsername )     {   $MyBody += @{ vcenter_username      = $vcenterUsername }        }
+                                    if ( $DeviceType1 )         {   write-error "The Wrong Device Type was specified"
+                                                                    Return
+                                                                }
                                 }
             }
         return Invoke-DSCCRestMethod -uriadd $MyAdd -method 'PUT' -body ( $MyBody | ConvertTo-Json ) -whatifBoolean $WhatIf

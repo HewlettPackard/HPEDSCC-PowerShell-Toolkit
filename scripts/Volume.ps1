@@ -266,8 +266,14 @@ function New-DSCCVolume
 .DESCRIPTION
     Creates a new Volume on the Specified Storage System with the supplied parameters. Depending on the target storage system, the command will 
     accept either 1 of 2 sets of parameters; device-type1 or device-type2. 
-.PARAMETER StorageSystemID
+.PARAMETER StorageID
     A single Storage System ID is specified and required. This is required for both parameter sets
+.PARAMETER DeviceType1
+    This switch is used to tell the command that the end device is the specific device type, and to only allow the correct
+    parameter set that matches this device type.
+.PARAMETER DeviceType2
+    This switch is used to tell the command that the end device is the specific device type, and to only allow the correct
+    parameter set that matches this device type.
 .PARAMETER name
     A single name is specified and required, and is required for both parameter sets.
 .PARAMETER sizeMiB
@@ -400,75 +406,83 @@ Creating a Device-Type1 type Volume on a Alletra6K or Nimble Storage device.
     -------                              ------    -------
     dd9e6b68-db1c-4f86-90b4-9ceffd65fbfa SUBMITTED
 
- PS:>
+PS:>
 #>   
 [CmdletBinding()]
-param(  [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]
-        [Parameter(Mandatory=$true, ParameterSetName='DeviceType2' )]       [string]    $SystemId, 
-        [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]
-        [Parameter(Mandatory=$true, ParameterSetName='DeviceType2' )]       [string]    $name,
+param(  [Parameter(Mandatory=$true, ParameterSetName='Type1' )]
+        [Parameter(Mandatory=$true, ParameterSetName='Type2' )]       [string]    $SystemId, 
+        
+        [Parameter(ParameterSetName='Type1' )]                        [switch]    $DeviceType1,
+        [Parameter(ParameterSetName='Type2' )]                        [switch]    $DeviceType2, 
+        
+        [Parameter(Mandatory=$true, ParameterSetName='Type1' )]
+        [Parameter(Mandatory=$true, ParameterSetName='Type2' )]       [string]    $name,
  
-        [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]       [string]    $sizeMib,
-        [Parameter(Mandatory=$true, ParameterSetName='DeviceType1' )]       [string]    $userCpg,
-        [Parameter(ParameterSetName='DeviceType1' )]                        [string]    $comments,
-        [Parameter(ParameterSetName='DeviceType1' )]                        [int]       $count,
-        [Parameter(ParameterSetName='DeviceType1' )]                        [boolean]   $dataReduction,
-        [Parameter(ParameterSetName='DeviceType1' )]                        [string]    $snapCpg,
-        [Parameter(ParameterSetName='DeviceType1' )]                        [string]    $snapshotAllocWarning,
-        [Parameter(ParameterSetName='DeviceType1' )]                        [string]    $userAllocWarning,
-       
-        [Parameter(Mandatory=$true, ParameterSetName='DeviceType2' )]       [string]    $size,
-        [Parameter(ParameterSetName='DeviceType2' )]                        [string]    $pool_id,
-        [Parameter(ParameterSetName='DeviceType2' )]
+        [Parameter(Mandatory=$true, ParameterSetName='Type1' )]       [string]    $sizeMib,
+        [Parameter(Mandatory=$true, ParameterSetName='Type1' )]       [string]    $userCpg,
+        [Parameter(ParameterSetName='Type1' )]                        [string]    $comments,
+        [Parameter(ParameterSetName='Type1' )]                        [int]       $count,
+        [Parameter(ParameterSetName='Type1' )]                        [boolean]   $dataReduction,
+        [Parameter(ParameterSetName='Type1' )]                        [string]    $snapCpg,
+        [Parameter(ParameterSetName='Type1' )]                        [string]    $snapshotAllocWarning,
+        [Parameter(ParameterSetName='Type1' )]                        [string]    $userAllocWarning,
+
+        [Parameter(Mandatory=$true, ParameterSetName='Type2' )]       [string]    $size,
+        [Parameter(ParameterSetName='Type2' )]                        [string]    $pool_id,
+        [Parameter(ParameterSetName='Type2' )]
             [ValidateSet('none','smis','vvol','openstack','openstackv2')]   [string]    $agent_type,
-        [Parameter(ParameterSetName='DeviceType2' )]                        [string]    $app_uid,
-        [Parameter(ParameterSetName='DeviceType2' )]                        [string]    $base_snap_id,
-        [Parameter(ParameterSetName='DeviceType2' )]
+        [Parameter(ParameterSetName='Type2' )]                        [string]    $app_uid,
+        [Parameter(ParameterSetName='Type2' )]                        [string]    $base_snap_id,
+        [Parameter(ParameterSetName='Type2' )]
             [ValidateSet(4096,8192,16384,32768,65536)]                      [int]       $block_size,
-        [Parameter(ParameterSetName='DeviceType2' )]                        [switch]    $cache_pinned,
-        [Parameter(ParameterSetName='DeviceType2' )]                        [switch]    $clone,
-        [Parameter(ParameterSetName='DeviceType2' )]                        [switch]    $dedupe_enabled,
-        [Parameter(ParameterSetName='DeviceType2' )]                        [string]    $description,
-        [Parameter(ParameterSetName='DeviceType2' )]                        [string]    $dest_pool_id,
-        [Parameter(ParameterSetName='DeviceType2' )]
+        [Parameter(ParameterSetName='Type2' )]                        [switch]    $cache_pinned,
+        [Parameter(ParameterSetName='Type2' )]                        [switch]    $clone,
+        [Parameter(ParameterSetName='Type2' )]                        [switch]    $dedupe_enabled,
+        [Parameter(ParameterSetName='Type2' )]                        [string]    $description,
+        [Parameter(ParameterSetName='Type2' )]                        [string]    $dest_pool_id,
+        [Parameter(ParameterSetName='Type2' )]
             [ValidateSet('none','aes_256_xts')]                             [string]    $encryption_cipher,
-        [Parameter(ParameterSetName='DeviceType2' )]                        [string]    $folder_id,
-        [Parameter(ParameterSetName='DeviceType2' )]
+        [Parameter(ParameterSetName='Type2' )]                        [string]    $folder_id,
+        [Parameter(ParameterSetName='Type2' )]
             [ValidateRange(0,100)]                                          [int]       $limit,
-        [Parameter(ParameterSetName='DeviceType2' )]
+        [Parameter(ParameterSetName='Type2' )]
             [ValidateRange(256,4294967294)]                                 [int]       $limit_iops,
-        [Parameter(ParameterSetName='DeviceType2' )]
+        [Parameter(ParameterSetName='Type2' )]
             [ValidateRange(256,4294967294)]                                 [int]       $limit_mbps,
-        [Parameter(ParameterSetName='DeviceType2' )]                        [switch]    $multi_initiator,
-        [Parameter(ParameterSetName='DeviceType2' )]                        [switch]    $online,
-        [Parameter(ParameterSetName='DeviceType2' )]                        [string]    $owned_by_group_id,
-        [Parameter(ParameterSetName='DeviceType2' )]                        [string]    $perfpolicy_id,
-        [Parameter(ParameterSetName='DeviceType2' )]                        [switch]    $read_only,
-        [Parameter(ParameterSetName='DeviceType2' )]
+        [Parameter(ParameterSetName='Type2' )]                        [switch]    $multi_initiator,
+        [Parameter(ParameterSetName='Type2' )]                        [switch]    $online,
+        [Parameter(ParameterSetName='Type2' )]                        [string]    $owned_by_group_id,
+        [Parameter(ParameterSetName='Type2' )]                        [string]    $perfpolicy_id,
+        [Parameter(ParameterSetName='Type2' )]                        [switch]    $read_only,
+        [Parameter(ParameterSetName='Type2' )]
             [ValidateRange(0,100)]                                          [int]       $reserve,
-        [Parameter(ParameterSetName='DeviceType2' )]
+        [Parameter(ParameterSetName='Type2' )]
             [ValidateRange(0,100)]                                          [int]       $snap_reserve,
-        [Parameter(ParameterSetName='DeviceType2' )]
+        [Parameter(ParameterSetName='Type2' )]
             [ValidateRange(0,100)]                                          [int]       $snap_warn_level,
-        [Parameter(ParameterSetName='DeviceType2' )]
+        [Parameter(ParameterSetName='Type2' )]
             [ValidateRange(0,100)]                                          [int]       $warn_level,
 
                                                                             [switch]    $WhatIf
-     )
+    )
 process
     {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         $MyBody = [ordered]@{}
         switch ( $DeviceType )
-          { 'device-type1'   {  if ( $comments   )          {   $MyBody = $MyBody + @{ 'comments'             = $comments }             }
+          { 'device-type1'  {   if ( $comments   )          {   $MyBody = $MyBody + @{ 'comments'             = $comments }             }
                                 if ( $count     )           {   $MyBody = $MyBody + @{ 'count'                = $count }                }
                                 if ( $dataReduction)        {   $MyBody = $MyBody + @{ 'dataReduction'        = $True }                 }
                                 if ( $name )                {   $MyBody = $MyBody + @{ 'name'                 = $name }                 }
                                 if ( $sizeMib   )           {   $MyBody = $MyBody + @{ 'sizeMib'              = [int]$sizeMib }         }  
                                 if ( $snapCpg   )           {   $MyBody = $MyBody + @{ 'snapCpg'              = $snapCpg }              }
                                 if ( $userCpg   )           {   $MyBody = $MyBody + @{ 'userCpg'              = $userCpg }              }
+                                if ( $DeviceType2 ) 
+                                        {   write-error "The Wrong Device Type was specified"
+                                            Return
+                                        }
                             }
             'device-type2'   {  if ( $name )                {   $MyBody = $MyBody + @{ 'name'                 = $name }                 }
-                                if ( $size   )              {   $MyBody = $MyBody + @{ 'size'                 = [int]$size }                }
+                                if ( $size   )              {   $MyBody = $MyBody + @{ 'size'                 = [int]$size }            }
                                 if ( $pool_id   )           {   $MyBody = $MyBody + @{ 'pool_id'              = $pool_id }              }
                                 if ( $agent_type   )        {   $MyBody = $MyBody + @{ 'agent_type'           = $agent_type }           }
                                 if ( $app_uiid   )          {   $MyBody = $MyBody + @{ 'app_uiid'             = $app_uiid }             }
@@ -481,17 +495,21 @@ process
                                 if ( $dest_pool_id   )      {   $MyBody = $MyBody + @{ 'dest_pool_id'         = $dest_pool_id }         }
                                 if ( $encryption_cipher )   {   $MyBody = $MyBody + @{ 'encryption_cipher'    = $encryption_cipher }    }
                                 if ( $folder_id   )         {   $MyBody = $MyBody + @{ 'folder_id'            = $folder_id }            }
-                                if ( $limit   )             {   $MyBody = $MyBody + @{ 'limit'                = [int]$limit }                }
-                                if ( $limit_iops   )        {   $MyBody = $MyBody + @{ 'limit_iops'           = [int]$limit_iops }           }
+                                if ( $limit   )             {   $MyBody = $MyBody + @{ 'limit'                = [int]$limit }           }
+                                if ( $limit_iops   )        {   $MyBody = $MyBody + @{ 'limit_iops'           = [int]$limit_iops }      }
                                 if ( $multi_initiator   )   {   $MyBody = $MyBody + @{ 'multi_initiator'      = $multi_initiator }      }
                                 if ( $online   )            {   $MyBody = $MyBody + @{ 'online'               = $online }               }
                                 if ( $owned_by_group_id   ) {   $MyBody = $MyBody + @{ 'owned_by_group_id'    = $owned_by_group_id }    }
                                 if ( $perfpolicy_id   )     {   $MyBody = $MyBody + @{ 'perfpolicy_id'        = $perfpolicy_id }        }
                                 if ( $read_only   )         {   $MyBody = $MyBody + @{ 'read_only'            = $read_only }            }
-                                if ( $reserve   )           {   $MyBody = $MyBody + @{ 'reserve'              = [int]$reserve }              }
-                                if ( $snap_reserve   )      {   $MyBody = $MyBody + @{ 'snap_reserve'         = [int]$snap_reserve }         }
-                                if ( $snap_warn_level   )   {   $MyBody = $MyBody + @{ 'snap_warn_level'      = [int]$snap_warn_level }      }
-                                if ( $warn_level   )        {   $MyBody = $MyBody + @{ 'warn_level'           = [int]$warn_level }           }
+                                if ( $reserve   )           {   $MyBody = $MyBody + @{ 'reserve'              = [int]$reserve }         }
+                                if ( $snap_reserve   )      {   $MyBody = $MyBody + @{ 'snap_reserve'         = [int]$snap_reserve }    }
+                                if ( $snap_warn_level   )   {   $MyBody = $MyBody + @{ 'snap_warn_level'      = [int]$snap_warn_level } }
+                                if ( $warn_level   )        {   $MyBody = $MyBody + @{ 'warn_level'           = [int]$warn_level }      }
+                                if ( $DeviceType1 ) 
+                                        {   write-error "The Wrong Device Type was specified"
+                                            Return
+                                        }
                             }
           }
         $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes'

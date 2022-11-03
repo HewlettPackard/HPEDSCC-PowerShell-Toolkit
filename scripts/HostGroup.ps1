@@ -95,7 +95,7 @@ function Get-DSCCHostGroup
 #>   
 [CmdletBinding()]
 param(  [parameter( ValueFromPipeLineByPropertyName=$true )][Alias('id')]   [string]    $SystemId,
-                                                                            [boolean]    $WhatIf=$false
+                                                                            [boolean]   $WhatIf=$false
      )
 process
     {   $ReturnCol= @()
@@ -177,6 +177,12 @@ Function New-DSCCHostGroup
     Creates a HPE DSSC DOM Host Group Record.    
 .DESCRIPTION
     Creates a HPE Data Services Cloud Console Data Operations Manager Host Group Record;
+.PARAMETER DeviceType1
+    This switch is used to tell the command that the end device is the specific device type, and to only allow the correct
+    parameter set that matches this device type.
+.PARAMETER DeviceType2
+    This switch is used to tell the command that the end device is the specific device type, and to only allow the correct
+    parameter set that matches this device type.
 .PARAMETER comment
     Address of the initiator and is required.
 .PARAMETER hostIds
@@ -294,6 +300,9 @@ process
                                     if ($hostIds)           {   $MyBody +=          @{ hostIds       = $hostIds       }  }
                                     if ($hostsToCreate )    {   $MyBody +=          @{ hostsToCreate = $hostsToCreate }  }
                                                                 $MyBody +=          @{ userCreated   = $userCreated      }
+                                    if ( $DeviceType2 )     {   write-error "The Wrong Device Type was specified"
+                                                                Return
+                                                            }
                                 }
                 'Type2fc_useExisting'
                                 {                               $MyBody +=          @{ access_protocol      = 'fc'           }
@@ -304,6 +313,9 @@ process
                                     if ($fc_tdz_ports)      {   $MyBody +=          @{ fc_tdz_ports         = $fc_tdz_ports  } }
                                     $myAdd = 'storage-systems/device-type2/'+$SystemId+'/host-groups'
                                     write-verbose "Creating a type2 device request using the API location $MyAdd"
+                                    if ( $DeviceType1 )     {   write-error "The Wrong Device Type was specified"
+                                                                Return
+                                                            }
                                 }
                 'Type2fc_createNew'
                                 {                               $MyBody +=          @{ access_protocol      = 'fc'           }
@@ -316,6 +328,9 @@ process
                                     if ($fc_tdz_ports)      {   $MyBody +=          @{ fc_tdz_ports         = $fc_tdz_ports  } }
                                     $myAdd = 'storage-systems/device-type2/'+$SystemId+'/host-groups'
                                     write-verbose "Creating a type2 device request using the API location $MyAdd"
+                                    if ( $DeviceType1 )     {   write-error "The Wrong Device Type was specified"
+                                                                Return
+                                                            }
                                 }
                 'Type2iscsi_useExisting'    
                                 {   $myAdd = 'storage-systems/device-type2/'+$SystemId+'/host-groups'
@@ -326,6 +341,9 @@ process
                                     if ($host_type)         {   $MyBody +=          @{ host_type            = $host_type     } }
                                     if ($iscsi_initiator_id){   $MyBody +=          @{ iscsi_initiators     = @( @{ id = $iscsi_initiators } )  } }
                                     if ($target_subnets)    {   $MyBody +=          @{ target_subnets       = $target_subnets } }
+                                    if ( $DeviceType1 )     {   write-error "The Wrong Device Type was specified"
+                                                                Return
+                                                            }
                                 }
                 'Type2iscsi_createNew'    
                                 {   $myAdd = 'storage-systems/device-type2/'+$SystemId+'/host-groups'
@@ -344,6 +362,9 @@ process
                                         }
                                                                         $MyBody +=       @{ iscsi_initiators     = @( $MySub )     } 
                                     if ($target_subnets)            {   $MyBody +=       @{ target_subnets       = $target_subnets } }
+                                    if ( $DeviceType1 )     {   write-error "The Wrong Device Type was specified"
+                                                                Return
+                                                            }
                                 }
         }
         return (Invoke-DSCCRestMethod -UriAdd $MyAdd -method 'POST' -body ($MyBody | convertto-json) -WhatIfBoolean $WhatIf)

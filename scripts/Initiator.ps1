@@ -158,6 +158,12 @@ Function New-DSCCInitiator
     or if a SystemID is specified, then it will make a Device-Type2 type initiator
 .PARAMETER systemID
     This is required for Device-Type2, and references a specific system ID.
+.PARAMETER DeviceType1
+    This switch is used to tell the command that the end device is the specific device type, and to only allow the correct
+    parameter set that matches this device type.
+.PARAMETER DeviceType2
+    This switch is used to tell the command that the end device is the specific device type, and to only allow the correct
+    parameter set that matches this device type.
 .PARAMETER Address
     Used only for Device-Type1. The Address of the initiator and is required.
 .PARAMETER wwpn
@@ -199,6 +205,8 @@ Function New-DSCCInitiator
 [CmdletBinding(DefaultParameterSetName = 'type1')]
 param(  [Parameter(Mandatory, ParameterSetName = 'type2iscsi')]
         [Parameter(Mandatory, ParameterSetName = 'type2fc')]                                    [string]    $SystemId,
+        [Parameter(ParameterSetName='Type1' )]                                                  [switch]    $DeviceType1,
+        [Parameter(ParameterSetName='Type2iscsi' )][Parameter(ParameterSetName='Type2fc' )]     [switch]    $DeviceType2, 
         [Parameter(Mandatory, ParameterSetName = 'type2iscsi')]
         [Parameter(Mandatory, ParameterSetName = 'type2fc')][ValidateSet('fc','iscsi')]         [string]    $access_protocol,
         [Parameter(           ParameterSetName = 'type2fc')]                                    [string]    $alias,
@@ -238,6 +246,10 @@ process
                                 if ($name)              {   $MyBody += @{ name = $name                       }  }
                                                             $MyBody += @{ protocol = $protocol                  }
                                 if ($vendor)            {   $MyBody += @{ vendor = $vendor                   }  }
+                                if ( $DeviceType2 ) 
+                                        {   write-error "The Wrong Device Type was specified"
+                                            Return
+                                        }
                             }
                 'type2iscsi'{   $MyAdd = 'storage-systems/device-type2/' + $SystemId + '/host-initiators'
                                 $MyBody += [ordered]@{                        access_protocol         = $access_protocol            } 
@@ -247,13 +259,19 @@ process
                                 if ($iqn)                    {  $MyBody += @{ iqn                     = $iqn                     }  }
                                 if ($label)                  {  $MyBody += @{ label                   = $label                   }  }
                                 if ($override_existing_alias){  $MyBody += @{ override_existing_alias = $override_existing_alias }  }
+                                if ( $DeviceType1 )          {  write-error "The Wrong Device Type was specified"
+                                                                Return
+                                                             }
                             }
                 'type2fc'   {   $MyAdd = 'storage-systems/device-type2/' + $SystemId + '/host-initiators'
-                                $MyBody += [ordered]@{                        access_protocol         = $access_protocol            } 
-                                if ($alias)                  {  $MyBody += @{ alias                   = $alias                   }  }
-                                                                $MyBody += @{ initiator_group_id      = $initiator_group_id         }  
-                                if ($override_existing_alias){  $MyBody += @{ override_existing_alias = $override_existing_alias }  }
-                                if ($wwpn)                   {  $MyBody += @{ vendor = $vendor                                   }  }
+                                $MyBody += [ordered]@{                            access_protocol         = $access_protocol            } 
+                                if ($alias)                     {  $MyBody  += @{ alias                   = $alias                   }  }
+                                                                    $MyBody += @{ initiator_group_id      = $initiator_group_id         }  
+                                if ($override_existing_alias )  {   $MyBody += @{ override_existing_alias = $override_existing_alias }  }
+                                if ($wwpn)                      {   $MyBody += @{ vendor                  = $vendor                  }  }
+                                if ( $DeviceType1 )             {   write-error "The Wrong Device Type was specified"
+                                                                    Return
+                                                                }
                             }
             }
         return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -Method POST -body ($MyBody | convertto-json) -whatifBoolean $WhatIf )
