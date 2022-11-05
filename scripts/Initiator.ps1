@@ -6,12 +6,13 @@ function Get-DSCCInitiator
 .DESCRIPTION
     Returns the HPE Data Services Cloud Console Data Operations Manager Initiators Collections;
 .PARAMETER SystemID
-    If the Target Device to detect the Initiators from is a Nimble Storage or Alletra 6K, you will need to supply a System ID.
+    Ths command will return ALL of the Initiators unless a specific SystemID is specified. If the System
+    Id is spefified, then only those that System matches will be returned
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 .EXAMPLE
-    PS:> Get-DSCCDOMInitiator | convertTo-Json
+    PS:> Get-DSCCInitiator | convertTo-Json
 
     [   {   "address": "100008F1EABFE61C",
             "associatedLinks": [    {   "resourceUri": "string",
@@ -43,15 +44,16 @@ function Get-DSCCInitiator
     00219be7785a43368fbab49295e2e0b1 c0:77:3f:58:5f:19:00:0a Host Path C0773F585F19000A (1:3:2) FC       initiator {2M2019018G}
     00bace011e774445b208858e2545a048 c0:77:2f:58:5f:19:00:50 Host Path C0772F585F190050 (1:3:1) FC       initiator {0006b878a5a008ec63000000000000000000000001, 2M202205GF}
     010814bed01b4258871fa834368c9796 c0:77:3f:58:5f:19:00:48 Host Path C0773F585F190048 (1:3:3) FC       initiator {2M2042059V}
+    010814bed01b4258871fa834368c9796 c0:77:3f:58:5f:19:00:48 Host Path C0773F585F190048 (1:3:3) FC       initiator 
     01ca788a6b244069a295d86dee748867 c0:77:3f:58:5f:19:00:2e Host Path C0773F585F19002E (1:3:2) FC       initiator {2M2042059V}
 .EXAMPLE
-    PS:> Get-DSCCInitiator | where {$_.id -like '46eaf545bf80404d8e479ec8d6871c97'
+    PS:> Get-DSCCInitiator -SystemId 2M20260BM0
     
     id                               address                 name                               protocol type      systems
     --                               -------                 ----                               -------- ----      -------
-    46eaf545bf80404d8e479ec8d6871c97 c0:77:3f:58:5f:19:00:0a Host Path C0773F585F19000A (1:3:2) FC       initiator {2M2019018G}
+    46eaf545bf80404d8e479ec8d6871c97 c0:77:3f:58:5f:19:00:0a Host Path C0773F585F19000A (1:3:2) FC       initiator {2M20260BM0}
 .EXAMPLE
-    PS:> Get-DSCCInitiator -WhatIf
+    PS:> Get-DSCCInitiator -WhatIf $true
     
     WARNING: You have selected the What-IF option, so the call will note be made to the array,
         instead you will see a preview of the RestAPI call
@@ -76,18 +78,24 @@ process
 {   if ( -not $SystemId )
             {   $ReturnCol= @()
                 write-verbose "No SystemID was given, so running against all system IDs"
-                foreach ( $Sys in Get-DSCCStorageSystem )
-                    {   write-verbose "Running discover on a singular System ID"
-                        IF ( ($Sys).id )
-                            {   write-verbose "This systemID is valid."
-                                $ReturnCol += Get-DSCCInitiator -SystemId ($Sys).id -whatif $WhatIf
-                            }
-                    }
-
+                # The following code will return a list of initiators that exist for EACH storage system detected. This is recursive
+                    foreach ( $Sys in Get-DSCCStorageSystem )
+                        {   write-verbose "Running discover on a singular System ID"
+                            If ( ($Sys).id )
+                                {   write-verbose "This systemID is valid."
+                                    $ReturnCol += Get-DSCCInitiator -SystemId ($Sys).id -whatif $WhatIf
+                                }
+                        }
+                # This block of code gets the Initiators that are not assigned to ANY system, and adds them to the results
+                    $MyAdd = 'initiators'
+                    $SysColOnly = Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Get' -WhatIfBoolean $WhatIf
+                    $BlankOnes = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Initiator"
+                    $ReturnCol += ( $BlankOnes | where-object { $_.systems -like '' } )
+                # The following return will sort for Uniqueness and return ALL of the Initiators
                 return ( $ReturnCol | sort-object -Property id -unique )
             } 
         else
-            {
+            {   # This block only runs if a specific SystemID is provided, and limits its results to ONLY that system ID.
                 switch(Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId)
                     {   'device-type1'  {   $MyAdd = 'initiators'
                                             write-verbose "Getting a Type1 Initiator List $MyAdd"  
@@ -101,7 +109,8 @@ process
                     }
                 write-verbose "About to make main call to retrieve Initiators"
                 $SysColOnly = Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Get' -WhatIfBoolean $WhatIf
-                return Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Initiator"
+                $FilteredList = ( $SysColOnly | where-object { $_.systems -like $SystemId } )
+                return Invoke-RepackageObjectWithType -RawObject $FilteredList -ObjectName "Initiator"
             }
 }
 }
@@ -111,9 +120,12 @@ function Remove-DSCCInitiator
 .SYNOPSIS
     Removes a HPE DSSC DOM Initiator.    
 .DESCRIPTION
-    Removes a HPE Data Services Cloud Console Data Operations Manager Host specified by Initiator ID;
+    Removes a HPE Data Services Cloud Console Data Operations Manager Host specified by Initiator ID; If the 
+    initiator is a Device-Type2, then it will read the initiator to determine which system to delete the initiator from, 
+    otherwise it will send the command to the DSCC console, which works for initiators not assigned to individual storage
+    systems, or those assigned to Device-Type1
 .PARAMETER InitiatorID
-    A single Initiator ID must be specified.
+    A single Initiator ID must be specified. 
 .PARAMETER force
     Will implement an API forcefull remove option instead of the default normal removal mechanism.
 .PARAMETER WhatIf
@@ -128,23 +140,37 @@ function Remove-DSCCInitiator
 .LINK
 #>   
 [CmdletBinding()]
-param(  [parameter(ValueFromPipeLineByPropertyName=$true )][Alias('id')]    [string]    $SystemId,
-        [Parameter(Mandatory)]                                              [string]    $InitiatorId,
+param(  [Parameter(Mandatory)]                                              [string]    $InitiatorId,
                                                                             [switch]    $Force,
                                                                             [boolean]   $WhatIf=$false
     )
 process
-    {   if ( -not $SystemId )
-                {   $MyAdd = 'initiators/' + $InitiatorID
-                    $MyBody = ''
-                    if ($Force)
-                        {   $MyBody = @{force=$true}
-                        }
-                    return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Delete' -Body ( $MyBody | convertto-json ) -WhatIfBoolean $WhatIf )
+
+    {   $MyInitiator = Get-DSCCInitiator | where-object { $_.id -like $InitiatorId}
+        $MyInitiatorId = $MyInitiator.id
+        write-Verbose "MyInitiatorId = $MyInitiatorId"
+        if ( $MyInitiatorId )
+                {   $MySystemId = ($MyInitiator).Systems
+                    if ( (Find-DSCCDeviceTypeFromStorageSystemID -SystemId $MySystemId) -like 'device-type2' ) 
+                            {   # If its a Nimble, then the Initiator is located in a different place on the Array instead of DSCC
+                                write-Verbose "Type2 System Detected"
+                                $MyAdd = 'storage-systems/device-type2/'+$MySystemId+'/host-initiators/'+$MyInitiatorId
+                                return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Delete' -WhatIfBoolean $WhatIf )
+                            }
+                        else                    
+                            {   # This code block runs either if its a Type1 system, or if SystemId is blank
+                                write-verbose "Type1 System Detected"
+                                $MyAdd = 'initiators/' + $MyInitiatorID
+                                $MyBody = ''
+                                if ($Force) 
+                                        {   $MyBody = @{force=$true}
+                                        }
+                                return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Delete' -Body ( $MyBody | convertto-json ) -WhatIfBoolean $WhatIf )
+                            }
                 }
             else 
-                {   $MyAdd = 'storage-systems/device-type2/'+$SystemId+'/host-initiators/'+$InitiatorId
-                    return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Delete' -WhatIfBoolean $WhatIf )
+                {   write-error "The initiatorId presented does not exist in the DSCC console."
+                    return
                 }
     }       
 }   
