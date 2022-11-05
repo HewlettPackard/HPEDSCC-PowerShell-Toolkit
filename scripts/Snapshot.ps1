@@ -1,4 +1,5 @@
-function Get-DSCCSnapshot{
+function Get-DSCCSnapshot
+{
 <#
 .SYNOPSIS
     Returns the HPE DSSC DOM Storage Systems Snapshots for a specific storage system and volume    
@@ -67,7 +68,8 @@ process
         $ReturnData
     }       
 } 
-function Remove-DSCCSnapshot{
+function Remove-DSCCSnapshot
+{
 <#
 .SYNOPSIS
     Removes the HPE DSSC DOM Storage Systems Snapshots for a specific storage system and volume    
@@ -104,7 +106,8 @@ process
     }       
 } 
     
-function New-DSCCSnapshot{
+function New-DSCCSnapshot
+{
 <#
 .SYNOPSIS
     Creates a DSSC DOM Storage Systems Snapshots for a specific storage system and volume    

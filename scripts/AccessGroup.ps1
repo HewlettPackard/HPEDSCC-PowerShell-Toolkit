@@ -47,7 +47,9 @@ process
                             }
                     }
                 write-verbose "Returning the Multiple System Id Access Controll Groups."
-                return $ReturnCol
+                if ($ReturnCol -ne @() )
+                    {   return $ReturnCol
+                    }
             }
         else 
             {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
@@ -62,18 +64,19 @@ process
                                             $SysColOnly = @()
                                             foreach ($MyVol in $VolObj)
                                                 {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes/' + ($MyVol).id + '/vluns'
-                                                    $MyCol = invoke-DSCCrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf    
-                                                    $SysColOnly += $MyCol                                                        
+                                                    $SysColOnly += invoke-DSCCrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf                                                        
                                                 } 
-                                            $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName ( "AccessControlRecord")
-                                            return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "AccessControlRecord" ) 
+                                            
+                                            # $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName ( "AccessControlRecord")
+                                            return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "AccessControlRecord" -whatif $WhatIf ) 
                                         }
                         'device-type2'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/access-control-records'
                                             $SysColOnly = invoke-Dsccrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf
-                                            return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "AccessControlRecord" )
+                                            return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "AccessControlRecord" -whatif $Whatif )
                                         }
                     }     
-            }       
+            }  
+    return     
 }  
 } 
 function Remove-DSCCAccessControlRecord

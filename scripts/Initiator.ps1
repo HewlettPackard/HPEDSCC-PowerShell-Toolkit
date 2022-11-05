@@ -83,7 +83,8 @@ process
                                 $ReturnCol += Get-DSCCInitiator -SystemId ($Sys).id -whatif $WhatIf
                             }
                     }
-                return $ReturnCol
+
+                return ( $ReturnCol | sort-object -Property id -unique )
             } 
         else
             {
@@ -100,8 +101,7 @@ process
                     }
                 write-verbose "About to make main call to retrieve Initiators"
                 $SysColOnly = Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Get' -WhatIfBoolean $WhatIf
-                $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Initiator"
-                return $ReturnData
+                return Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Initiator"
             }
 }
 }
@@ -203,32 +203,30 @@ Function New-DSCCInitiator
     }
 #>   
 [CmdletBinding(DefaultParameterSetName = 'type1')]
-param(  [Parameter(Mandatory, ParameterSetName = 'type2iscsi')]
-        [Parameter(Mandatory, ParameterSetName = 'type2fc')]                                    [string]    $SystemId,
-        [Parameter(ParameterSetName='Type1' )]                                                  [switch]    $DeviceType1,
-        [Parameter(ParameterSetName='Type2iscsi' )][Parameter(ParameterSetName='Type2fc' )]     [switch]    $DeviceType2, 
-        [Parameter(Mandatory, ParameterSetName = 'type2iscsi')]
-        [Parameter(Mandatory, ParameterSetName = 'type2fc')][ValidateSet('fc','iscsi')]         [string]    $access_protocol,
-        [Parameter(           ParameterSetName = 'type2fc')]                                    [string]    $alias,
-        [Parameter(           ParameterSetName = 'type2iscsi')]                                 [string]    $label,
-        [Parameter(           ParameterSetName = 'type2iscsi')]                                 [string]    $chapuser_id,
-        [Parameter(Mandatory, ParameterSetName = 'type2iscsi')]
-        [Parameter(Mandatory, ParameterSetName = 'type2fc')]                                    [string]    $initiator_group_id,
-        [Parameter(           ParameterSetName = 'type2iscsi')]                                 [string]    $ip_address,
-        [Parameter(Mandatory, ParameterSetName = 'type2iscsi')]                                 [string]    $iqn,
-        [Parameter(           ParameterSetName = 'type2iscsi')]        
-        [Parameter(           ParameterSetName = 'type2fc')]                                    [boolean]   $override_existing_alias,
-        [Parameter(Mandatory, ParameterSetName = 'type2fc')]                                    [string]    $wwpn,
-
-        
-        [Parameter(Mandatory, parameterSetName = 'type1')]                                      [string]    $address,
+param(  [Parameter(ParameterSetName = 'type2iscsi', Mandatory)]
+        [Parameter(ParameterSetName = 'type2fc',    Mandatory)]                                 [string]    $SystemId,
+        [Parameter(ParameterSetName = 'Type1',      Mandatory)]                                 [switch]    $DeviceType1,
+        [Parameter(ParameterSetName = 'Type2iscsi' )][Parameter(ParameterSetName='Type2fc' )]   [switch]    $DeviceType2, 
+        [Parameter(ParameterSetName = 'type2iscsi', Mandatory)]
+        [Parameter(ParameterSetName = 'type2fc')]   [ValidateSet('fc','iscsi')]                 [string]    $access_protocol,
+        [Parameter(ParameterSetName = 'type2fc')]                                               [string]    $alias,
+        [Parameter(ParameterSetName = 'type2iscsi')]                                            [string]    $label,
+        [Parameter(ParameterSetName = 'type2iscsi')]                                            [string]    $chapuser_id,
+        [Parameter(ParameterSetName = 'type2iscsi', Mandatory)]
+        [Parameter(ParameterSetName = 'type2fc',    Mandatory)]                                 [string]    $initiator_group_id,
+        [Parameter(ParameterSetName = 'type2iscsi')]                                            [string]    $ip_address,
+        [Parameter(ParameterSetName = 'type2iscsi', Mandatory)]                                 [string]    $iqn,
+        [Parameter(ParameterSetName = 'type2iscsi')]        
+        [Parameter(ParameterSetName = 'type2fc')]                                               [boolean]   $override_existing_alias,
+        [Parameter(ParameterSetName = 'type2fc',    Mandatory)]                                 [string]    $wwpn,        
+        [Parameter(parameterSetName = 'type1',      Mandatory)]                                 [string]    $address,
         [Parameter(ParameterSetName = 'type1')]                                                 [string]    $driverVersion,
         [Parameter(ParameterSetName = 'type1')]                                                 [string]    $firmwareVersion,
         [Parameter(ParameterSetName = 'type1')]                                                 [string]    $hbaModel,
         [Parameter(ParameterSetName = 'type1')]                                                 [int64]     [int]$hostSpeed,
         [Parameter(ParameterSetName = 'type1')]                                                 [string]    $ipAddress,
         [Parameter(ParameterSetName = 'type1')]                                                 [string]    $name,  
-        [Parameter( Mandatory,ParameterSetName = 'type1')][ValidateSet('FC','iSCSI','NMVe')]    [string]    $protocol,
+        [Parameter(ParameterSetName = 'type1',Mandatory)][ValidateSet('FC','iSCSI','NMVe')]     [string]    $protocol,
         [Parameter(ParameterSetName = 'type1')]                                                 [string]    $vendor,
         [Parameter(ParameterSetName = 'type2iscsi' )]                               
         [Parameter(ParameterSetName = 'type2fc' )]                               
@@ -237,35 +235,34 @@ param(  [Parameter(Mandatory, ParameterSetName = 'type2iscsi')]
 process
     {   Switch($PSCmdlet.ParameterSetName)
             {   'type1'     {   $MyAdd = 'initiators'
-                                $MyBody += [ordered]@{                    address  = $address           } 
-                                if ($driverVerson)      {   $MyBody += @{ driverVersion = $driverVersion     }  }
-                                if ($firmwareVersion)   {   $MyBody += @{ firmwareVersion = $firmwareVersion }  }
-                                if ($hbaModel)          {   $MyBody += @{ hbaModel = $hbaModel               }  }
-                                if ($hostSpeed)         {   $MyBody += @{ hostSpeed = $hostSpeed             }  }
-                                if ($ipAddress)         {   $MyBody += @{ ipAddress = $ipAddress             }  }
-                                if ($name)              {   $MyBody += @{ name = $name                       }  }
-                                                            $MyBody += @{ protocol = $protocol                  }
-                                if ($vendor)            {   $MyBody += @{ vendor = $vendor                   }  }
-                                if ( $DeviceType2 ) 
-                                        {   write-error "The Wrong Device Type was specified"
-                                            Return
-                                        }
+                                $MyBody += [ordered]@{                    address           = $address         } 
+                                if ($driverVerson)      {   $MyBody += @{ driverVersion     = $driverVersion   }  }
+                                if ($firmwareVersion)   {   $MyBody += @{ firmwareVersion   = $firmwareVersion }  }
+                                if ($hbaModel)          {   $MyBody += @{ hbaModel          = $hbaModel        }  }
+                                if ($hostSpeed)         {   $MyBody += @{ hostSpeed         = $hostSpeed       }  }
+                                if ($ipAddress)         {   $MyBody += @{ ipAddress         = $ipAddress       }  }
+                                if ($name)              {   $MyBody += @{ name              = $name            }  }
+                                                            $MyBody += @{ protocol          = $protocol        }
+                                if ($vendor)            {   $MyBody += @{ vendor            = $vendor          }  }
+                                if ( $DeviceType2 )     {   write-error "The Wrong Device Type was specified"
+                                                            Return
+                                                        }
                             }
                 'type2iscsi'{   $MyAdd = 'storage-systems/device-type2/' + $SystemId + '/host-initiators'
-                                $MyBody += [ordered]@{                        access_protocol         = $access_protocol            } 
-                                if ($chapuser_id)            {  $MyBody += @{ chapuser_id             = $chapuser_id             }  }
-                                                                $MyBody += @{ initiator_group_id      = $initiator_group_id         }  
-                                if ($ip_address)             {  $MyBody += @{ ip_address              = $ip_address              }  }
-                                if ($iqn)                    {  $MyBody += @{ iqn                     = $iqn                     }  }
-                                if ($label)                  {  $MyBody += @{ label                   = $label                   }  }
-                                if ($override_existing_alias){  $MyBody += @{ override_existing_alias = $override_existing_alias }  }
-                                if ( $DeviceType1 )          {  write-error "The Wrong Device Type was specified"
-                                                                Return
-                                                             }
+                                $MyBody += [ordered]@{                        access_protocol             = $access_protocol            } 
+                                if ($chapuser_id)               {   $MyBody += @{ chapuser_id             = $chapuser_id             }  }
+                                                                    $MyBody += @{ initiator_group_id      = $initiator_group_id         }  
+                                if ($ip_address)                {   $MyBody += @{ ip_address              = $ip_address              }  }
+                                if ($iqn)                       {   $MyBody += @{ iqn                     = $iqn                     }  }
+                                if ($label)                     {   $MyBody += @{ label                   = $label                   }  }
+                                if ($override_existing_alias)   {   $MyBody += @{ override_existing_alias = $override_existing_alias }  }
+                                if ( $DeviceType1 )             {   write-error "The Wrong Device Type was specified"
+                                                                    Return
+                                                                }
                             }
                 'type2fc'   {   $MyAdd = 'storage-systems/device-type2/' + $SystemId + '/host-initiators'
                                 $MyBody += [ordered]@{                            access_protocol         = $access_protocol            } 
-                                if ($alias)                     {  $MyBody  += @{ alias                   = $alias                   }  }
+                                if ($alias)                     {   $MyBody += @{ alias                   = $alias                   }  }
                                                                     $MyBody += @{ initiator_group_id      = $initiator_group_id         }  
                                 if ($override_existing_alias )  {   $MyBody += @{ override_existing_alias = $override_existing_alias }  }
                                 if ($wwpn)                      {   $MyBody += @{ vendor                  = $vendor                  }  }

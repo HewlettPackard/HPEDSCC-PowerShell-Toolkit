@@ -96,7 +96,7 @@ function Get-DSCCHostGroup
 [CmdletBinding()]
 param(  [parameter( ValueFromPipeLineByPropertyName=$true )][Alias('id')]   [string]    $SystemId,
                                                                             [boolean]   $WhatIf=$false
-     )
+    )
 process
     {   $ReturnCol= @()
         write-verbose "No SystemID was given, so running against all system IDs"
@@ -160,7 +160,7 @@ function Remove-DSCCHostGroup
 param(  [Parameter(Mandatory)]  [string]    $HostGroupID,
                                 [switch]    $Force,
                                 [boolean]   $WhatIf=$false
-     )
+    )
 process
     {   $MyAdd = 'host-initiator-groups/' + $HostGroupID
         $MyBody = ''
@@ -368,7 +368,7 @@ process
                                 }
         }
         return (Invoke-DSCCRestMethod -UriAdd $MyAdd -method 'POST' -body ($MyBody | convertto-json) -WhatIfBoolean $WhatIf)
-     }      
+    }      
 } 
 Function Set-DSCCHostGroup
 {
@@ -403,7 +403,7 @@ param(  [Parameter(Mandatory)]  [string]    $hostGroupID,
                                 [array]     $hostsToCreate,
                                 [array]     $updatedHosts,
                                 [Boolean]    $WhatIf=$false
-     )
+    )
 process
     {   $MyAdd = 'host-initiator-groups/' + $hostGroupID
                                     $MyBody += @{}

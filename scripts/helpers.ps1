@@ -206,7 +206,8 @@ Process
 }
 }
 function Invoke-DSCCAutoReconnect
-{   Param()
+{   
+    Param()
     $CurrentEpoch = [int](New-TimeSpan -Start (Get-Date "01/01/1970") -End (Get-Date)).TotalSeconds
     $TokenEpoch = [int]($AuthToken).Token_CreationEpoch
     $Timeout = 60 * 105 # 1 hour and 45 minutes 
@@ -262,7 +263,7 @@ Process
                                     {   $InvokeReturnData = ($InvokeReturnData).items
                                     }
                                 if (($InvokeReturnData).Total -eq 0)
-                                    {   Write-warning "The call succeeded however zero items were returned"
+                                    {   Write-verbose "The call succeeded however zero items were returned"
                                         $InvokeReturnData = ''
                                     }
                             }
@@ -306,11 +307,15 @@ process
 function Invoke-RepackageObjectWithType 
 {   
 Param   (   $RawObject,
-            $ObjectName
+            $ObjectName,
+            [boolean]   $WhatIf=$false
         )
 process
 {   if ( $RawObject )
             {   $OutputObject = @()
+                if ( $WhatIf )
+                    {   Return 
+                    }
                 foreach ( $RawElementObject in $RawObject )
                     {   $Z=$RawElementObject
                         $DataSetType = "DSCC.$ObjectName"
@@ -322,7 +327,7 @@ process
                 return $OutputObject
             }
         else
-            {   write-warning "Null value sent to create object type."
+            {   write-verbose "Null value sent to create object type."
                 return
             }
 }   
