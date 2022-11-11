@@ -106,7 +106,7 @@ function Remove-DSCCAccessControlRecord
 #>    
 [CmdletBinding()]
 param   (   [Parameter(ParameterSetName=('type1'),ValueFromPipeLineByPropertyName=$true,Mandatory=$true )]
-            [Parameter(ParameterSetName=('type1'),ValueFromPipeLineByPropertyName=$true,Mandatory=$true )]
+            [Parameter(ParameterSetName=('type2'),ValueFromPipeLineByPropertyName=$true,Mandatory=$true )]
                                                         [Alias('id')]   [string]    $SystemId,  
             [Parameter(ParameterSetName=('type1'))]                     [switch]    $DeviceType1,
             [Parameter(ParameterSetName=('type2'))]                     [switch]    $DeviceType2,

@@ -339,7 +339,7 @@ process
                                     if ($app_uuid)          {   $MyBody +=          @{ app_uuid             = $app_uuid      } }
                                     if ($description)       {   $MyBody +=          @{ description          = $description   } }
                                     if ($host_type)         {   $MyBody +=          @{ host_type            = $host_type     } }
-                                    if ($iscsi_initiator_id){   $MyBody +=          @{ iscsi_initiators     = @( @{ id = $iscsi_initiators } )  } }
+                                    if ($iscsi_initiator_id){   $MyBody +=          @{ iscsi_initiators     = @( @{ id = $iscsi_initiator_id } )  } }
                                     if ($target_subnets)    {   $MyBody +=          @{ target_subnets       = $target_subnets } }
                                     if ( $DeviceType1 )     {   write-error "The Wrong Device Type was specified"
                                                                 Return

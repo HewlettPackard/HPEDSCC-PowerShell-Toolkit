@@ -21,19 +21,19 @@ function Get-DSCCHost
                     "0006b878a5a008ec63000000000000000000000001",
                     "2M202205GF"
                 ],
-    "associatedSystems":  [
-                              "0006b878a5a008ec63000000000000000000000001"
-                          ],
+    "associatedSystems":[
+                            "0006b878a5a008ec63000000000000000000000001"
+                        ],
     "userCreated":  true,
     "hostGroups":  [
-                       {
-                           "id":  "3ea6d00cb589489c94d928f41ca5ad28",
-                           "name":  "TestHostGroup1",
-                           "userCreated":  true,
-                           "systems":  "0006b878a5a008ec63000000000000000000000001 2M202205GF",
-                           "markedForDelete":  false
-                       }
-                   ],
+                        {
+                            "id":  "3ea6d00cb589489c94d928f41ca5ad28",
+                            "name":  "TestHostGroup1",
+                            "userCreated":  true,
+                            "systems":  "0006b878a5a008ec63000000000000000000000001 2M202205GF",
+                            "markedForDelete":  false
+                        }
+                    ],
     "comment":  null,
     "protocol":  null,
     "customerId":  "ffc311463d8711ecbdd5428607ee1704",
@@ -41,15 +41,15 @@ function Get-DSCCHost
     "generation":  1638468553,
     "consoleUri":  "/data-ops-manager/host-initiators/733b0e0808c3469d8a8650974cac8847",
     "initiators":  [
-                       {
-                           "id":  "00bace011e774445b208858e2545a048",
-                           "ipAddress":  null,
-                           "address":  "c0:77:2f:58:5f:19:00:50",
-                           "name":  "Host Path C0772F585F190050 (1:3:1)",
-                           "protocol":  "FC",
-                           "systems":  "0006b878a5a008ec63000000000000000000000001 2M202205GF"
-                       }
-                   ],
+                        {
+                            "id":  "00bace011e774445b208858e2545a048",
+                            "ipAddress":  null,
+                            "address":  "c0:77:2f:58:5f:19:00:50",
+                            "name":  "Host Path C0772F585F190050 (1:3:1)",
+                            "protocol":  "FC",
+                            "systems":  "0006b878a5a008ec63000000000000000000000001 2M202205GF"
+                        }
+                    ],
     "location":  null,
     "persona":  null,
     "subnet":  null,
@@ -86,7 +86,7 @@ function Get-DSCCHost
 [CmdletBinding()]
 param(  [string]    $HostID,
         [switch]    $WhatIf
-     )
+    )
 process
     {   $MyAdd = 'host-initiators'
         $SysColOnly = Invoke-DSCCRestMethod -UriAdd $MyAdd -method Get -WhatIfBoolean $WhatIf
@@ -134,7 +134,7 @@ function Remove-DSCCHost
 param(  [Parameter(Mandatory)]  [string]    $HostID,
                                 [switch]    $Force,
                                 [switch]    $WhatIf
-     )
+    )
 process
     {   $MyAdd = 'host-initiators/' + $HostID
         if ($Force)
@@ -199,7 +199,7 @@ function Get-DSCCHostVolume
 [CmdletBinding()]
 param(  [string]    $HostID,
         [switch]    $WhatIf
-     )
+    )
 process
     {   $MyAdd = 'host-initiators/' + $HostID + '/volumes'
         return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -Method Get -WhatIfBoolean $WhatIf )
@@ -277,7 +277,7 @@ param(                              [string]    $comment,
                                     [string]    $subnet,
                                     [boolean]   $userCreated=$true,
                                     [switch]    $WhatIf
-     )
+    )
 process
     {   $MyAdd = 'host-initiators'
                                         $MyBody= [ordered]@{}
@@ -332,7 +332,7 @@ param(  [Parameter(Mandatory)]  [string]    $hostID,
                                 [array]     $initiatorsToCreate,
                                 [array]     $updatedInitiators,
                                 [switch]    $WhatIf
-     )
+    )
 process
     {   $MyAdd = 'host-initiator/' + $hostID
                                         $MyBody += @{} 

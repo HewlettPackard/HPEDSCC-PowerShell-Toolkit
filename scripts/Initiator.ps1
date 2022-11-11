@@ -118,9 +118,9 @@ function Remove-DSCCInitiator
 {
 <#
 .SYNOPSIS
-    Removes a HPE DSSC DOM Initiator.    
+    Removes a HPE DSSC Initiator.    
 .DESCRIPTION
-    Removes a HPE Data Services Cloud Console Data Operations Manager Host specified by Initiator ID; If the 
+    Removes a HPE Data Services Cloud Console Host specified by Initiator ID; If the 
     initiator is a Device-Type2, then it will read the initiator to determine which system to delete the initiator from, 
     otherwise it will send the command to the DSCC console, which works for initiators not assigned to individual storage
     systems, or those assigned to Device-Type1
@@ -131,7 +131,6 @@ function Remove-DSCCInitiator
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
-
 .EXAMPLE
     PS:> Remove-DSCCHostServiceInitiator -InitiatorID d548ef683c27403e96caa51816ddc72c
 
@@ -140,9 +139,9 @@ function Remove-DSCCInitiator
 .LINK
 #>   
 [CmdletBinding()]
-param(  [Parameter(Mandatory)]  [string]    $InitiatorId,
-                                [switch]    $Force,
-                                [boolean]   $WhatIf=$false
+param(  [Parameter( Mandatory )]        [string]    $InitiatorId,
+                                        [switch]    $Force,
+                                        [boolean]   $WhatIf=$false
     )
 process
 
@@ -229,11 +228,12 @@ Function New-DSCCInitiator
     }
 #>   
 [CmdletBinding(DefaultParameterSetName = 'type1')]
-param(  [Parameter(ParameterSetName = 'type2iscsi', Mandatory   )]
+param(  
+        [Parameter(ParameterSetName = 'type1'                   )]      [switch]    $DeviceType1,
+        [Parameter(ParameterSetName = 'type2iscsi'              )]
+        [Parameter(ParameterSetName = 'type2fc'                 )]      [switch]    $DeviceType2, 
+        [Parameter(ParameterSetName = 'type2iscsi', Mandatory   )]
         [Parameter(ParameterSetName = 'type2fc',    Mandatory   )]      [string]    $SystemId,
-        [Parameter(ParameterSetName = 'Type1',      Mandatory   )]      [switch]    $DeviceType1,
-        [Parameter(ParameterSetName = 'Type2iscsi'              )]
-        [Parameter(ParameterSetName = 'Type2fc'                 )]      [switch]    $DeviceType2, 
         [Parameter(ParameterSetName = 'type2iscsi', Mandatory   )]
         [Parameter(ParameterSetName = 'type2fc'                 )]   
             [ValidateSet('fc','iscsi')]                                 [string]    $access_protocol,
@@ -251,7 +251,7 @@ param(  [Parameter(ParameterSetName = 'type2iscsi', Mandatory   )]
         [Parameter(ParameterSetName = 'type1'                   )]      [string]    $driverVersion,
         [Parameter(ParameterSetName = 'type1'                   )]      [string]    $firmwareVersion,
         [Parameter(ParameterSetName = 'type1'                   )]      [string]    $hbaModel,
-        [Parameter(ParameterSetName = 'type1'                   )]      [int64]     [int]$hostSpeed,
+        [Parameter(ParameterSetName = 'type1'                   )]      [int]       $hostSpeed,
         [Parameter(ParameterSetName = 'type1'                   )]      [string]    $ipAddress,
         [Parameter(ParameterSetName = 'type1'                   )]      [string]    $name,  
         [Parameter(ParameterSetName = 'type1',      Mandatory   )]
