@@ -235,10 +235,14 @@ Param   ( $ErrorResponse
         )
 Process 
 {   $Response =   ((($ErrorResponse).Exception).Response | convertto-json -depth 10 )
+    $R2 =         ((($ErrorResponse).Exception).Response)
     $ECode =      (((($ErrorResponse).Exception).Response).StatusCode).value__
     $EText =      ((($ErrorResponse).Exception).Response).StatusDescription + ((($ErrorResponse).Exception).Response).ReasonPhrase 
     write-verbose "The RestAPI Request failed with the following Status: `r`n`tHTTPS Return Code = $ECode`r`n`tHTTPS Return Code Description = $EText"
     Write-verbose "Raw Response  = $Response"
+    if ( ($R2).StatusCode -eq 400 )
+        {   write-warning "The command returned an error status Code 400:Bad Request"
+        } 
     return
 }
 }
@@ -257,17 +261,18 @@ Process
                 {   invoke-RestMethodWhatIf -Uri $MyUri -Method $Method -Headers $MyHeaders -Body $Body -ContentType 'application/json'
                 }
             else
-                {   try     {   write-verbose "About to make rest call to URL $MyUri."
-                                $InvokeReturnData = invoke-restmethod -Uri $MyUri -Method $Method -Headers $MyHeaders -Body $Body -ContentType 'application/json'
-                                if (($InvokeReturnData).items)
-                                    {   $InvokeReturnData = ($InvokeReturnData).items
-                                    }
-                                if (($InvokeReturnData).Total -eq 0)
-                                    {   Write-verbose "The call succeeded however zero items were returned"
-                                        $InvokeReturnData = ''
-                                    }
+                {   write-verbose "About to make rest call to URL $MyUri."
+                    try     {   $InvokeReturnData = invoke-restmethod -Uri $MyUri -Method $Method -Headers $MyHeaders -Body $Body -ContentType 'application/json'
                             }
-                    catch   {   ThrowHTTPError -ErrorResponse $_
+                    catch   {   ThrowHTTPError -ErrorResponse $_ 
+                                return
+                            }
+                    if (($InvokeReturnData).items)
+                            {   $InvokeReturnData = ($InvokeReturnData).items
+                            }
+                    if (($InvokeReturnData).Total -eq 0)
+                            {   Write-verbose "The call succeeded however zero items were returned"
+                                $InvokeReturnData = ''
                             }
                 }   
     return $InvokeReturnData
