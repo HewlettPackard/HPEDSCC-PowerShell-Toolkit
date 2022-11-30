@@ -64,11 +64,17 @@ process
                                             $SysColOnly = @()
                                             foreach ($MyVol in $VolObj)
                                                 {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes/' + ($MyVol).id + '/vluns'
-                                                    $SysColOnly += invoke-DSCCrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf                                                        
+                                                    $NewItem = invoke-DSCCrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf
+                                                    if ( $NewItem )
+                                                        {   $SysColOnly += $NewItem 
+                                                        }                                                        
                                                 } 
-                                            
-                                            # $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName ( "AccessControlRecord")
-                                            return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "AccessControlRecord" -whatif $WhatIf ) 
+                                            if ( $SysColOnly )
+                                                    {   return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "AccessControlRecord" -whatif $WhatIf )
+                                                    }
+                                                else 
+                                                    {   Return 
+                                                    } 
                                         }
                         'device-type2'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/access-control-records'
                                             $SysColOnly = invoke-Dsccrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf

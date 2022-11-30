@@ -116,34 +116,34 @@ function Get-DSCCStorageSystem
                         1
                     ],
     "inClusterNodes":  [
-                           0,
-                           1
-                       ],
+                        0,
+                        1
+                    ],
     "nodesPresent":  [
-                         0,
-                         1
-                     ],
+                        0,
+                        1
+                    ],
     "clusterLED":  "LED_GREEN",
-    "deviceType":  {
-                       "default":  "HPE_3PAR A630",
-                       "key":  "sys_type-67"
-                   },
+    "deviceType": {
+                    "default":  "HPE_3PAR A630",
+                    "key":  "sys_type-67"
+                },
     "type":  "primera-system",
     "customerId":  "ffc311463d8711ecbdd5428607ee1704",
     "generation":  1638407162262,
     "chunkletSizeMiB":  1024,
     "fqdn":  "10.77.7.1",
     "softwareVersions":  {
-                             "baseVersion":  "4.4.0",
-                             "release":  "",
-                             "patches":  "",
-                             "fullVersion":  "4.4.0.59",
-                             "components":  [
-                                                "@{baseVersion=4.4.0; release=; fullVersion=4.4.0.59; name=CLI Server}",
-                                                ...
-                                                "@{baseVersion=16.29.1702; release=; fullVersion=16.29.1702; name=Mellanox CX-5 Firmware}"
+                            "baseVersion":  "4.4.0",
+                            "release":  "",
+                            "patches":  "",
+                            "fullVersion":  "4.4.0.59",
+                            "components":  [
+                                            "@{baseVersion=4.4.0; release=; fullVersion=4.4.0.59; name=CLI Server}",
+                                            ...
+                                            "@{baseVersion=16.29.1702; release=; fullVersion=16.29.1702; name=Mellanox CX-5 Firmware}"
                                             ]
-                         },
+                        },
     "version":  {
                     "display":  "4.4.0",
                     "base":  "4.4.0",
@@ -152,20 +152,20 @@ function Get-DSCCStorageSystem
                 },
     "sysLogStatus":  null,
     "state":  {
-                  "detailed":  null,
-                  "overall":  "STATE_NORMAL"
-              },
+                "detailed":  null,
+                "overall":  "STATE_NORMAL"
+            },
     "manufacturing":  {
-                          "assemblyRev":  null,
-                          "checkSum":  null,
-                          "hpeModelName":  null,
-                          "saleablePartNumber":  null,
-                          "saleableSerialNumber":  null,
-                          "sparePartNumber":  null,
-                          "serialNumber":  "2M202205GG",
-                          "model":  "HPE_3PAR A630",
-                          "manufacturer":  "HPE"
-                      },
+                        "assemblyRev":  null,
+                        "checkSum":  null,
+                        "hpeModelName":  null,
+                        "saleablePartNumber":  null,
+                        "saleableSerialNumber":  null,
+                        "sparePartNumber":  null,
+                        "serialNumber":  "2M202205GG",
+                        "model":  "HPE_3PAR A630",
+                        "manufacturer":  "HPE"
+                    },
     "descriptors":  {
                         "owner":  "",
                         "contact":  "Gerald Best, 8325021955, hou.tmealerts@hpe.com",
@@ -174,9 +174,9 @@ function Get-DSCCStorageSystem
                     },
     "networkMasterNode":  1,
     "uptime":  {
-                   "ms":  1637227068000,
-                   "tz":  "Local"
-               },
+                "ms":  1637227068000,
+                "tz":  "Local"
+            },
     "domain":  "",
     "associatedLinks":  [
                             {
@@ -190,7 +190,6 @@ function Get-DSCCStorageSystem
                             }
                         ]
 }
-
 .EXAMPLE
     PS:> Get-DSCCStorageSystem -WhatIf
 
@@ -216,7 +215,7 @@ param(                                                                      [str
         [parameter(helpMessage="The Acceptable values are device-type1 or device-type2.")][validateset('device-type1','device-type2')]  
                                                                             [string]    $DeviceType,
                                                                             [switch]    $WhatIf
-     )
+    )
 process
     {   if ( $DeviceType ) 
             {   $DevTypes = $DeviceType 
@@ -231,7 +230,7 @@ process
                 $BigCollection+= $ReturnData 
             }
         if ( $systemId )
-                {   return ( $BigCollection | where {$_.id -like $SystemId })
+                {   return ( $BigCollection | where-object {$_.id -like $SystemId })
                 }
             else 
                 {   return $BigCollection
@@ -275,7 +274,7 @@ function Invoke-DSCCStorageSystemLocate
 [CmdletBinding()]
 param(  [parameter(mandatory)]  [string]    $SystemId,        
                                 [switch]    $WhatIf
-     )
+    )
 process
     {   $MyAdd = 'storage-systems/device-type1/' + $SystemId 
         $MyBody = @{    locateEnabled = $true   }

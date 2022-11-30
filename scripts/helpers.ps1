@@ -243,6 +243,9 @@ Process
     if ( ($R2).StatusCode -eq 400 )
         {   write-warning "The command returned an error status Code 400:Bad Request"
         } 
+    if ( ($R2).StatusCode -eq 401 )
+        {   write-warning "The command returned an error status Code 401:Unauthorized"
+        } 
     return
 }
 }
