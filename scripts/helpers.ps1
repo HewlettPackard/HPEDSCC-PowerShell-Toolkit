@@ -177,7 +177,6 @@ Process
             }
 }
 }
- 
 function Find-DSCCDeviceTypeFromStorageSystemID
 {
 [CmdletBinding()]

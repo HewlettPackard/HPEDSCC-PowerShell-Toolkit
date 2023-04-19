@@ -89,7 +89,7 @@ function Get-DSCCPool
 param(  [parameter(mandatory,ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
                                                                             [string]    $SystemId, 
                                                                             [switch]    $WhatIf
-     )
+    )
 process
     {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         if ( $DeviceType )

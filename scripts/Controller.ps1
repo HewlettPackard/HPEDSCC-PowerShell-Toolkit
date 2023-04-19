@@ -8,7 +8,7 @@ function Get-DSCCController
 .PARAMETER StorageSystemID
     A single Storage System ID is specified and required, the events will be returned unless a specific EventId is requested.
 .PARAMETER DeviceType
-    This can either be set to Device-Type1 or Device-Type2, where Device-Type1 refers to 3PAR/Primera/Alletra9K, while Device-Type2 refers to NimbleStorage/Alletra9K.
+    This can either be set to Device-Type1 or Device-Type2, where Device-Type1 refers to 3PAR/Primera/Alletra9K, while Device-Type2 refers to NimbleStorage/Alletra6K.
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
@@ -22,7 +22,6 @@ function Get-DSCCController
     
 .EXAMPLE
     PS:> Get-DSCCController -StorageSystemId 2M202205GG -DeviceType device-type1 | format-table
-  
 .LINK
 #>   
 [CmdletBinding()]
@@ -30,7 +29,7 @@ param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('i
                                                                             [string]    $SystemId,
                                                                             [string]    $ControllerId,
                                                                             [boolean]   $WhatIf = $false
-     )
+    )
 process
     {   if ( -not $PSBoundParameters.ContainsKey('SystemId' ) )
                 {   write-verbose "No SystemID Given, running all SystemIDs"
@@ -70,7 +69,7 @@ function Get-DSCCControllerSubComponent
 .PARAMETER StorageSystemID
     A single Storage System ID is specified and required, the events will be returned unless a specific EventId is requested.
 .PARAMETER DeviceType
-    This can either be set to Device-Type1 or Device-Type2, where Device-Type1 refers to 3PAR/Primera/Alletra9K, while Device-Type2 refers to NimbleStorage/Alletra9K.
+    This can either be set to Device-Type1 or Device-Type2, where Device-Type1 refers to 3PAR/Primera/Alletra9K, while Device-Type2 refers to NimbleStorage/Alletra6K.
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
@@ -107,10 +106,9 @@ function Get-DSCCControllerSubComponent
     generation      : 1637284024663
     type            : node-battery
 .EXAMPLE
-   PS:> Get-DSCCControllerSubComponent -SystemId 2M2019018G -NodeId a8e846634d139a21a1a9dd635302e19f -SubComponent batteries  -WhatIf
+    PS:> Get-DSCCControllerSubComponent -SystemId 2M2019018G -NodeId a8e846634d139a21a1a9dd635302e19f -SubComponent batteries  -WhatIf
     
-   WARNING: You have selected the What-IF option, so the call will note be made to the array,
-    instead you will see a preview of the RestAPI call
+    WARNING: You have selected the What-IF option, so the call will note be made to the array, instead you will see a preview of the RestAPI call
 
     The URI for this call will be
         https://scalpha-app.qa.cds.hpe.com/api/v1/storage-systems/device-type1/2M2019018G/nodes/a8e846634d139a21a1a9dd635302e19f/nodes-batteries
@@ -130,7 +128,7 @@ param(  [parameter( ValueFromPipeLineByPropertyName=$true )][Alias('id')]
         [parameter(mandatory)][validateset('cards','cpus','drives','mcus','mems','powers','batteries')]
                                                                             [string]    $SubComponent,
                                                                             [boolean]   $WhatIf = $false
-     )
+    )
 process
     {   if ( -not $PSBoundParameters.ContainsKey('SystemId' ) )
                 {   write-verbose "No SystemID Given, running all SystemIDs"
@@ -147,7 +145,7 @@ process
                 }
             else 
                 {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-                    clear-varibable -name ControllerWord -ErrorAction SilentlyContinue
+                    clear-variable -name ControllerWord -ErrorAction SilentlyContinue
                     switch($DeviceType)
                         {   'Device-Type1'  {   $ControllerWord = 'nodes'        }
                             'Device-Type2'  {   Write-warning "This command only works on Device-Type1 which include 3par/Primera/Alletra9K devices"
@@ -222,7 +220,7 @@ function Get-DSCCControllerPerf
 param(  [parameter( ValueFromPipeLineByPropertyName=$true )]                [string]    $systemId,
         [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )]     [string]    $id,
                                                                             [boolean]   $WhatIf = $false
-     )
+    )
 process
     {   if ( -not $PSBoundParameters.ContainsKey('SystemId' ) )
                 {   write-verbose "No SystemID Given, running all SystemIDs"
@@ -272,14 +270,13 @@ function Invoke-DSCCControllerLocate
 .LINK
 #>   
 [CmdletBinding()]
-param(  [parameter(mandatory)][string]    $SystemId, 
-        [parameter(mandatory)][string]    $NodeId,
-        [parameter(mandatory)][boolean]   $Locate,
-                              [switch]    $WhatIf
-     )
+param(  [parameter(mandatory)]  [string]    $SystemId, 
+        [parameter(mandatory)]  [string]    $NodeId,
+        [parameter(mandatory)]  [boolean]   $Locate,
+                                [switch]    $WhatIf
+    )
 process
-    {   $MyBody = @{ locate = $Locate
-                   }
+    {   $MyBody = @{ locate = $Locate }
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         if ($DeviceType -eq 'Device-Type2')  
                 {   Write-warning "This command only works on Device-Type1 which include 3par/Primera/Alletra9K devices"
@@ -315,12 +312,12 @@ function Invoke-DSCCControllerLocatePCBM
 .LINK
 #>   
 [CmdletBinding()]
-param(  [parameter(mandatory)][string]    $SystemId, 
-        [parameter(mandatory)][string]    $NodeId,
-        [parameter(mandatory)][string]    $PowerId,
-        [parameter(mandatory)][boolean]   $Locate,
-                              [switch]    $WhatIf
-     )
+param(  [parameter(mandatory)]  [string]    $SystemId, 
+        [parameter(mandatory)]  [string]    $NodeId,
+        [parameter(mandatory)]  [string]    $PowerId,
+        [parameter(mandatory)]  [boolean]   $Locate,
+                                [switch]    $WhatIf
+    )
 process
     {   $MyBody = ( @{ locate = $Locate } | convertto-json )
         if ( $DeviceType -eq 'Device-Type2' )   { Write-warning "This command only works on Device-Type1 which include 3par/Primera/Alletra9K devices"; return }
