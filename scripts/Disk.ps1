@@ -1,15 +1,12 @@
 <#
 .SYNOPSIS
-    Returns the HPE DSSC DOM Disks for a specific storage system     
+    Returns disk objects from HPE DSSC Data Ops Manager for a specific storage system.
 .DESCRIPTION
-    Returns the HPE DSSC DOM Disks for a specific storage system 
-.PARAMETER StorageSystemID
+    Returns disk objects from HPE DSSC Data Ops Manager for a specific storage system.
+
+    You must be connected to HPE GreenLake via a valid account.
+.PARAMETER SystemID
     A single Storage System ID is specified and required, the pools defined will be returned unless a specific Disk ID is requested.
-.PARAMETER DiskID
-    If a single Storage System Disk ID is specified, only that Disk will be returned.
-.PARAMETER WhatIf
-    The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
-    This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 .EXAMPLE
     PS:> Get-DSCCStorageSystem -DeviceType device-type1 | Get-DSCCdisk
 
@@ -50,7 +47,7 @@
 .EXAMPLE
     PS:> Get-DSCCDisk -SystemId 000849204632ec0d70000000000000000000000001 -WhatIf
 
-    WARNING: You have selected the What-IF option, so the call will note be made to the array,
+    WARNING: You have selected the WhatIf option, so the call will note be made to the array,
     instead you will see a preview of the RestAPI call
 
     The URI for this call will be
@@ -68,7 +65,7 @@ function Get-DsccDisk {
     [CmdletBinding(SupportsShouldProcess)]
     param (
         [parameter(ValueFromPipeLineByPropertyName)]
-        [alias('id')]                                              
+        [alias('id')]
         [string[]]$SystemId = ((Get-DSCCStorageSystem).Id)
     )
     begin {
