@@ -1,5 +1,3 @@
-function Get-DSCCDisk
-{
 <#
 .SYNOPSIS
     Returns the HPE DSSC DOM Disks for a specific storage system     
@@ -65,46 +63,38 @@ function Get-DSCCDisk
     The Body of this call will be:
         "No Body"
 .LINK
-#>   
-[CmdletBinding()]
-param(  [parameter( ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
-                                                                            [string]    $SystemId,
-                                                                            [boolean]   $WhatIf = $false
-     )
-process
-    {   if ( -not $PSBoundParameters.ContainsKey('SystemId' ) )
-                {   write-verbose "No SystemID Given, running all SystemIDs"
-                    $ReturnCol=@()
-                    foreach( $Sys in Get-DSCCStorageSystem )
-                        {   write-verbose "Walking Through Multiple Systems"
-                            If ( ($Sys).Id )
-                                {   write-verbose "Found a system with a System.id"
-                                    $ReturnCol += ( Get-DSCCDisk -SystemId ($Sys).Id -WhatIf $WhatIf )
-                                }
-                        }
-                    write-verbose "Returning the Multiple System Id Certificates."
-                    return $ReturnCol
-                }
-            else 
-                {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-                    if ( $DeviceType )
-                            {   switch ( $DeviceType )
-                                    {   'device-type2'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/disks'
-                                                            $SysColOnly = invoke-DSCCrestmethod -uriadd $MyAdd -method Get -whatifBoolean $WhatIf
-                                                            return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Disk.Combined" )          
-                                                        }
-                                        'device-type1'  {   $ReturnData = @()
-                                                            foreach ( $Shelfid in ( Get-DSCCShelf -systemId $SystemID ) )
-                                                                {   $Shelfid = $Shelfid.Id
-                                                                    $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/enclosures/' + $Shelfid +'/enclosure-disks'
-                                                                    $SysColOnly = invoke-DSCCrestmethod -uriAdd $MyAdd  -method Get -whatifBoolean $WhatIf
-                                                                    $ReturnData += Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Disk.Combined"         
-                                                                } 
-                                                            return $ReturnData
-                                                        }
-                                    }  
-                            }
-                    return
-                }
+#> 
+function Get-DsccDisk {  
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [parameter(ValueFromPipeLineByPropertyName)]
+        [alias('id')]                                              
+        [string[]]$SystemId = ((Get-DSCCStorageSystem).Id)
+    )
+    begin {
+        Write-Verbose 'Executing Get-DsccDisk'
     }
-}
+    process {
+        foreach ($ThisId in $SystemId) {
+            $DeviceType = (Find-DSCCDeviceTypeFromStorageSystemID -SystemId $ThisId)
+            if (-not $DeviceType) {
+                return
+            }
+            elseif ($DeviceType -eq 'device-type1') {
+                foreach ( $ShelfId in ((Get-DSCCShelf -SystemId $ThisId).Id)) {
+                    $UriAdd = "storage-systems/$DeviceType/$ThisId/enclosures/$ShelfId/enclosure-disks"
+                    $RawObject = Invoke-DsccRestMethod -uriAdd $UriAdd  -Method Get -WhatIf:$WhatIfPreference
+                    Invoke-RepackageObjectWithType -RawObject $RawObject -ObjectName 'Disk.Combined'
+                }
+            }
+            elseif ($DeviceType -eq 'device-type2') {
+                $UriAdd = "storage-systems/$DeviceType/$ThisId/disks"
+                $RawObject = Invoke-DsccRestMethod -uriadd $UriAdd -Method Get -WhatIf:$WhatIfPreference
+                Invoke-RepackageObjectWithType -RawObject $RawObject -ObjectName 'Disk.Combined'
+            }
+            else {
+                Write-Error "Unsupported device type found for system $ThisId"
+            }
+        } #end foreach
+    } #end process
+} #end Get-DsccDisk
