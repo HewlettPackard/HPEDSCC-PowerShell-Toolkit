@@ -1,67 +1,37 @@
 <#
 .SYNOPSIS
-    Returns disk objects from HPE DSSC Data Ops Manager for a specific storage system.
+    Returns disk objects from HPE Data Services Cloud Console (DSCC), Data Ops Manager for a specific storage system.
 .DESCRIPTION
-    Returns disk objects from HPE DSSC Data Ops Manager for a specific storage system.
-
+    Returns disk objects from HPE Data Services Cloud Console (DSCC), Data Ops Manager for a specific storage system.
     You must be connected to HPE GreenLake via a valid account.
 .PARAMETER SystemID
-    A single Storage System ID is specified and required, the pools defined will be returned unless a specific Disk ID is requested.
+    Accepts one or more storage system IDs. Disks from all storage systems associated with the current HPE GreenLafe account
+    will be displayed if no system id is specified. 
 .EXAMPLE
     PS:> Get-DSCCStorageSystem -DeviceType device-type1 | Get-DSCCdisk
 
-    id                               name   wwn              displayName                           systemId   encosureId                       enclosureName enclosureType
-    --                               ----   ---              -----------                           --------   ----------                       ------------- -------------
-    898333cdcb23f3b28640ec056ebe72e6 0:20:0 002538F401005192 Drive Enclosure Disk 0.SIDE_NONE.20.0 2M2042059T 0929bb1a282fc6ea8d81549e77dca70c cage0         ENCLOSURE_DCN5
-    fcae935fdd39e38dfc10e57789a03393 0:19:0 002538F4010051A0 Drive Enclosure Disk 0.SIDE_NONE.19.0 2M2042059T 0929bb1a282fc6ea8d81549e77dca70c cage0         ENCLOSURE_DCN5
-    5906dadf09f9a84c1a74a14511301029 0:17:0 002538F401005197 Drive Enclosure Disk 0.SIDE_NONE.17.0 2M2042059T 0929bb1a282fc6ea8d81549e77dca70c cage0         ENCLOSURE_DCN5
-    4e8a78e143f218deff00449347d6a2bb 0:19:0 002538F40100518A Drive Enclosure Disk 0.SIDE_NONE.19.0 2M2042059V 269fe18d901c8173d70697a7aff46d7c cage0         ENCLOSURE_DCN5
-    61661c558978b3d87df3f381a2b98fa6 0:17:0 002538F401005173 Drive Enclosure Disk 0.SIDE_NONE.17.0 2M2042059V 269fe18d901c8173d70697a7aff46d7c cage0         ENCLOSURE_DCN5
-.EXAMPLE
+    This command displays the disks from all storage systems that are device type 1 (HPE Alletra 9000, HPE Primera and HPE 3PAR)
+ .EXAMPLE
     PS:> Get-DSCCStorageSystem -DeviceType device-type2 | Get-DSCCdisk
 
-    id                                         model                      serial             bank slot arrayId                                    arrayName            shelfLocation shelfSerial
-    --                                         -----                      ------             ---- ---- -------                                    ---------            ------------- -----------
-    2c06b878a5a008ec630001000000000b0000000b00 INTEL SSDSC2BB480G7        PHDV804403D9480BGN 0    11   0906b878a5a008ec63000000000000000000000001 TMEHOU-Pod3-Nimble   B.0           AF-204952
-    2c06b878a5a008ec630001000000000b0000001400 INTEL SSDSC2BB480G7        PHDV804403F0480BGN 0    20   0906b878a5a008ec63000000000000000000000001 TMEHOU-Pod3-Nimble   B.0           AF-204952
-    2c06b878a5a008ec630001000000000b0000001000 INTEL SSDSC2BB480G7        PHDV80440277480BGN 0    16   0906b878a5a008ec63000000000000000000000001 TMEHOU-Pod3-Nimble   B.0           AF-204952
-    2c06b878a5a008ec630001000000000b0000000500 INTEL SSDSC2BB480G7        PHDV804403AU480BGN 0    5    0906b878a5a008ec63000000000000000000000001 TMEHOU-Pod3-Nimble   B.0           AF-204952
-    2c06b878a5a008ec630001000000000b0000000800 INTEL SSDSC2BB480G7        PHDV804404FZ480BGN 0    8    0906b878a5a008ec63000000000000000000000001 TMEHOU-Pod3-Nimble   B.0           AF-204952
-    2c06b878a5a008ec630001000000000b0000000900 INTEL SSDSC2BB480G7        PHDV804401DE480BGN 0    9    0906b878a5a008ec63000000000000000000000001 TMEHOU-Pod3-Nimble   B.0           AF-204952
+    This command displays the disks from all storage systems that are device type 1 (HPE Alletra 6000 and 5000)
 .EXAMPLE
     PS:> Get-DSCCDisk -SystemId 2M2042059T
 
-    id                               name   wwn              displayName                           systemId   encosureId                       enclosureName enclosureType
-    --                               ----   ---              -----------                           --------   ----------                       ------------- -------------
-    898333cdcb23f3b28640ec056ebe72e6 0:20:0 002538F401005192 Drive Enclosure Disk 0.SIDE_NONE.20.0 2M2042059T 0929bb1a282fc6ea8d81549e77dca70c cage0         ENCLOSURE_DCN5
-    25e48e6ce009ec2687c3d421bb951605 0:21:0 002538F40100519C Drive Enclosure Disk 0.SIDE_NONE.21.0 2M2042059T 0929bb1a282fc6ea8d81549e77dca70c cage0         ENCLOSURE_DCN5
-    6b5ca17ecd0ccc9462bef616130078c5 0:16:0 002538F401005193 Drive Enclosure Disk 0.SIDE_NONE.16.0 2M2042059T 0929bb1a282fc6ea8d81549e77dca70c cage0         ENCLOSURE_DCN5
+    This command displays the disks from the specified device type 1 storage system.
 .EXAMPLE
     PS:> Get-DSCCDisk -SystemId 000849204632ec0d70000000000000000000000001
 
-    id                                         model                      serial         bank slot arrayId                                    arrayName        shelfLocation shelfSerial
-    --                                         -----                      ------         ---- ---- -------                                    ---------        ------------- -----------
-    2c0849204632ec0d700001000000000a0000000200 SAMSUNG MZ7LH1T9HMLT-00005 S455NC0NB08330 0    2    090849204632ec0d70000000000000000000000001 TMEHOL-POD2-AF40 A.0           AF-226165
-    2c0849204632ec0d700001000000000a0000000900 SAMSUNG MZ7LH1T9HMLT-00005 S455NC0NB08340 0    9    090849204632ec0d70000000000000000000000001 TMEHOL-POD2-AF40 A.0           AF-226165
-    2c0849204632ec0d700001000000000a0000001000 SAMSUNG MZ7LH1T9HMLT-00005 S455NC0NB14060 0    16   090849204632ec0d70000000000000000000000001 TMEHOL-POD2-AF40 A.0           AF-226165
+    This command displays the disks from the specified device type 2 storage system.
 .EXAMPLE
-    PS:> Get-DSCCDisk -SystemId 000849204632ec0d70000000000000000000000001 -WhatIf
+    PS:> Get-DSCCDisk -SystemId 000849204632ec0d70000000000000000000000001 -WhatIf -Verbose
 
-    WARNING: You have selected the WhatIf option, so the call will note be made to the array,
-    instead you will see a preview of the RestAPI call
-
-    The URI for this call will be
-        https://fleetscale-app.qa.cds.hpe.com/api/v1/storage-systems/device-type2/000849204632ec0d70000000000000000000000001/disks
-    The Method of this call will be
-        Get
-    The Header for this call will be :
-        {   "Authorization":  "Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6Inh0UGFCcHI1ZjRieVdGaXNqX0tsV1JiaXVVdyIsInBpLmF0bSI6ImRlejAifQ.eyJjbGllbnRfaWQiOiJmYjA5Yzk1MS03NzNiLTRkNzgtOTI1ZS1kMmUzZTMwZjFhZGMiLCJpc3MiOiJodHRwczovL3Nzby5jb21tb24uY2xvdWQuaHBlLmNvbSIsImF1ZCI6ImV4dGVybmFsX2FwaSIsInN1YiI6ImNocmlzLmxpb25ldHRpQGhwZS5jb20iLCJ1c2VyX2N0eCI6ImZmYzMxMTQ2M2Q4NzExZWNiZGQ1NDI4NjA3ZWUxNzA0IiwiYXV0aF9zb3VyY2UiOiJjY3NfdG9rZW5fbWFuYWdlbWVudCIsInBsYXRmb3JtX2N1c3RvbWVyX2lkIjoiOGZmYzRiN2VlOWQyMTFlYjhjZWU2ZTEzYzA3MWVhMzciLCJpYXQiOjE2Mzg0ODQwNjIsImFwcGxpY2F0aW9uX2luc3RhbmNlX2lkIjoiOTBjYTg5MjMtZjI4YS00OTkxLTg4NmItMTgyOWRhYWU4YWFjIiwiZXhwIjoxNjM4NDkxMjYyfQ.CNDYWJ8Mvsf0Xt9HHrxPX4MXg4OooTzxdB69PdFniFzC51BUOkJpymkK_np4XkOeeJdLePSY95taxxtZb7OapQZAY4zH2giYapoNNnaGCUS_2x9P_yOrAhSeE1068iSt-6Gt5r7HUm0tU2qAiG7psmVPnHSOoW0GqAgYsR2Q6HBtrolhQ2K_luYenNwJZtU8YaoAMev5LBl84gScFKyLHzJYb5QcQfd1CC_IN1iLhsupadW6eySVgU6NRw9enbkse-sW33KunV2ZDRxSQQ5EzrD3x4Fef4hDangyQ5iX4AW5tsJf5HXIrWDGpBItrkZX_wdujUA7ZF9XTzksX7pzZg"
-        }
-    The Body of this call will be:
-        "No Body"
+    This command displays information about the REST call itself rather than the data from the array(s), consisting of
+    the URI, header, method and body of the call to the API. This is useful for troubleshooting.
 .LINK
+    https://github.com/HewlettPackard/HPEDSCC-PowerShell-Toolkit
 #> 
-function Get-DsccDisk {  
+function Get-DsccDisk {
     [CmdletBinding(SupportsShouldProcess)]
     param (
         [parameter(ValueFromPipeLineByPropertyName)]
