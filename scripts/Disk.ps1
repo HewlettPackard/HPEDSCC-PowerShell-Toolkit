@@ -1,20 +1,23 @@
 <#
 .SYNOPSIS
-    Returns disk objects from HPE Data Services Cloud Console (DSCC), Data Ops Manager for a specific storage system.
+    Returns disks for storage systems accessible to an instance of Data Storage Cloud Console (DSCC) Data Ops Manager.
 .DESCRIPTION
-    Returns disk objects from HPE Data Services Cloud Console (DSCC), Data Ops Manager for a specific storage system.
-    You must be connected to HPE GreenLake via a valid account.
+    Returns disks for storage systems accessible to an instance of Data Storage Cloud Console (DSCC) Data Ops Manager.
+    You must be logged in with valid credentials to a HPE GreenLake account.
 .PARAMETER SystemID
-    Accepts one or more storage system IDs. Disks from all storage systems associated with the current HPE GreenLafe account
-    will be displayed if no system id is specified.
+    Accepts one or more System IDs if specified, or shows disks from all storage systems accessible to this 
+    HPE GreenLake account.
+.PARAMETER SystemName
+    Accepts one or more System names if specified, or shows disks from all storage systems accessible to this 
+    HPE GreenLake account.
 .PARAMETER DiskId
     Accepts one or more disk IDs.
 .EXAMPLE
-    PS:> Get-DsccStorageSystem -DeviceType device-type1 | Get-Dsccdisk
+    PS:> Get-DsccStorageSystem -DeviceType device-type1 | Get-DsccDisk
 
     Display the disks from all storage systems that are device type 1 (HPE Alletra 9000, HPE Primera and HPE 3PAR)
  .EXAMPLE
-    PS:> Get-DsccStorageSystem -DeviceType device-type2 | Get-Dsccdisk
+    PS:> Get-DsccStorageSystem -DeviceType device-type2 | Get-DsccDisk
 
     Display the disks from all storage systems that are device type 1 (HPE Alletra 6000 and 5000)
 .EXAMPLE
@@ -31,27 +34,34 @@
     Display information about the REST call itself rather than the data from the array(s), consisting of
     the URI, header, method and body of the call to the API. This is useful for troubleshooting.
 .EXAMPLE
-    PS:> Get-DsccDisk -DiskId ''89cc60ca6bc53785aa9ffc07f62eed7b','ec6b431eaec10bc32f1aa5aab67faa93'
+    PS:> Get-DsccDisk -DiskId '89cc60ca6bc53785aa9ffc07f62eed7b','ec6b431eaec10bc32f1aa5aab67faa93'
 
     Display information about the specified disk or disks. 
 .LINK
     https://github.com/HewlettPackard/HPEDSCC-PowerShell-Toolkit
 #> 
 function Get-DsccDisk {
-    [CmdletBinding(SupportsShouldProcess)]
+    [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'BySystemId')]
     param (
-        [parameter(ValueFromPipeLineByPropertyName)]
+        [Parameter(ValueFromPipeLineByPropertyName, ParameterSetName = 'BySystemId')]
         [alias('id')]
-        [string[]]$SystemId = ((Get-DSCCStorageSystem).Id),
+        [string[]]$SystemId,
+
+        [Parameter(ParameterSetName = 'BySystemName')]
+        [alias('name')]
+        [string[]]$SystemName,
 
         [string[]]$DiskId
     )
     begin {
         Write-Verbose 'Executing Get-DsccDisk'
+        if ($PSBoundParameters.ContainsKey('SystemName')) {
+            $SystemId = Get-DsccSystemIdFromName -SystemName $SystemName
+        }
     }
     process {
         foreach ($ThisId in $SystemId) {
-            $DeviceType = (Find-DSCCDeviceTypeFromStorageSystemID -SystemId $ThisId)
+            $DeviceType = ($DsccStorageSystem | Where-Object Id -EQ $ThisId).DeviceType
             if (-not $DeviceType) {
                 return
             }
