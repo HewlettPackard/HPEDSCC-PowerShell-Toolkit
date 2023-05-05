@@ -87,22 +87,23 @@ function Get-DsccStorageSystem {
 
     end {
         # If no parameters are specified, take the opportunity to update the Global variable 
-        # Note: -Verbose and -WhatIf do not affect this, if specified.
-        if (-not $PSBoundParameters.ContainsKey('SystemId') -and -not $PSBoundParameters.ContainsKey('DeviceType')) {
-            $GlobalSystem = @{}
-            foreach ($ThisSystem in $SystemCollection) {
-                $GlobalSystem += @{
-                    Name       = $ThisSystem.Name
-                    Id         = $ThisSystem.Id
-                    DeviceType = ([regex]::Matches($ThisSystem.resourceUri, 'device-type\d')).Value
-                }
+        # Note: -Verbose does not affect this, if specified.
+        foreach ($ExcludeParam in $('SystemId', 'DeviceType', 'WhatIf')) {
+            if ($ExcludeParam -in $PSBoundParameters.Keys) {
+                Write-Output 'Global Variable $DsccStorageSystem not updated'
+                return
             }
-            $Global:DsccStorageSystem = [pscustomobject]$GlobalSystem
-            Write-Verbose 'Global Variable $DsccStorageSystem updated'
         }
-        else {
-            Write-Verbose 'Global Variable $DsccStorageSystem not updated'
+        $GlobalSystem = @{}
+        foreach ($ThisSystem in $SystemCollection) {
+            $GlobalSystem += @{
+                Name       = $ThisSystem.Name
+                Id         = $ThisSystem.Id
+                DeviceType = ([regex]::Matches($ThisSystem.resourceUri, 'device-type\d')).Value
+            }
         }
+        $Global:DsccStorageSystem = [pscustomobject]$GlobalSystem
+        Write-Verbose 'Global Variable $DsccStorageSystem updated'
     }
 } #end Get-DsccStorageSystem
 

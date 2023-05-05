@@ -45,7 +45,7 @@ function Get-DsccDisk {
     param (
         [Parameter(ValueFromPipeLineByPropertyName, ParameterSetName = 'BySystemId')]
         [alias('id')]
-        [string[]]$SystemId,
+        [string[]]$SystemId = (($DsccStorageSystem).Id),
 
         [Parameter(ParameterSetName = 'BySystemName')]
         [alias('name')]
@@ -56,7 +56,7 @@ function Get-DsccDisk {
     begin {
         Write-Verbose 'Executing Get-DsccDisk'
         if ($PSBoundParameters.ContainsKey('SystemName')) {
-            $SystemId = Get-DsccSystemIdFromName -SystemName $SystemName
+            $SystemId = Resolve-DsccSystemId -SystemName $SystemName
         }
     }
     process {
@@ -84,7 +84,8 @@ function Get-DsccDisk {
                 Invoke-RepackageObjectWithType -RawObject $RawObject -ObjectName 'Disk.Combined'
             }
             else {
-                Write-Error "Unsupported device type found for system $ThisId"
+                # Additional device types are coming
+                Write-Error "Device type of $DeviceType (system $ThisId) is not currently supported"
             }
         } #end foreach
     } #end process

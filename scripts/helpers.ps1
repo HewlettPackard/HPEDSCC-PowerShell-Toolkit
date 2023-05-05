@@ -167,7 +167,7 @@
                 }
                 $ReturnData2 = $ReturnData | ConvertTo-Json | ConvertFrom-Json
                 $Global:AuthToken = Invoke-RepackageObjectWithType -RawObject $ReturnData2 -ObjectName 'AccessToken'
-                return $AuthToken 
+                $AuthToken 
             } 
             else {
                 if (-not $whatifGreenLakeType) {
@@ -181,6 +181,8 @@
         else {
             Write-Warning 'The request for a Token was not successful using the supplied Client-ID and CLient-Secret.'            
         }
+        Write-Verbose 'Initialize $DsccStorageSystem'
+        $null = Get-DsccStorageSystem
     }
 }
 function Find-DSCCDeviceTypeFromStorageSystemID {
@@ -194,12 +196,12 @@ function Find-DSCCDeviceTypeFromStorageSystemID {
             Write-Verbose 'Empty String sent in as a SystemId'
             Return
         }
-        if ( ( Get-DSCCStorageSystem -SystemId $SystemId -DeviceType Device-Type1 ) ) {
+        if ( ( Get-DsccStorageSystem -SystemId $SystemId -DeviceType Device-Type1 ) ) {
             Write-Verbose 'The DeviceType Detected was Device-Type1'
             return 'device-type1'
         } 
         else {
-            if ( ( Get-DSCCStorageSystem -SystemId $SystemId -DeviceType Device-Type2 ) ) {
+            if ( ( Get-DsccStorageSystem -SystemId $SystemId -DeviceType Device-Type2 ) ) {
                 Write-Verbose 'The DeviceType detected was Device-Type2'
                 return 'device-type2'
             }
@@ -342,7 +344,10 @@ function Invoke-RepackageObjectWithType {
     }
 }
 
-function Get-DsccSystemIdFromName {
+# Helper function for most exported functions. This function returns the system ID(s) for the specified system names.
+# depends on the global variable called $DsccStorageSystem to be present in the current session. This variable is 
+# created and maintained by Get-DsccStorageSystem.
+function Resolve-DsccSystemId {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]
