@@ -1,8 +1,8 @@
 <#
 .SYNOPSIS
-    Returns disks for storage systems accessible to an instance of Data Storage Cloud Console (DSCC) Data Ops Manager.
+    Returns disks for storage systems accessible to an instance of Data Storage Cloud Console (DSCC).
 .DESCRIPTION
-    Returns disks for storage systems accessible to an instance of Data Storage Cloud Console (DSCC) Data Ops Manager.
+    Returns disks for storage systems accessible to an instance of Data Storage Cloud Console (DSCC).
     You must be logged in with valid credentials to a HPE GreenLake account.
 .PARAMETER SystemID
     Accepts one or more System IDs if specified, or shows disks from all storage systems accessible to this 
@@ -66,22 +66,22 @@ function Get-DsccDisk {
                 return
             }
             elseif ($DeviceType -eq 'device-type1') {
-                foreach ( $ShelfId in ((Get-DSCCShelf -SystemId $ThisId).Id)) {
+                foreach ( $ShelfId in ((Get-DsccShelf -SystemId $ThisId).Id)) {
                     $UriAdd = "storage-systems/$DeviceType/$ThisId/enclosures/$ShelfId/enclosure-disks"
-                    $RawObject = Invoke-DsccRestMethod -uriAdd $UriAdd  -Method Get -WhatIf:$WhatIfPreference
+                    $Response = Invoke-DsccRestMethod -UriAdd $UriAdd  -Method Get -WhatIf:$WhatIfPreference
                     if ($PSBoundParameters.ContainsKey('DiskId')) {
-                        $RawObject = $RawObject | Where-Object id -In $DiskId
+                        $Response = $Response | Where-Object id -In $DiskId
                     }
-                    Invoke-RepackageObjectWithType -RawObject $RawObject -ObjectName 'Disk.Combined'
+                    Invoke-RepackageObjectWithType -RawObject $Response -ObjectName 'Disk.Combined'
                 }
             }
             elseif ($DeviceType -eq 'device-type2') {
                 $UriAdd = "storage-systems/$DeviceType/$ThisId/disks"
-                $RawObject = Invoke-DsccRestMethod -uriadd $UriAdd -Method Get -WhatIf:$WhatIfPreference
+                $Response = Invoke-DsccRestMethod -UriAdd $UriAdd -Method Get -WhatIf:$WhatIfPreference
                 if ($PSBoundParameters.ContainsKey('DiskId')) {
-                    $RawObject = $RawObject | Where-Object id -In $DiskId
+                    $Response = $Response | Where-Object id -In $DiskId
                 }
-                Invoke-RepackageObjectWithType -RawObject $RawObject -ObjectName 'Disk.Combined'
+                Invoke-RepackageObjectWithType -RawObject $Response -ObjectName 'Disk.Combined'
             }
             else {
                 # Additional device types are coming

@@ -1,8 +1,8 @@
 <#
 .SYNOPSIS
-    Returns the storage systems accessible to an instance of Data Storage Cloud Console (DSCC) Data Ops Manager.
+    Returns the storage systems accessible to an instance of HPE GreenLake Data Storage Cloud Console (DSCC). 
 .DESCRIPTION
-    Returns the storage systems accessible to an instance of Data Storage Cloud Console (DSCC) Data Ops Manager.
+    Returns the storage systems accessible to an instance of HPE GreenLake Data Storage Cloud Console (DSCC).
     You must be logged in with valid credentials to a HPE GreenLake account.
 .PARAMETER SystemID
     Accepts one or more System IDs if specified, or shows all storage systems accessible to this HPE GreenLake account.
@@ -75,11 +75,11 @@ function Get-DsccStorageSystem {
         $SystemCollection = @()
         foreach ( $ThisDeviceType in $DevType ) {
             $UriAdd = "storage-systems/$ThisDeviceType"
-            $RawObject = Invoke-DsccRestMethod -UriAdd $UriAdd -method Get -WhatIf:$WhatIfPreference
+            $Response = Invoke-DsccRestMethod -UriAdd $UriAdd -method Get -WhatIf:$WhatIfPreference
             if ($PSBoundParameters.ContainsKey('SystemId') -or $PSBoundParameters.ContainsKey('SystemName')) {
-                $RawObject = $RawObject | Where-Object id -In $SystemId
+                $Response = $Response | Where-Object id -In $SystemId
             }
-            $Returndata = Invoke-RepackageObjectWithType -RawObject $RawObject -ObjectName 'StorageSystem.Combined'
+            $Returndata = Invoke-RepackageObjectWithType -RawObject $Response -ObjectName 'StorageSystem.Combined'
             $SystemCollection += $Returndata    
         }
         Write-Output $SystemCollection
@@ -100,6 +100,7 @@ function Get-DsccStorageSystem {
                 Name       = $ThisSystem.Name
                 Id         = $ThisSystem.Id
                 DeviceType = ([regex]::Matches($ThisSystem.resourceUri, 'device-type\d')).Value
+                Model      = $ThisSystem.Model
             }
         }
         $Global:DsccStorageSystem = [pscustomobject]$GlobalSystem

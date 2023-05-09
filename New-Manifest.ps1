@@ -1,15 +1,13 @@
 ﻿#
 # Create a new Manifest file for HPE GreenLake Data Storage Cloud Console Module
 #
-$ModuleVersion = '1.0.1'
+$ModuleVersion = '1.0.2'
 $ExportingFunctions = @(
-    'Connect-DSCC',
+    'Connect-Dscc',
     'Get-DSCCAuditEvent',
     'Get-DSCCAccessControl',
     'Get-DSCCResourceType',
-    'Get-DSCCController',
-    'Get-DSCCControllerPerf',
-    'Get-DSCCControllerSubComponent',
+    'Get-DsccController',
     'Invoke-DSCCControllerLocatePCBM',
     'Get-DSCCAccessControlRecord',
     'Remove-DSCCAccessControlRecord',

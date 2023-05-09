@@ -1,258 +1,209 @@
-function Get-DSCCController
-{
+
 <#
 .SYNOPSIS
-    Returns the HPE DSSC DOM Storage Systems Controllers    
+    Returns controllers for storage systems accessible to an instance of Data Storage Cloud Console (DSCC).
 .DESCRIPTION
-    Returns the HPE DSSC DOM Storage Systems Controllers
-.PARAMETER StorageSystemID
-    A single Storage System ID is specified and required, the events will be returned unless a specific EventId is requested.
-.PARAMETER DeviceType
-    This can either be set to Device-Type1 or Device-Type2, where Device-Type1 refers to 3PAR/Primera/Alletra9K, while Device-Type2 refers to NimbleStorage/Alletra6K.
-.PARAMETER WhatIf
-    The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
-    This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
-.EXAMPLE
-    PS:> Get-HPEDSCCDOMController -StorageSystemId 2M202205GG -DeviceType device-type1
+    Returns disks for storage systems accessible to an instance of Data Storage Cloud Console (DSCC).
+    
+    Optionally, for device-Type2 devices only (HPE Alletra 9000, HPE Primera and HPE 3PAR), the command can return 
+    component information about each controller passed in, such as CPU, memory, power supply and battery.
 
+    Optionally, again for device-Type2 devices only, the command can return performance metrics for each controller
+    passed in. If both -Component and -Performance are specified, -Component takes precedence. 
     
+    You must be logged in with valid credentials to a HPE GreenLake account.
+.PARAMETER SystemId
+    Accepts one or more System IDs if specified, or shows disks from all storage systems accessible to this 
+    HPE GreenLake account.
+.PARAMETER SystemName
+    Accepts one or more System names if specified, or shows disks from all storage systems accessible to this 
+    HPE GreenLake account.
+.PARAMETER ControllerId
+    Accepts a controller ID.
+.PARAMETER Component
+    Accepts a component name for Device-Type2 devices only.  Display component information rather than controllers.
+.PARAMETER Performance
+    Display storage system controller performance information rather than controllers.
 .EXAMPLE
-    PS:> Get-DSCCController -StorageSystemId 2M202205GG -DeviceType device-type1 -ControllerID 3ff8fa3d971f16948fd9cff800775b9d -whatif
-    
-    
+    PS:> Get-DsccController
+
+    Display all controllers for all storage systems accessible from this GreenLake account
 .EXAMPLE
-    PS:> Get-DSCCController -StorageSystemId 2M202205GG -DeviceType device-type1 | format-table
+    PS:> Get-DsccController -SystemId 2M202205GG
+
+    Display all controllers on the specified storage system.
+.EXAMPLE
+    PS:> Get-DsccController -SystemId 2M202205GG -ControllerID 3ff8fa3d971f16948fd9cff800775b9d
+    
+    Display the specified controller
+.EXAMPLE
+    PS:> Get-DsccController -ControllerID 3ff8fa3d971f16948fd9cff800775b9d
+
+    This also displays the specified controller, but is less efficient, because it has to iterate through every
+    storage system.
+.EXAMPLE
+    PS:> Get-DsccController -SystemId 2M202205GG -Component Battery
+
+    Display batteries associated with all controllers on the specified storage system
+.EXAMPLE
+    PS:> Get-DsccController -SystemId 2M202205GG -ControllerID 3ff8fa3d971f16948fd9cff800775b9d -Component PowerSupply
+
+    Display the power supplies associated with the specified storage system controller.
+.EXAMPLE
+    PS:> Get-DsccController -SystemId 2M202205GG -Performance
+
+    Display the performance metrics for each controller on the specified storage system.
+.EXAMPLE
+    PS:> Get-DsccController -SystemId 2M202205GG -WhatIf
+
+    Display information about the REST call itself rather than the data from the array(s), consisting of
+    the URI, header, method and body of the call to the API. This is useful for troubleshooting.
 .LINK
-#>   
-[CmdletBinding()]
-param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
-                                                                            [string]    $SystemId,
-                                                                            [string]    $ControllerId,
-                                                                            [boolean]   $WhatIf = $false
+    https://github.com/HewlettPackard/HPEDSCC-PowerShell-Toolkit
+#>
+function Get-DSCCController {
+    [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'BySystemId')]
+    param (
+        [Parameter(ParameterSetName = 'BySystemId')]
+        [alias('id')]
+        [string[]]$SystemId = (($DsccStorageSystem).Id),
+
+        [Parameter(ParameterSetName = 'BySystemName')]
+        [alias('name')]
+        [string[]]$SystemName,
+
+        [string]$ControllerId,
+
+        [validateset('Card', 'CPU', 'Drive', 'MicroControllerUnit', 'Memory', 'PowerSupply', 'Battery')]
+        [string]$Component,
+
+        [switch]$Performance
     )
-process
-    {   if ( -not $PSBoundParameters.ContainsKey('SystemId' ) )
-                {   write-verbose "No SystemID Given, running all SystemIDs"
-                    $ReturnCol=@()
-                    foreach( $Sys in Get-DSCCStorageSystem )
-                        {   write-verbose "Walking Through Multiple Systems"
-                            If ( ($Sys).Id )
-                                    {   write-verbose "Found a system with a System.id"
-                                        $ReturnCol += Get-DSCCController -SystemId ($Sys).Id -WhatIf $WhatIf
-                                    }
-                        }
-                    write-verbose "Returning the Multiple System Id."
-                    return $ReturnCol
-                }
-            else 
-                {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-                    switch($DeviceType)
-                        {   'Device-Type1'  { $ControllerWord = '/nodes'        }
-                            'Device-Type2'  { $ControllerWord = '/controllers'  }
-                        }    
-                    $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + $ControllerWord
-                    if ( $ControllerId )
-                        {   $MyURI = $MyURI + '/' + $ControllerId 
-                        }
-                    $SysColOnly = invoke-DSCCrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf
-                    return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Controller.$DeviceType" )
-                }
-    }       
-} 
-function Get-DSCCControllerSubComponent
-{
-<#
-.SYNOPSIS
-    Returns the HPE DSSC DOM Storage Systems Controllers    
-.DESCRIPTION
-    Returns the HPE DSSC DOM Storage Systems Controllers
-.PARAMETER StorageSystemID
-    A single Storage System ID is specified and required, the events will be returned unless a specific EventId is requested.
-.PARAMETER DeviceType
-    This can either be set to Device-Type1 or Device-Type2, where Device-Type1 refers to 3PAR/Primera/Alletra9K, while Device-Type2 refers to NimbleStorage/Alletra6K.
-.PARAMETER WhatIf
-    The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
-    This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
-.EXAMPLE
-    PS:> Get-DSCCControllerSubComponent -SystemId 2M2019018G -NodeId a8e846634d139a21a1a9dd635302e19f -SubComponent batteries
-
-    chargeLevel     : 98
-    expirationDate  : @{ms=1778135508000; tz=America/Chicago}
-    fullyCharged    : True
-    nodeBatteryId   : 0
-    life            : 10
-    locateEnabled   : False
-    manufacturing   : @{assemblyRev=--; checkSum=--; hpeModelName=--; saleablePartNumber=--; saleableSerialNumber=--; sparePartNumber=; serialNumber=31323633; model=800-200012.02; manufacturer=CHN}
-    maxLife         : 11
-    name            : Battery
-    powerSupplyId   : 0
-    primaryNodeId   : 0
-    safeToRemove    : True
-    secondaryNodeId : 0
-    serviceLED      : LED_OFF
-    state           : @{detailed=; overall=STATE_NORMAL}
-    testInProgress  : False
-    timeToCharge    : -1
-    domain          :
-    resourceUri     : /api/v1/storage-systems/device-type1/2M2019018G/nodes/0/nodes-batteries/b1a3f62c608af59ec2dfd2eb9c919d09
-    displayname     : Controller Node - 0,0, Power Supply - 0, Battery - 0
-    faultLED        : LED_UNKNOWN
-    statusLED       : LED_UNKNOWN
-    dischargeLED    : LED_OFF
-    id              : b1a3f62c608af59ec2dfd2eb9c919d09
-    systemId        : 2M2019018G
-    associatedLinks : {@{type=systems; resourceUri=/api/v1/storage-systems/device-type1/2M2019018G}, @{type=nodes; resourceUri=/api/v1/storage-systems/device-type1/2M2019018G/nodes/0}}
-    customerId      : 0056b71eefc411eba26862adb877c2d8
-    generation      : 1637284024663
-    type            : node-battery
-.EXAMPLE
-    PS:> Get-DSCCControllerSubComponent -SystemId 2M2019018G -NodeId a8e846634d139a21a1a9dd635302e19f -SubComponent batteries  -WhatIf
-    
-    WARNING: You have selected the What-IF option, so the call will note be made to the array, instead you will see a preview of the RestAPI call
-
-    The URI for this call will be
-        https://scalpha-app.qa.cds.hpe.com/api/v1/storage-systems/device-type1/2M2019018G/nodes/a8e846634d139a21a1a9dd635302e19f/nodes-batteries
-    The Method of this call will be
-        Get
-    The Header for this call will be :
-        {   "Authorization":  "Bearer eyJhVXtNEzKX-Cs...C2dLww8WglRiODredKeRORGKIkesKew"
+    begin {
+        Write-Verbose 'Executing Get-DsccStorageSystem'
+        if ($PSBoundParameters.ContainsKey('SystemName')) {
+            $SystemId = Get-DsccSystemIdFromName -SystemName $SystemName
         }
-    The Body of this call will be:
-    "No Body"
-.LINK
-#>   
-[CmdletBinding()]
-param(  [parameter( ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
-                                                                            [string]    $SystemId,
-                                                                            [string]    $NodeId,
-        [parameter(mandatory)][validateset('cards','cpus','drives','mcus','mems','powers','batteries')]
-                                                                            [string]    $SubComponent,
-                                                                            [boolean]   $WhatIf = $false
-    )
-process
-    {   if ( -not $PSBoundParameters.ContainsKey('SystemId' ) )
-                {   write-verbose "No SystemID Given, running all SystemIDs"
-                    $ReturnCol=@()
-                    foreach( $Sys in Get-DSCCStorageSystem )
-                        {   write-verbose "Walking Through Multiple Systems"
-                            If ( ($Sys).Id )
-                                {   write-verbose "Found a system with a System.id"
-                                    $ReturnCol += Get-DSCCcontrollerSubComponent -SystemId ($Sys).Id -subcomponent $Subcomponent -WhatIf $WhatIf
-                                }
-                        }
-                    write-verbose "Returning the Multiple System Id."
-                    return $ReturnCol
-                }
-            else 
-                {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-                    clear-variable -name ControllerWord -ErrorAction SilentlyContinue
-                    switch($DeviceType)
-                        {   'Device-Type1'  {   $ControllerWord = 'nodes'        }
-                            'Device-Type2'  {   Write-warning "This command only works on Device-Type1 which include 3par/Primera/Alletra9K devices"
-                                                return  
-                                            }
-                            default         {   Write-Warning "No array was detected using the SystemID $SystemId"
-                                                return
-                                            }
-                        }
-                    $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/' + $ControllerWord + '/' + $NodeId + '/node-' + $SubComponent
-                    if ($SubComponent -eq 'batteries' )
-                        {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/' + $ControllerWord + '/' + $NodeId + '/nodes-' + $SubComponent
-                        }
-                    return ( invoke-DSCCrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf )
-                }
-    }       
-} 
-function Get-DSCCControllerPerf
-{
-<#
-.SYNOPSIS
-    Returns the HPE DSSC DOM performance statistics for a specific storage system controller     
-.DESCRIPTION
-    Returns the HPE DSSC DOM performance statistics for a specific storage system controller
-.PARAMETER SystemID
-    A single Storage System ID is specified and required, the pools defined will be returned unless a specific Disk ID is requested.
-.PARAMETER NodeID
-    If a single Storage System Disk ID is specified, only that Disk will be returned.
-.PARAMETER WhatIf
-    The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
-    This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
-.EXAMPLE
-    PS:> Get-DSCCControllerPerf -SystemId 2M2019018G -NodeId a8e846634d139a21a1a9dd635302e19f
-
-    CpuPercentage                                                            cachePercentage                                                         customerId                       requestUri
-    -------------                                                            ---------------                                                         ----------                       ----------
-    @{avgOfLatest=12.671327585505013; avgOf1hour=; avgOf8hours=; avgOf1day=} @{avgOfLatest=69.84595038002811; avgOf1hour=; avgOf8hours=; avgOf1day=} 0056b71eefc411eba26862adb877c2d8 https://scalpha-app....
-.EXAMPLE
-    PS:> Get-DSCCControllerPerf -SystemId 2M2019018G -NodeId a8e846634d139a21a1a9dd635302e19f | convertto-json
-    
-    {   "cpuPercentage":  {     "avgOfLatest":  12.671327585504994,
-                                "avgOf1hour":  null,
-                                "avgOf8hours":  null,
-                                "avgOf1day":  null
-                          },
-        "cachePercentage":  {   "avgOfLatest":  69.84595038002807,
-                                "avgOf1hour":  null,
-                                "avgOf8hours":  null,
-                                "avgOf1day":  null
-                            },
-        "customerId":  "0056b71eefc411eba26862adb877c2d8",
-        "requestUri":  "https://scalpha-app.qa.cds.hpe.com/api/v1/storage-systems/device-type1/2M2019018G/nodes/a8e846634d139a21a1a9dd635302e19f/component-performance-statistics"
     }
-.EXAMPLE
-    PS:> Get-DSCCControllerPerf -SystemId 2M2019018G -NodeId a8e846634d139a21a1a9dd635302e19f -whatif
-    
-    WARNING: You have selected the What-IF option, so the call will note be made to the array,
-    instead you will see a preview of the RestAPI call
+    process {
+        foreach ($ThisId in $SystemId) {
+            $DeviceType = ($DsccStorageSystem | Where-Object Id -EQ $ThisId).DeviceType
+            if (-not $DeviceType) {
+                return
+            }
+            elseif ($DeviceType -eq 'Device-Type1') {
+                $UriAdd = "storage-systems/$DeviceType/$SystemId/nodes"
+            }
+            elseif ($DeviceType -eq 'Device-Type2') {
+                $UriAdd = "storage-systems/$DeviceType/$SystemId/controllers"
+            }
+            else {
+                # Additional device types are coming
+                Write-Error "Device type of $DeviceType (system $ThisId) is not currently supported"
+                continue
+            }
+            if ($PSBoundParameters.ContainsKey('ControllerId')) {
+                $UriAdd += "/$ControllerId"
+            }
+            $Response = Invoke-DsccRestMethod -uriAdd $UriAdd -Method Get -WhatIf:$WhatIfPreference
 
-    The URI for this call will be
-        https://scalpha-app.qa.cds.hpe.com/api/v1/storage-systems/device-type1/2M2019018G/nodes/a8e846634d139a21a1a9dd635302e19f/component-performance-statistics
-    The Method of this call will be
-        Get
-    The Header for this call will be :
-        {   "Authorization":  "Bearer eyJhbGciO...ibJAt31ZZ2VQ"
-        }
-    The Body of this call will be:
-        "No Body"
-.LINK
-#>   
-[CmdletBinding()]
-param(  [parameter( ValueFromPipeLineByPropertyName=$true )]                [string]    $systemId,
-        [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )]     [string]    $id,
-                                                                            [boolean]   $WhatIf = $false
+            # Display output - various object types, depending on specified parameters
+            if (($PSBoundParameters.ContainsKey('Component'))) {
+                # Output specified component
+                foreach ($ThisController in $Response.Id) {
+                    Get-DsccControllerComponent -SystemId $ThisId -ControllerID $ThisController -Component $Component
+                }
+            }
+            elseif (($PSBoundParameters.ContainsKey('Performance'))) {
+                # Output performance metrics. -Component takes precedence - can't use parameter sets.
+                foreach ($ThisController in $Response.Id) {
+                    Get-DSCCControllerPerformance -SystemId $ThisId -ControllerID $ThisController
+                }
+            }
+            else {
+                # Default is to display Controller/Node
+                Invoke-RepackageObjectWithType -RawObject $Response -ObjectName "Controller.$DeviceType"
+            }
+        } #end foreach
+    } #end process
+} #end Get-DsccController
+
+# Helper function for Get-DsccController. Implements the -Component parameter functionality
+function Get-DsccControllerComponent {
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory)]
+        [string]$SystemId,
+
+        [parameter(Mandatory)]
+        [string]$ControllerId,
+
+        [parameter(Mandatory)]
+        [validateset('Card', 'CPU', 'Drive', 'MicroControllerUnit', 'Memory', 'PowerSupply', 'Battery')]
+        [string]$Component
     )
-process
-    {   if ( -not $PSBoundParameters.ContainsKey('SystemId' ) )
-                {   write-verbose "No SystemID Given, running all SystemIDs"
-                    $ReturnCol=@()
-                    foreach( $Sys in Get-DSCCStorageSystem )
-                        {   write-verbose "Walking Through Multiple Systems"
-                            If ( ($Sys).Id )
-                                {   write-verbose "Found a system with a System.id"
-                                    $ReturnCol += Get-DSCCControllerPerf -SystemId ($Sys).Id -WhatIf $WhatIf
-                                }
-                        }
-                    write-verbose "Returning the Multiple System Id."
-                    return $ReturnCol
-                }
-            else 
-                {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $systemId )
-                    if ($DeviceType -eq 'device-type2' )
-                            {   Write-warning "This command only works on Device-Type1 which include 3par/Primera/Alletra9K devices"
-                                return  
-                            }
-                    if ( -not $DeviceType )
-                        {   Write-Warning "No array was detected using the SystemID $systemId"
-                            return
-                        }
-                    $MyAdd = 'storage-systems/device-type1/' + $systemId + '/nodes/' + $id + '/component-performance-statistics'
-                    return ( invoke-DSCCrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf )
-                }
-    }       
+    begin {
+        $ComponentType = @{
+            Card                = 'cards'
+            CPU                 = 'cpus'
+            Drive               = 'drives'
+            MicroControllerUnit = 'mcus'
+            Memory              = 'mems'
+            PowerSupply         = 'powers'
+            Battery             = 'batteries'
+        }
+        $ThisComponent = $ComponentType.$Component
+    }
+    process {
+        $DeviceType = ($DsccStorageSystem | Where-Object Id -EQ $SystemId).DeviceType
+        if ($DeviceType -eq 'Device-Type1') {
+            if ($Component -eq 'Battery' ) {
+                # Bug in the API? This might get fixed in the future
+                $UriAdd = "storage-systems/device-type1/$SystemId/nodes/$ControllerId/nodes-$ThisComponent"
+            }
+            else {
+                # All other components use the same formatted URI.
+                $UriAdd = "storage-systems/device-type1/$SystemId/nodes/$ControllerId/node-$ThisComponent"
+            }
+            Invoke-DsccRestMethod -uriAdd $UriAdd -Method Get
+        }
+        elseif ($DeviceType -eq 'Device-Type2') {
+            Write-Error 'This command supports HPE Alletra 9000, HPE Primera and HPE 3AR devices only'
+        }
+        else {
+            # Additional device types are coming
+            Write-Error "Device type of $DeviceType (system $ThisId) is not currently supported"
+        }
+    }
 }
-function Invoke-DSCCControllerLocate
-{
-<#
+
+#Helper function for Get-DsccController. Implements the -Performance parameter functionality
+function Get-DSCCControllerPerformance {  
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory)]
+        [string]$SystemId,
+
+        [parameter(Mandatory)]
+        [string]$ControllerId
+    )
+    process {
+        $DeviceType = ($DsccStorageSystem | Where-Object Id -EQ $SystemId).DeviceType
+        if ($DeviceType -eq 'Device-Type1') {
+            $UriAdd = "storage-systems/device-type1/$SystemId/nodes/$ControllerId/component-performance-statistics"
+            Invoke-DsccRestMethod -uriAdd $UriAdd -Method Get
+        }
+        elseif ($DeviceType -eq 'Device-Type2') {
+            Write-Error 'This command supports HPE Alletra 9000, HPE Primera and HPE 3AR devices only'
+        }
+        else {
+            # Additional device types are coming
+            Write-Error "Device type of $DeviceType (system $SystemId) is not currently supported"
+        }
+    }
+}
+function Invoke-DSCCControllerLocate {
+    <#
 .SYNOPSIS
     WIll illuminate the LED on the Storage Controller and specified node, or turn it off    
 .DESCRIPTION
@@ -269,30 +220,29 @@ function Invoke-DSCCControllerLocate
 .EXAMPLE
 .LINK
 #>   
-[CmdletBinding()]
-param(  [parameter(mandatory)]  [string]    $SystemId, 
+    [CmdletBinding()]
+    param(  [parameter(mandatory)]  [string]    $SystemId, 
         [parameter(mandatory)]  [string]    $NodeId,
         [parameter(mandatory)]  [boolean]   $Locate,
-                                [switch]    $WhatIf
+        [switch]    $WhatIf
     )
-process
-    {   $MyBody = @{ locate = $Locate }
+    process {
+        $MyBody = @{ locate = $Locate }
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-        if ($DeviceType -eq 'Device-Type2')  
-                {   Write-warning "This command only works on Device-Type1 which include 3par/Primera/Alletra9K devices"
-                    return  
-                }
-        if ( -not $DeviceType )
-                {   Write-Warning "No array was detected using the SystemID $SystemId"
-                    return
-                }
+        if ($DeviceType -eq 'Device-Type2') {
+            Write-Warning 'This command only works on Device-Type1 which include 3par/Primera/Alletra9K devices'
+            return  
+        }
+        if ( -not $DeviceType ) {
+            Write-Warning "No array was detected using the SystemID $SystemId"
+            return
+        }
         $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/nodes/' + $NodeId
-        return ( invoke-DSCCrestmethod -uriadd $MyAdd -body ( $MyBody | convertto-json ) -method Post -whatifBoolean $WhatIf )
+        return ( invoke-DSCCrestmethod -uriadd $MyAdd -body ( $MyBody | ConvertTo-Json ) -method Post -whatifBoolean $WhatIf )
     }       
 } 
-function Invoke-DSCCControllerLocatePCBM
-{
-<#
+function Invoke-DSCCControllerLocatePCBM {
+    <#
 .SYNOPSIS
     WIll illuminate the LED on the Storage Controller Power Supply and specified node, or turn it off    
 .DESCRIPTION
@@ -311,18 +261,18 @@ function Invoke-DSCCControllerLocatePCBM
 .EXAMPLE
 .LINK
 #>   
-[CmdletBinding()]
-param(  [parameter(mandatory)]  [string]    $SystemId, 
+    [CmdletBinding()]
+    param(  [parameter(mandatory)]  [string]    $SystemId, 
         [parameter(mandatory)]  [string]    $NodeId,
         [parameter(mandatory)]  [string]    $PowerId,
         [parameter(mandatory)]  [boolean]   $Locate,
-                                [switch]    $WhatIf
+        [switch]    $WhatIf
     )
-process
-    {   $MyBody = ( @{ locate = $Locate } | convertto-json )
-        if ( $DeviceType -eq 'Device-Type2' )   { Write-warning "This command only works on Device-Type1 which include 3par/Primera/Alletra9K devices"; return }
-        if ( -not $DeviceType )                 { Write-Warning "No array was detected using the SystemID $SystemId"; return }
+    process {
+        $MyBody = ( @{ locate = $Locate } | ConvertTo-Json )
+        if ( $DeviceType -eq 'Device-Type2' ) { Write-Warning 'This command only works on Device-Type1 which include 3par/Primera/Alletra9K devices'; return }
+        if ( -not $DeviceType ) { Write-Warning "No array was detected using the SystemID $SystemId"; return }
         $MyAdd = 'storage-systems/device-type1/' + $SystemId + '/nodes/' + $NodeId + '/Powers/' + $PowerId
-        return ( invoke-restmethod -uriadd $MyAdd -body ( $MyBody | convertto-json ) -method Post -whatifBoolean $WhatIf )
+        return ( Invoke-RestMethod -uriadd $MyAdd -Body ( $MyBody | ConvertTo-Json ) -Method Post -whatifBoolean $WhatIf )
     }       
 } 

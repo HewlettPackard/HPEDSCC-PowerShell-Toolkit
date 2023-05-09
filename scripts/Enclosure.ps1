@@ -1,50 +1,39 @@
 <#
 .SYNOPSIS
-    Returns the HPE DSSC DOM Shelves for a specific storage system     
+    Returns the enclosures (disk shelves) of storage systems accessible to an instance of 
+    HPE GreenLake Data Storage Cloud Console (DSCC).
 .DESCRIPTION
-    Returns the HPE DSSC DOM Shelves for a specific storage system 
+    Returns the enclosures (disk shelves) of storage systems accessible to an instance of 
+    HPE GreenLake Data Storage Cloud Console (DSCC).
+    You must be logged in with valid credentials to a HPE GreenLake account.
 .PARAMETER SystemID
-    A single Storage System ID is specified and required, the pools defined will be returned unless a specific Shelf ID is requested.
-    You can feed the output of the Get-DSCCStorageSystems command to this command to specify the required parameter.
-.PARAMETER WhatIf
-    The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
-    This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
+    Accepts one or more System IDs if specified, or shows all storage systems accessible to this HPE GreenLake account.
+.PARAMETER SystemName
+    Accepts one or more System names if specified, or shows all storage systems accessible to this HPE GreenLake account.
 .EXAMPLE
-    PS:> Get-DSCCStorageSystem -DeviceType device-type1 | Get-DSCCShelf
+    PS:> Get-DsccStorageSystem -DeviceType device-type1 | Get-DsccShelf
 
-    Id                               Model          Serial Number  SystemId   Detailed Name     Overall Status
-    --                               -----          -------------  --------   -------------     --------------
-    0929bb1a282fc6ea8d81549e77dca70c HPE     600 2N PWDRRA2LMDS00R 2M2042059T Drive Enclosure 0 STATE_NORMAL
-    269fe18d901c8173d70697a7aff46d7c HPE     600 2N PWDRRA2LMDS01O 2M2042059V Drive Enclosure 0 STATE_NORMAL
-    33ca0ba3498759d593028ad3db5539ad HPE     600 2N PWDRRA1LMD1040 2M202205GF Drive Enclosure 0 STATE_NORMAL
-    0c6c79380a69c35d1a41fa47c086e834 HPE     600 2N PWDRRA2LMDS07C 2M2042059X Drive Enclosure 0 STATE_NORMAL
-    6ab4ad21f76e1623ba6879bee11788a5 HPE     600 2N PWDRRA1LMCT05E 2M202205GG Drive Enclosure 0 STATE_NORMAL
-    9b8276f429f20287faf3c4ecab95d4f9 HPE     600 2N PWDRRA1LMD107J 2M2019018G Drive Enclosure 0 STATE_NORMAL
+    Display enclosure information for all device-type1 storage systems (HPE Alletra 9000, HPE Primera, HPE 3PAR) 
+    accessible to this instance of DSCC.
 .EXAMPLE
-    PS:> Get-DSCCStorageSystem -DeviceType device-type2 | Get-DSCCShelf
+    PS:> Get-DsccStorageSystem -DeviceType device-type2 | Get-DsccEnclosure
 
-    Id                                         Model          Serial Number System Name          Detailed Name     PSU Status Fan Status Temp Status
-    --                                         -----          ------------- -----------          -------------     ---------- ---------- -----------
-    2d06b878a5a008ec63000000010000414600032098 AF40-2P2QF-11T AF-204952     TMEHOU-Pod3-Nimble   chassis_nmbl_4u24 OK         OK         OK
-    2d0849204632ec0d70000000010000414600037375 AF40-QP2QF-46T AF-226165     TMEHOL-POD2-AF40     chassis_nmbl_4u24 OK         OK         OK
-    2d3be9f65d5b1de4fd000000010000414600036c15 6050-4N2QY-46T AF-224277     tmehou-pod1-bluetail chassis_nmbl_4u24 OK         OK         OK
+    Display enclosure information for all device-type2 storage systems (HPE Alletra 6000 and 5000) accessible to this 
+    instance of DSCC.
 .EXAMPLE
-    PS:> Get-DSCCShelf -SystemId 000849204632ec0d70000000000000000000000001
+    PS:> Get-DsccEnclosure -SystemId 000849204632ec0d70000000000000000000000001
 
-    Id                                         Model          Serial Number System Name      Detailed Name     PSU Status Fan Status Temp Status
-    --                                         -----          ------------- -----------      -------------     ---------- ---------- -----------
-    2d0849204632ec0d70000000010000414600037375 AF40-QP2QF-46T AF-226165     TMEHOL-POD2-AF40 chassis_nmbl_4u24 OK         OK         OK
+    Display enclosure information for the specified device-type2 storage system.
 .EXAMPLE
-    PS:>Get-DSCCStorageSystem | Get-DSCCShelf
+    PS:>Get-DsccStorageSystem | Get-DsccShelf
 
-    Id                                         Model               Serial Number   SystemId or Name Detailed Name     Overall Status PSU/Fan/Temp Status
-    --                                         -----               -------------   ---------------- -------------     -------------- -------------------
-    f6852422f12b903df418c541ac4ff464           --                  SHM1002657RBMM1 MXN5442108       unknown           STATE_DEGRADED
-    2d0f2fad32a41581b2000000010000637300000000 Virtual-6G-12T-320F cs-fdcad6       ppatil-cds-8050  chassis_smc_3u16                 OK OK OK
-    2d3a78e8778c204dc20000000100004146000384e4 6030-4NQY-46T       AF-230628       rtp-afa184       chassis_nmbl_4u24                OK OK OK
-.LINK
+    Displays enclosure information for all storage systems accessible to this instance of DSCC. Get-DsccShelf is
+    an alias for Get-DsccEnclosure.
 .OUTPUTS
-    The commmand should return an object of data type DSCC.Shelf.Combined which the default formatters
+    Returns objects of type DSCC.Shelf.Combined, made up of storage systems with device type 1 and 2. There 
+    are some common properties between them but not all properties are common
+.LINK
+    https://github.com/HewlettPackard/HPEDSCC-PowerShell-Toolkit
 #>
 function Get-DsccEnclosure { 
     [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'BySystemId')]
@@ -85,13 +74,14 @@ function Get-DsccEnclosure {
                 Write-Error "Device type of $DeviceType (system $ThisId) is not currently supported"
             }
         }
-        $RawObject = Invoke-DSCCRestMethod -UriAdd $UriAdd -Method Get -WhatIf:$WhatIfPreference
+        $Response = Invoke-DSCCRestMethod -UriAdd $UriAdd -Method Get -WhatIf:$WhatIfPreference
         if ($PSBoundParameters.ContainsKey('EnclosureId')) {
-            $RawObject = $RawObject | Where-Object id -In $EnclosureId
+            $Response = $Response | Where-Object id -In $EnclosureId
         }
-        Invoke-RepackageObjectWithType -RawObject $RawObject -ObjectName 'Shelf.Combined'
+        Invoke-RepackageObjectWithType -RawObject $Response -ObjectName 'Shelf.Combined'
     } #end process
 } # end Get-DsccEnclosure
+
 function Invoke-DSCCShelfLocate {
     <#
 .SYNOPSIS
