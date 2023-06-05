@@ -162,7 +162,7 @@ process
                                 $MyAdd = 'initiators/' + $MyInitiatorID
                                 $MyBody = ''
                                 if ($Force) 
-                                        {   $MyBody = @{force=$true}
+                                        {   $MyAdd += '?force=true'
                                         }
                                 return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Delete' -Body ( $MyBody | convertto-json ) -WhatIfBoolean $WhatIf )
                             }
