@@ -224,7 +224,7 @@ process
             }
         $BigCollection=@()
         foreach ( $DevType in $DevTypes )
-            {   $MyAdd = '' + $DevType
+            {   $MyAdd = 'storage-systems/' + $DevType
                 $SysColOnly = invoke-DSCCrestmethod -UriAdd $MyAdd -method Get -whatifBoolean $WhatIf  
                 $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "StorageSystem.Combined"   
                 $BigCollection+= $ReturnData 
