@@ -33,7 +33,7 @@ function Get-DSCCVolume
     1070dbef0bad8a313ada2b67f401c28b admin     10240  60002AC0000000000000000000025F89 Virtual Volume admin     2M202205GF False N/A     0
     6acfbbd149c521a16bfb9fc72360a8fd .srdata   71680  60002AC0000000000000000100025F89 Virtual Volume .srdata   2M202205GF False N/A     0
 .EXAMPLE
-    PS:> Get-DSCCStorageVolume -StorageSystemId 2M202205GF
+    PS:> Get-DSCCStorageVolume -SystemId 2M202205GF
 
     Id                               name      size   serial number or wwn             volume detail            system id  thin  de-dupe compression
     --                               ----      ----   --------------------             -------------            ---------  ----  ------- -----------
@@ -41,13 +41,13 @@ function Get-DSCCVolume
     1070dbef0bad8a313ada2b67f401c28b admin     10240  60002AC0000000000000000000025F89 Virtual Volume admin     2M202205GF False N/A     0
     6acfbbd149c521a16bfb9fc72360a8fd .srdata   71680  60002AC0000000000000000100025F89 Virtual Volume .srdata   2M202205GF False N/A     0
 .EXAMPLE
-    PS:> Get-DSCCStorageVolume -StorageSystemId 2M202205GF -VolumeId 1070dbef0bad8a313ada2b67f401c28b
+    PS:> Get-DSCCStorageVolume -SystemId 2M202205GF -VolumeId 1070dbef0bad8a313ada2b67f401c28b
 
     Id                               name      size   serial number or wwn             volume detail            system id  thin  de-dupe compression
     --                               ----      ----   --------------------             -------------            ---------  ----  ------- -----------
     1070dbef0bad8a313ada2b67f401c28b admin     10240  60002AC0000000000000000000025F89 Virtual Volume admin     2M202205GF False N/A     0
 .EXAMPLE
-    PS:> Get-DSCCStorageVolume -StorageSystemId 2M202205GF -VolumeId 1070dbef0bad8a313ada2b67f401c28b | format-list
+    PS:> Get-DSCCStorageVolume -SystemId 2M202205GF -VolumeId 1070dbef0bad8a313ada2b67f401c28b | format-list
 
     id                           : 67e1c89608b1657b34369d16a07f2689
     systemId                     : 2M2042059V
@@ -114,7 +114,7 @@ function Get-DSCCVolume
     type                         : volume
     consoleUri                   : /data-ops-manager/storage-systems/device-type1/2M2042059V/volumes/67e1c89608b1657b34369d16a07f2689
 .EXAMPLE
-    PS:> Get-DSCCStoragePool -StorageSystemId 2M202205GG -StoragePoolId 3ff8fa3d971f16948fd9cff800775b9d -whatif
+    PS:> Get-DSCCStoragePool -SystemId 2M202205GG -StoragePoolId 3ff8fa3d971f16948fd9cff800775b9d -whatif
     
     WARNING: You have selected the What-IF option, so the call will note be made to the array,
     instead you will see a preview of the RestAPI call
@@ -129,7 +129,7 @@ function Get-DSCCVolume
     The Body of this call will be:
         "No Body"
 .EXAMPLE
-    PS:> Get-DSCCDOMStoragePoolVolume -StorageSystemId 2M202205GG -StoragePoolId 3ff8fa3d971f16948fd9cff800775b9d | format-table
+    PS:> Get-DSCCDOMStoragePoolVolume -SystemId 2M202205GG -StoragePoolId 3ff8fa3d971f16948fd9cff800775b9d | format-table
 
     id                               systemId   displayname              domain name      healthState usedCapacity volumeId 
     --                               --------   -----------              ------ ----      ----------- ------------ -----
@@ -139,7 +139,7 @@ function Get-DSCCVolume
     ee9f3c18a83aeef9ebfaabb8526b7386 2M2042059T Virtual Volume .srdata   -      .srdata             3          100     1
     6acfbbd149c521a16bfb9fc72360a8fd 2M202205GF Virtual Volume .srdata   -      .srdata             3          100     1
 .EXAMPLE
-    PS:> Get-DSCCDOMStoragePoolVolume -StorageSystemId 2M202205GG -StoragePoolId 3ff8fa3d971f16948fd9cff800775b9d
+    PS:> Get-DSCCDOMStoragePoolVolume -SystemId 2M202205GG -StoragePoolId 3ff8fa3d971f16948fd9cff800775b9d
     
     WARNING: You have selected the What-IF option, so the call will note be made to the array,
     instead you will see a preview of the RestAPI call

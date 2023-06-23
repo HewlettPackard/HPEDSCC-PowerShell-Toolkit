@@ -30,10 +30,6 @@
 
     Display information about the specific storage system(s) accessible to this instance of DSCC Data Ops Manager.
 .EXAMPLE
-    PS:>Get-DsccStorageSystem -SystemName tmehou-pod1-primera2,tme-pod1-alletra6k
-
-    Display information about the specified system system(s) accessible to this instance of DSCC Data Ops Manager.
-.EXAMPLE
     PS:> Get-DSCCStorageSystem -WhatIf
 
     Displays information about the RESTApi call itself, rather than displaying the data. No call is made to the RESTApi.
@@ -44,25 +40,17 @@
     https://github.com/HewlettPackard/HPEDSCC-PowerShell-Toolkit
 #>
 function Get-DsccStorageSystem { 
-    [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'BySystemId')]
+    [CmdletBinding(DefaultParameterSetName = 'BySystemId')]
     param (
         [Parameter(ParameterSetName = 'BySystemId')]
         [alias('id')]
-        [string[]]$SystemId,
+        [string]$SystemId,
 
-        [Parameter(ParameterSetName = 'BySystemName')]
-        [alias('name')]
-        [string[]]$SystemName,
-        
         [parameter(helpMessage = 'The acceptable values are device-type1 or device-type2.')]
         [validateset('device-type1', 'device-type2')]  
         [string]$DeviceType
     )
-    begin {
-        Write-Verbose 'Executing Get-DsccStorageSystem'
-        if ($PSBoundParameters.ContainsKey('SystemName')) {
-            $SystemId = Get-DsccSystemIdFromName -SystemName $SystemName
-        }
+    begin {    
     }
     process {
         if ( $DeviceType ) { 
@@ -86,25 +74,29 @@ function Get-DsccStorageSystem {
     } #end process
 
     end {
-        # If no parameters are specified, take the opportunity to update the Global variable 
-        # Note: -Verbose does not affect this, if specified.
-        foreach ($ExcludeParam in $('SystemId', 'DeviceType', 'WhatIf')) {
-            if ($ExcludeParam -in $PSBoundParameters.Keys) {
-                Write-Output 'Global Variable $DsccStorageSystem not updated'
-                return
-            }
-        }
-        $GlobalSystem = @{}
-        foreach ($ThisSystem in $SystemCollection) {
-            $GlobalSystem += @{
-                Name       = $ThisSystem.Name
-                Id         = $ThisSystem.Id
-                DeviceType = ([regex]::Matches($ThisSystem.resourceUri, 'device-type\d')).Value
-                Model      = $ThisSystem.Model
-            }
-        }
-        $Global:DsccStorageSystem = [pscustomobject]$GlobalSystem
-        Write-Verbose 'Global Variable $DsccStorageSystem updated'
+        #   This code was also commented out until a fix could be found.
+        #   If no parameters are specified, take the opportunity to update the Global variable 
+        #   Note: -Verbose does not affect this, if specified.
+        #   foreach ($ExcludeParam in $('SystemId', 'DeviceType', 'WhatIf')) {
+        #    if ($ExcludeParam -in $PSBoundParameters.Keys) {
+        #        Write-Output 'Global Variable $DsccStorageSystem not updated'
+        #        return
+        #    }
+        #   }
+        #   The following Code Snippet was supposed to set a global variable to set your System ID, 
+        #   however this code throws an error when multiple arrays exist of the same type. 
+        #   Commenting out until I can either fix or remove this code.
+        #       $GlobalSystem = @{}
+        #       foreach ($ThisSystem in $SystemCollection) {
+        #           $GlobalSystem += @{
+        #               Name       = $ThisSystem.Name
+        #               Id         = $ThisSystem.Id
+        #               DeviceType = ([regex]::Matches($ThisSystem.resourceUri, 'device-type\d')).Value
+        #               Model      = $ThisSystem.Model
+        #           }
+        #       }
+        #       $Global:DsccStorageSystem = [pscustomobject]$GlobalSystem
+        #       Write-Verbose 'Global Variable $DsccStorageSystem updated'
     }
 } #end Get-DsccStorageSystem
 

@@ -212,7 +212,7 @@ Function New-DSCCInitiator
 .PARAMETER label
     Name of the Initiator. Used only for Device-Type2, and only for iSCSI connections 
 .PARAMETER protocol
-    The protocol can be FC, iSCSI, or NVMe and is required.
+    The protocol can be iSCSI, or NVMe and is required when creating a DeviceType1 Initiator.
 .PARAMETER Vendor
     Vendor of the host initiator.
 .PARAMETER WhatIf
@@ -220,7 +220,28 @@ Function New-DSCCInitiator
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 
 .EXAMPLE
-    PS:> New-DSCCHostServiceInitiator -Address 100008F1EABFE61C -name Host1InitA -protocol FC
+    PS:> New-DSCCInitiator -name 'Test2' -ipAddress '10.10.25.26' -address 'iqn1234.1421256' -protocol 'iSCSI'
+
+    id              : c2063ae3931d418da86e5c8d4266c032
+    ipAddress       : 10.10.25.26
+    address         : iqn1234.1421256
+    name            : Test2
+    driverVersion   :
+    firmwareVersion :
+    vendor          :
+    hbaModel        :
+    hostSpeed       :
+    protocol        : iSCSI
+    customerId      : 3b4bb8caefc311ebb419c24d8e353b6f
+    type            : initiator
+    generation      : 1687561944
+    hosts           : {}
+    systems         :
+    associatedLinks :
+
+    This command will create an new iSCSI initiator for the DeviceType1 devices.
+.EXAMPLE
+    PS:> New-DSCCInitiator -Address 100008F1EABFE61C -name Host1InitA -protocol FC
 
     {   "message": "Successfully submitted",
         "status": "SUBMITTED",
@@ -255,7 +276,7 @@ param(
         [Parameter(ParameterSetName = 'type1'                   )]      [string]    $ipAddress,
         [Parameter(ParameterSetName = 'type1'                   )]      [string]    $name,  
         [Parameter(ParameterSetName = 'type1',      Mandatory   )]
-            [ValidateSet('FC','iSCSI','NMVe')]                          [string]    $protocol,
+            [ValidateSet('iSCSI','NMVe')]                               [string]    $protocol,
         [Parameter(ParameterSetName = 'type1'                   )]      [string]    $vendor,
         [Parameter(ParameterSetName = 'type2iscsi'              )]                               
         [Parameter(ParameterSetName = 'type2fc'                 )]                               
