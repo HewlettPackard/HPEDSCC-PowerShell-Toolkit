@@ -4,7 +4,7 @@ function Get-DSCCAuditEvent
 .SYNOPSIS
     Returns the DSCC Audit and Events information.    
 .DESCRIPTION
-    Returns the HPE Data Services Cloud Console Data Operations Manager Audit and Event information;
+    Returns the HPE Data Services Cloud Console Audit and Event information;
 .PARAMETER WhatIf
     This option shows you the command that will be sent to the DSCC, will include the URI being sent to, the Header, Method, and the Body of the message.
 .EXAMPLE
@@ -33,10 +33,12 @@ function Get-DSCCAuditEvent
         }
     The Body of this call will be:
         "No Body"
+.LINK
+    More details about the operation of this API can be found at https://console-us1.data.cloud.hpe.com/doc/api/v1/ under audit-events.
 #>   
 [CmdletBinding()]
 param(  [switch]    $whatIf
-     )
+    )
 process
     {   $SysColOnly = Invoke-DSCCRestMethod -uriadd 'audit-events' -method 'Get' -whatifBoolean $WhatIf 
         return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Audit" )

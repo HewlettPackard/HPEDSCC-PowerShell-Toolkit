@@ -2,9 +2,9 @@ function Get-DSCCInitiator
 {
 <#
 .SYNOPSIS
-    Returns the HPE DSSC DOM Initiators Collection    
+    Returns the HPE DSSC Initiators Collection    
 .DESCRIPTION
-    Returns the HPE Data Services Cloud Console Data Operations Manager Initiators Collections;
+    Returns the HPE Data Services Cloud Console Initiators Collections;
 .PARAMETER SystemID
     Ths command will return ALL of the Initiators unless a specific SystemID is specified. If the System
     Id is spefified, then only those that System matches will be returned
@@ -134,8 +134,6 @@ function Remove-DSCCInitiator
 .EXAMPLE
     PS:> Remove-DSCCHostServiceInitiator -InitiatorID d548ef683c27403e96caa51816ddc72c
 
-    {   "deleteInitiator": true
-    }
 .LINK
 #>   
 [CmdletBinding()]
@@ -177,9 +175,9 @@ Function New-DSCCInitiator
 {
 <#
 .SYNOPSIS
-    Creates a HPE DSSC DOM Initiator Record.    
+    Creates a HPE DSSC Initiator Record.    
 .DESCRIPTION
-    Creates a HPE Data Services Cloud Console Data Operations Manager Host Initiator Record; This will create either a Device-Type1 type Initiator,
+    Creates a HPE Data Services Cloud Console Host Initiator Record; This will create either a Device-Type1 type Initiator,
     or if a SystemID is specified, then it will make a Device-Type2 type initiator
 .PARAMETER systemID
     This is required for Device-Type2, and references a specific system ID.
@@ -189,24 +187,24 @@ Function New-DSCCInitiator
 .PARAMETER DeviceType2
     This switch is used to tell the command that the end device is the specific device type, and to only allow the correct
     parameter set that matches this device type.
-.PARAMETER Address
-    Used only for Device-Type1. The Address of the initiator and is required.
+.PARAMETER address
+    Used only for Device-Type1. The Address of the initiator and is required. It will either be an IQN such as 
 .PARAMETER wwpn
-    The World Wide Port name, used only for Device-Type2, and only for FC connections
+    Used only for Device-Type2. The World Wide Port name, used only for FC connections and of the format 'af:32:f1:20:bc:ba:43:1a'
 .PARAMETER driverVersion
     Driver Version of the Host Initiator. Used only for Device-Type1. 
 .PARAMETER firmwareVersion
     Firmware Version of the Host Initiator. Used only for Device-Type1. 
 .PARAMETER hbaModel
-    Host bus adaptor model of the host initiator. Used only for Device-Type1. 
-.PARAMETER HostSpeed
+    Used only for Device-Type1. Host bus adaptor model of the host initiator. 
+.PARAMETER hostSpeed
     Host Speed. Used only for Device-Type1. 
 .PARAMETER ipAddress
     IP Address of the Initiator. Used for both Device-Types, but only for iSCSI connections.
-.PARAMETER iqn
-    The IQN of the Initiator, used for Device-Type2, but only for iSCSI connections
 .PARAMETER name
     Name of the Initiator. Used only for Device-Type1. 
+.PARAMETER iqn
+    The IQN of the Initiator, used for Device-Type2, but only for iSCSI connections
 .PARAMETER alias
     Name of the Initiator. Used only for Device-Type2, and only for FC connections 
 .PARAMETER label

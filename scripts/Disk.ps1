@@ -16,7 +16,7 @@
     PS:> Get-DsccStorageSystem -DeviceType device-type1 | Get-DsccDisk
 
     Display the disks from all storage systems that are device type 1 (HPE Alletra 9000, HPE Primera and HPE 3PAR)
- .EXAMPLE
+.EXAMPLE
     PS:> Get-DsccStorageSystem -DeviceType device-type2 | Get-DsccDisk
 
     Display the disks from all storage systems that are device type 1 (HPE Alletra 6000 and 5000)
@@ -72,7 +72,7 @@ function Get-DsccDisk {
                     if ($PSBoundParameters.ContainsKey('DiskId')) {
                         $Response = $Response | Where-Object id -In $DiskId
                     }
-                    Invoke-RepackageObjectWithType -RawObject $Response -ObjectName 'Disk.Combined'
+                    return ( Invoke-RepackageObjectWithType -RawObject $Response -ObjectName 'Disk.Combined' )
                 }
             }
             elseif ($DeviceType -eq 'device-type2') {
@@ -81,7 +81,7 @@ function Get-DsccDisk {
                 if ($PSBoundParameters.ContainsKey('DiskId')) {
                     $Response = $Response | Where-Object id -In $DiskId
                 }
-                Invoke-RepackageObjectWithType -RawObject $Response -ObjectName 'Disk.Combined'
+                return ( Invoke-RepackageObjectWithType -RawObject $Response -ObjectName 'Disk.Combined' )
             }
             else {
                 # Additional device types are coming

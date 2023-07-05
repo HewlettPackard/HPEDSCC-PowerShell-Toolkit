@@ -40,7 +40,7 @@ process
                                                 return
                                             }
                             'device-type2'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $systemId + '/folders'
-                                                $SysColOnly = invoke-DSCCrestmethod -uriadd $MyAdd -method Get -whatifBoolean
+                                                $SysColOnly = invoke-DSCCrestmethod -uriadd $MyAdd -method Get -whatifBoolean $whatif
                                                 $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Folder"
                                                 return $ReturnData
                                             }

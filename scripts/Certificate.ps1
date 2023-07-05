@@ -4,7 +4,7 @@ function Get-DSCCCertificate
 .SYNOPSIS
     Returns Certificate data for a storage system {DeviceType-1} 
 .DESCRIPTION
-    Returns the HPE Data Services Cloud Console Data Operations Manager Certificate data for a storage system {DeviceType-1} 
+    Returns the HPE Data Services Cloud Console Certificate data for a storage system {DeviceType-1} 
 .PARAMETER systemID
     The singular system to run the query against, if unset will run against all systems
 .PARAMETER CertificateID

@@ -2,7 +2,7 @@ function Get-DSCCAccessControlRecord
 {
 <#
 .SYNOPSIS
-    Returns the HPE DSSC Access Group Collection     
+    Returns the HPE DSSC Access Group Collection for DeviceType2 Type Devices     
 .DESCRIPTION
     Returns the HPE Data Services Cloud Console Data Operations Manager Access Groups Collections.
 .PARAMETER SystemID
@@ -16,8 +16,10 @@ function Get-DSCCAccessControlRecord
     sending the request. This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 .LINK
     The API call for this operation is file:///api/v1/storage-systems/{systemid}/device-type1/access-control-records
+    More details about the operation of this API can be found at https://console-us1.data.cloud.hpe.com/doc/api/v1/ under Volume --> 
+    'Get all Access Control Record Detail by Nimble/Alletra 6K' or 'Get details of vluns for Volume for Primera / Alletra 9K'
 .EXAMPLE
-    PS:> Get-DSCCAccessControlRecord
+    PS:> Get-DSCCAccessControlRecord https://console-us1.data.cloud.hpe.com/doc/api/v1/ under the object name 
     
     WARNING: The Call to SystemID MXN5442108 returned no Access ControlRecord Records.
 
@@ -33,8 +35,12 @@ function Get-DSCCAccessControlRecord
 [CmdletBinding()]
 param   (  [Parameter(ValueFromPipeLineByPropertyName=$true)]   [Alias('id')]   [string]    $SystemId,  
                                                                                 [string]    $VolumeId,  
-                                                                                [boolean]   $WhatIf=$false
+                                                                                [switch]    $WhatIf
         )
+Begin
+{   if ( $WhatIf )          {   $WhatIfBoolean = $true}
+                    else    {  $WhatIfBoolean = $false}
+}
 process
 {   if ( -not $PSBoundParameters.ContainsKey('SystemId' ) )
             {   write-verbose "No SystemID Given, running all SystemIDs"
@@ -43,7 +49,7 @@ process
                     {   write-verbose "Walking Through Multiple Systems"
                         If ( ($Sys).Id )
                             {   write-verbose "Found a system with a System.id"
-                                $ReturnCol += Get-DSCCAccessControlRecord -SystemId ($Sys).Id -WhatIf $WhatIf
+                                $ReturnCol += Get-DSCCAccessControlRecord -SystemId ($Sys).Id -WhatIf $WhatIfBoolean
                             }
                     }
                 write-verbose "Returning the Multiple System Id Access Controll Groups."
@@ -64,7 +70,7 @@ process
                                             $SysColOnly = @()
                                             foreach ($MyVol in $VolObj)
                                                 {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes/' + ($MyVol).id + '/vluns'
-                                                    $NewItem = invoke-DSCCrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf
+                                                    $NewItem = invoke-DSCCrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIfBoolean
                                                     if ( $NewItem )
                                                         {   $SysColOnly += $NewItem 
                                                         }                                                        
@@ -77,7 +83,7 @@ process
                                                     } 
                                         }
                         'device-type2'  {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/access-control-records'
-                                            $SysColOnly = invoke-Dsccrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIf
+                                            $SysColOnly = invoke-Dsccrestmethod -uriAdd $MyAdd -method Get -whatifBoolean $WhatIfBoolean
                                             return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "AccessControlRecord" -whatif $Whatif )
                                         }
                     }     
@@ -91,7 +97,7 @@ function Remove-DSCCAccessControlRecord
 .SYNOPSIS
     Removes a HPE DSSC Access Group Record or vLUN mapping 
 .DESCRIPTION
-    Removes a HPE Data Services Cloud Console Data Operations Manager Access Groups Record or vLUN mapping.
+    Removes a HPE Data Services Cloud Console Access Groups Record or vLUN mapping.
 .PARAMETER SystemID
     This parameter is required for both device-type1 and device-type2; A single System ID is specified and required.
 .PARAMETER DeviceType1
@@ -109,6 +115,9 @@ function Remove-DSCCAccessControlRecord
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
+.LINK
+    More details about the operation of this API can be found at https://console-us1.data.cloud.hpe.com/doc/api/v1/ under Volume --> 
+    'Remove access-control-record from Nimble/Alletra 6K' or 'Remove vlun form volume from Primera/Alletra 9K'
 #>    
 [CmdletBinding()]
 param   (   [Parameter(ParameterSetName=('type1'),ValueFromPipeLineByPropertyName=$true,Mandatory=$true )]
@@ -122,6 +131,10 @@ param   (   [Parameter(ParameterSetName=('type1'),ValueFromPipeLineByPropertyNam
             [Parameter(ParameterSetName=('type2'),Mandatory=$true )]    [string]    $AccessControlRecordId,      
                                                                         [switch]    $WhatIf
         )
+Begin
+    {   if ( $WhatIf )          {  $WhatIfBoolean = $true}
+                        else    {  $WhatIfBoolean = $false}
+    }
 process
     {   Invoke-DSCCAutoReconnect
         $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
@@ -139,7 +152,7 @@ process
                                         }
                                 }
             }
-        return Invoke-DSCCRestMethod -uriAdd $MyAdd -Method Delete -WhatIfBoolean $WhatIf
+        return Invoke-DSCCRestMethod -uriAdd $MyAdd -Method Delete -WhatIfBoolean $WhatIfBoolean
     }       
 }   
 Function New-DSCCAccessControlRecord
@@ -148,7 +161,7 @@ Function New-DSCCAccessControlRecord
 .SYNOPSIS
     Creates a HPE DSSC Access Group Record or LUN Mapping Record.
 .DESCRIPTION
-    Creates a HPE Data Services Cloud Console Data Operations Manager Access Group Record or LUN Mapping Record.
+    Creates a HPE Data Services Cloud Console Access Group Record or LUN Mapping Record.
 .PARAMETER SystemID
     A single System ID is specified and required.
 .PARAMETER DeviceType1
@@ -197,7 +210,8 @@ Function New-DSCCAccessControlRecord
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 .LINK
-    The API call for this operation is file:///api/v1/storage-systems/{systemid}/device-type1/access-control-records
+    More details about the operation of this API can be found at https://console-us1.data.cloud.hpe.com/doc/api/v1/ under Volume --> 
+    'Create Nimble / Alletra 6K access control record in system' or 'Export vlun for volume from Primera/Alletra 9K'
 #>   
 [CmdletBinding()]
 param(  [Parameter(ParameterSetName=('type1'),ValueFromPipeLineByPropertyName=$true,Mandatory=$true )]
@@ -213,7 +227,7 @@ param(  [Parameter(ParameterSetName=('type1'),ValueFromPipeLineByPropertyName=$t
         [Parameter(ParameterSetName=('type1'))]                                      [boolean]   $override,
         [Parameter(ParameterSetName=('type1'))]                                      [boolean]   $noVcn,
         [Parameter(ParameterSetName=('type1'))]
-        [ValidateSet('PRIMARY','SECONDARY','ALL')]                                   [string]   $proximity,
+        [ValidateSet('PRIMARY','SECONDARY','ALL')]                                   [string]    $proximity,
         [Parameter(ParameterSetName=('type1'))]                                      [string[]]  $hostGroupIds,
 
         [Parameter(ParameterSetName=('type2'))]                                      [int]       $lun,
@@ -224,8 +238,12 @@ param(  [Parameter(ParameterSetName=('type1'),ValueFromPipeLineByPropertyName=$t
         [Parameter(ParameterSetName=('type2'))]                                      [string]    $pe_ids,
         [Parameter(ParameterSetName=('type2'))]                                      [string]    $snapId,
         [Parameter(ParameterSetName=('type1'))]
-        [Parameter(ParameterSetName=('type2'))]                                      [boolean]   $WhatIf = $false
+        [Parameter(ParameterSetName=('type2'))]                                      [switch]    $WhatIf
     )
+Begin
+    {   if ( $WhatIf )          {  $WhatIfBoolean = $true}
+                        else    {  $WhatIfBoolean = $false}
+    }
 process
     {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         switch ( $devicetype )
@@ -259,6 +277,6 @@ process
                                         }
                                 }
             }
-        return Invoke-DSCCRestMethod -uriadd $MyAdd -method 'POST' -body ( $MyBody | ConvertTo-Json ) -whatifBoolean $WhatIf
+        return Invoke-DSCCRestMethod -uriadd $MyAdd -method 'POST' -body ( $MyBody | ConvertTo-Json ) -whatifBoolean $WhatIfBoolean
     }      
 } 

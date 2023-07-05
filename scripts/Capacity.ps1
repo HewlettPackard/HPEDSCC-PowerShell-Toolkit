@@ -4,7 +4,7 @@ function Get-DSCCCapacity
 .SYNOPSIS
     Returns Application Summary for a storage system {DeviceType-1}    
 .DESCRIPTION
-    Returns the HPE Data Services Cloud Console Data Operations Manager Application Summary for a storage system {DeviceType-1}    
+    Returns the HPE Data Services Cloud Console Application Summary for a storage system {DeviceType-1}    
 .PARAMETER systemID
     The required system ID to query for the alerts
 .PARAMETER select
@@ -21,7 +21,7 @@ function Get-DSCCCapacity
     This option shows you the command that will be sent to the DSCC, will include the URI being sent to, the Header, Method, and the Body of the message.
 .EXAMPLE    
     PS:> Get-DSCCCapacity -SystemID 12
- 
+
     {   "customerId": "string",
         "items": [  {   "applicationSetType": "Microsoft Exchange",
                         "totalSizeMiB": 307200,
@@ -94,7 +94,7 @@ function Get-DSCCCapacityHistory
 .SYNOPSIS
     Returns capacity trend data for a storage system {DeviceType-1} 
 .DESCRIPTION
-    Returns the HPE Data Services Cloud Console Data Operations Manager capacity trend data for a storage system {DeviceType-1} 
+    Returns the HPE Data Services Cloud Console capacity trend data for a storage system {DeviceType-1} 
 .PARAMETER systemID
     The required system ID to query for the alerts
 .PARAMETER select
@@ -115,11 +115,10 @@ function Get-DSCCCapacityHistory
                             "items": [  {   "timestampMs": 1605063600,
                                             "usageMiB": 4
                                         }
-                                     ],
+                                    ],
                             "total": 1
                         },
         "endTime": 1625209133,
-        "requestUri": "/v1/storage-systems/device-type1/SGH014XGSP/capacity-history",
         "startTime": 1625122733
     }
 .EXAMPLE
@@ -128,7 +127,7 @@ function Get-DSCCCapacityHistory
     WARNING: You have selected the What-IF option, so the call will note be made to the array,
     instead you will see a preview of the RestAPI call
     The URI for this call will be
-        https://pavo-user-api.common.cloud.hpe.com/api/v1Data-Ops-Manager-ProductType1-Volumes/storage-systems/device-type1/12/capacity-history
+        https://us1.data.cloud.hpe.com/api/v1/storage-systems/device-type1/{systemId}/volumes/{id}/capacity-history
     The Method of this call will be 
         Get
     The Header for this call will be :
@@ -183,7 +182,7 @@ function Get-DSCCCapacitySummary
 .SYNOPSIS
     Returns capacity summary data for a storage system {DeviceType-1} 
 .DESCRIPTION
-    Returns the HPE Data Services Cloud Console Data Operations Manager capacity summary data for a storage system {DeviceType-1} 
+    Returns the HPE Data Services Cloud Console capacity summary data for a storage system {DeviceType-1} 
 .PARAMETER systemID
     The required system ID to query for the alerts
 .PARAMETER select
@@ -213,7 +212,6 @@ function Get-DSCCCapacitySummary
         }
     The Body of this call will be:
         {}
-
 #>   
 [CmdletBinding()]
 param(                                  [string]   $SystemID,

@@ -2,9 +2,9 @@ function Get-DSCCHostGroup
 {
 <#
 .SYNOPSIS
-    Returns the HPE DSSC DOM Host Group Collection    
+    Returns the HPE DSSC Host Group Collection    
 .DESCRIPTION
-    Returns the HPE Data Services Cloud Console Data Operations Manager Host Groups Collections;
+    Returns the HPE Data Services Cloud Console Host Groups Collections;
 .PARAMETER SystemId 
     This will limit the output to only a single SystemId, this parameter is only valid for Device-Type2. 
     With this parameter not set, the command will return ALL host groups.
@@ -77,7 +77,7 @@ function Get-DSCCHostGroup
     --                               ----           ----                 -----              -------
     e987ef683c27403e96caa51816ddc72c TestHostGroup1 host-initiator-group TestHostInitiator1 {0006b878a5a008ec63000000000000000000000001, 2M202205GF}
 .EXAMPLE
-    PS:> Get-DSCCHostServiceHostGroup -Whatif
+    PS:> Get-DSCCHostGroup -Whatif
     WARNING: You have selected the What-IF option, so the call will note be made to the array,
     instead you will see a preview of the RestAPI call
     
@@ -123,9 +123,9 @@ function Remove-DSCCHostGroup
 {
 <#
 .SYNOPSIS
-    Removes a HPE DSSC DOM Host Group.    
+    Removes a HPE DSSC Host Group.    
 .DESCRIPTION
-    Removes a HPE Data Services Cloud Console Data Operations Manager Host Group specified by ID;
+    Removes a HPE Data Services Cloud Console Host Group specified by ID;
 .PARAMETER HostGroupID
     A single Host Group ID must be specified.
 .PARAMETER force
@@ -174,9 +174,9 @@ Function New-DSCCHostGroup
 {
 <#
 .SYNOPSIS
-    Creates a HPE DSSC DOM Host Group Record.    
+    Creates a HPE DSSC Host Group Record.    
 .DESCRIPTION
-    Creates a HPE Data Services Cloud Console Data Operations Manager Host Group Record;
+    Creates a HPE Data Services Cloud Console Host Group Record;
 .PARAMETER DeviceType1
     This switch is used to tell the command that the end device is the specific device type, and to only allow the correct
     parameter set that matches this device type.
@@ -198,7 +198,7 @@ Function New-DSCCHostGroup
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 
 .EXAMPLE
-    PS:> New-DSCCHostServiceInitiator -Address 100008F1EABFE61C -name Host1InitA -protocol FC
+    PS:> New-DSCCHostInitiator -Address 100008F1EABFE61C -name Host1InitA -protocol FC
 
     {   "associatedLinks":  [   {   "resourceUri": "string",
                                     "type": "string"
@@ -374,9 +374,9 @@ Function Set-DSCCHostGroup
 {
 <#
 .SYNOPSIS
-    Updates a HPE DSSC DOM Host Group Initiator Record.    
+    Updates a HPE DSSC Host Group Record.    
 .DESCRIPTION
-    Creates a HPE Data Services Cloud Console Data Operations Manager Host Group Initiator Record;
+    Creates a HPE Data Services Cloud Console Host Group Record;
 .PARAMETER hostGroupId
     The host group initiator record to be modified.
 .PARAMETER hostsToCreate
@@ -390,7 +390,7 @@ Function Set-DSCCHostGroup
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 
 .EXAMPLE
-    PS:> New-DSCCHostServiceInitiator -Address 100008F1EABFE61C -name Host1InitA -protocol FC
+    PS:> New-DSCCHostGroup -Address 100008F1EABFE61C -name Host1InitA -protocol FC
 
     {   "message": "Successfully submitted",
         "status": "SUBMITTED",

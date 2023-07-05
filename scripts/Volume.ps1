@@ -2,9 +2,9 @@ function Get-DSCCVolume
 {
 <#
 .SYNOPSIS
-    Returns the HPE DSSC DOM Storage Systems Pools for a specific storage system and pool    
+    Returns the HPE DSSC Storage Systems Pools for a specific storage system and pool    
 .DESCRIPTION
-    Returns the HPE DSSC DOM Storage Systems Pools for a specific storage system and pool 
+    Returns the HPE DSSC Storage Systems Pools for a specific storage system and pool 
 .PARAMETER StorageSystemID
     A single Storage System ID is specified and required, the pools defined will be returned unless a specific PoolID is requested.
 .PARAMETER VolumeID
@@ -129,7 +129,7 @@ function Get-DSCCVolume
     The Body of this call will be:
         "No Body"
 .EXAMPLE
-    PS:> Get-DSCCDOMStoragePoolVolume -SystemId 2M202205GG -StoragePoolId 3ff8fa3d971f16948fd9cff800775b9d | format-table
+    PS:> Get-DSCCStoragePoolVolume -SystemId 2M202205GG -StoragePoolId 3ff8fa3d971f16948fd9cff800775b9d | format-table
 
     id                               systemId   displayname              domain name      healthState usedCapacity volumeId 
     --                               --------   -----------              ------ ----      ----------- ------------ -----
@@ -139,7 +139,7 @@ function Get-DSCCVolume
     ee9f3c18a83aeef9ebfaabb8526b7386 2M2042059T Virtual Volume .srdata   -      .srdata             3          100     1
     6acfbbd149c521a16bfb9fc72360a8fd 2M202205GF Virtual Volume .srdata   -      .srdata             3          100     1
 .EXAMPLE
-    PS:> Get-DSCCDOMStoragePoolVolume -SystemId 2M202205GG -StoragePoolId 3ff8fa3d971f16948fd9cff800775b9d
+    PS:> Get-DSCCStoragePoolVolume -SystemId 2M202205GG -StoragePoolId 3ff8fa3d971f16948fd9cff800775b9d
     
     WARNING: You have selected the What-IF option, so the call will note be made to the array,
     instead you will see a preview of the RestAPI call

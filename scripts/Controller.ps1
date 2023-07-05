@@ -21,9 +21,9 @@
 .PARAMETER ControllerId
     Accepts a controller ID.
 .PARAMETER Component
-    Accepts a component name for Device-Type2 devices only.  Display component information rather than controllers.
+    Only valid for Device-Type1 devices. Display component information rather than controllers.
 .PARAMETER Performance
-    Display storage system controller performance information rather than controllers.
+    Only valid for Device-Type1 devices. Display storage system controller performance information rather than controllers.
 .EXAMPLE
     PS:> Get-DsccController
 
@@ -168,37 +168,36 @@ function Get-DsccControllerComponent {
             Invoke-DsccRestMethod -uriAdd $UriAdd -Method Get
         }
         elseif ($DeviceType -eq 'Device-Type2') {
-            Write-Error 'This command supports HPE Alletra 9000, HPE Primera and HPE 3AR devices only'
+            Write-warning 'This command supports HPE Alletra 9000, HPE Primera and HPE 3AR devices only'
+            return
         }
         else {
             # Additional device types are coming
-            Write-Error "Device type of $DeviceType (system $ThisId) is not currently supported"
+            Write-Warning "Device type of $DeviceType (system $ThisId) is not currently supported"
+            return
         }
     }
 }
 
 #Helper function for Get-DsccController. Implements the -Performance parameter functionality
 function Get-DSCCControllerPerformance {  
-    [CmdletBinding()]
-    param(
-        [parameter(Mandatory)]
-        [string]$SystemId,
-
-        [parameter(Mandatory)]
-        [string]$ControllerId
+[CmdletBinding()]
+param(  [parameter(Mandatory)]    [string]$SystemId,
+        [parameter(Mandatory)]    [string]$ControllerId
     )
-    process {
+process {
         $DeviceType = ($DsccStorageSystem | Where-Object Id -EQ $SystemId).DeviceType
         if ($DeviceType -eq 'Device-Type1') {
             $UriAdd = "storage-systems/device-type1/$SystemId/nodes/$ControllerId/component-performance-statistics"
-            Invoke-DsccRestMethod -uriAdd $UriAdd -Method Get
+            return ( Invoke-DsccRestMethod -uriAdd $UriAdd -Method Get )
         }
         elseif ($DeviceType -eq 'Device-Type2') {
-            Write-Error 'This command supports HPE Alletra 9000, HPE Primera and HPE 3AR devices only'
+            Write-warning 'This command supports HPE Alletra 9000, HPE Primera and HPE 3AR devices only'
         }
         else {
             # Additional device types are coming
-            Write-Error "Device type of $DeviceType (system $SystemId) is not currently supported"
+            Write-warning "Device type of $DeviceType (system $SystemId) is not currently supported"
+            return
         }
     }
 }
@@ -270,8 +269,14 @@ function Invoke-DSCCControllerLocatePCBM {
     )
     process {
         $MyBody = ( @{ locate = $Locate } | ConvertTo-Json )
-        if ( $DeviceType -eq 'Device-Type2' ) { Write-Warning 'This command only works on Device-Type1 which include 3par/Primera/Alletra9K devices'; return }
-        if ( -not $DeviceType ) { Write-Warning "No array was detected using the SystemID $SystemId"; return }
+        if ( $DeviceType -eq 'Device-Type2' ) { 
+            Write-Warning 'This command only works on Device-Type1 which include 3par/Primera/Alletra9K devices'
+            return 
+        }
+        if ( -not $DeviceType ) { 
+            Write-Warning "No array was detected using the SystemID $SystemId"
+            return 
+        }
         $MyAdd = 'storage-systems/device-type1/' + $SystemId + '/nodes/' + $NodeId + '/Powers/' + $PowerId
         return ( Invoke-RestMethod -uriadd $MyAdd -Body ( $MyBody | ConvertTo-Json ) -Method Post -whatifBoolean $WhatIf )
     }       

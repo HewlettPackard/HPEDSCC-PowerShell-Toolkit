@@ -2,9 +2,9 @@ function Get-DSCCHost
 {
 <#
 .SYNOPSIS
-    Returns the HPE DSSC DOM Hosts Collection    
+    Returns the HPE DSSC Hosts Collection    
 .DESCRIPTION
-    Returns the HPE Data Services Cloud Console Data Operations Manager Host Collections;
+    Returns the HPE Data Services Cloud Console Host Collections;
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
@@ -75,7 +75,7 @@ function Get-DSCCHost
     --                               ----               --------------- -------- ----
     733b0e0808c3469d8a8650974cac8847 TestHostInitiator1 Windows Server           host-initiator
 .EXAMPLE
-    PS:> Get-DSCCHostServiceHost | where { $_.id -like 'f0b1edd8f8984c8db9e596f25de0bdf4' )
+    PS:> Get-DSCCHost | where { $_.id -like 'f0b1edd8f8984c8db9e596f25de0bdf4' )
 
     id                               name               operatingSystem protocol type
     --                               ----               --------------- -------- ----
@@ -97,9 +97,9 @@ function Remove-DSCCHost
 {
 <#
 .SYNOPSIS
-    Removes a HPE DSSC DOM Host.    
+    Removes a HPE DSSC Host.    
 .DESCRIPTION
-    Removes a HPE Data Services Cloud Console Data Operations Manager Host specified by ID;
+    Removes a HPE Data Services Cloud Console Host specified by ID;
 .PARAMETER HostGroupID
     A single Host ID must be specified.
 .PARAMETER force
@@ -108,11 +108,8 @@ function Remove-DSCCHost
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 .EXAMPLE
-    PS:> Remove-HPEDSCCDOMHostServiceHostGroup -HostId e987ef683c27403e96caa51816ddc72c
+    PS:> Remove-HPEDSCCHost -HostId e987ef683c27403e96caa51816ddc72c
 
-    taskUri                              status    message
-    -------                              ------    -------
-    2899825b-0ac9-4145-9c6a-e1860db615b4 SUBMITTED
 .EXAMPLE
     WARNING: You have selected the What-IF option, so the call will note be made to the array,
     instead you will see a preview of the RestAPI call
@@ -156,7 +153,7 @@ function Get-DSCCHostVolume
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 .EXAMPLE
-    PS:> Get-DSCCHostServiceHostVolume -HostId e1839c72fef8784f2c77194efb8b2620
+    PS:> Get-DSCCHostVolume -HostId e1839c72fef8784f2c77194efb8b2620
     
     {   "iops": 4702,
         "latencyMs": 1.2,
@@ -167,7 +164,7 @@ function Get-DSCCHostVolume
         "volumeName": "test-vv"
     }
 .EXAMPLE
-    PS:> Get-DSCCHostServiceHostVolume | convertTo-Json
+    PS:> Get-DSCCHostVolume | convertTo-Json
     [   {   "iops": 4702,
             "latencyMs": 1.2,
             "pathCount": 2,
@@ -178,7 +175,7 @@ function Get-DSCCHostVolume
         }
     ],
 .EXAMPLE
-    PS:> Get-DSCCHostServiceHostVolume -HostId f0b1edd8f8984c8db9e596f25de0bdf4
+    PS:> Get-DSCCHostVolume -HostId f0b1edd8f8984c8db9e596f25de0bdf4
     
     WARNING: You have selected the What-IF option, so the call will note be made to the array,
         instead you will see a preview of the RestAPI call
@@ -194,7 +191,7 @@ function Get-DSCCHostVolume
         "No Body"
 .EXAMPLE
     PS:> # The following example snippet returns ALL volumes for all hosts, since HostID is required
-    PS:> ForEach($HostItem in Get-DSCCHostServicehost) { Get-DSCCHostServiceHostVolume -HostID ($HostItem).id }
+    PS:> ForEach($HostItem in Get-DSCCHost) { Get-DSCCHostVolume -HostID ($HostItem).id }
 #>   
 [CmdletBinding()]
 param(  [string]    $HostID,
@@ -209,9 +206,9 @@ Function New-DSCCHost
 {
 <#
 .SYNOPSIS
-    Creates a HPE DSSC DOM Host Record.    
+    Creates a HPE DSSC Host Record.    
 .DESCRIPTION
-    Creates a HPE Data Services Cloud Console Data Operations Manager Host Record;
+    Creates a HPE Data Services Cloud Console Host Record;
 .PARAMETER comment
     Address of the initiator and is required.
 .PARAMETER contact
@@ -252,12 +249,7 @@ Function New-DSCCHost
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 .EXAMPLE
-    PS:> New-DSCCHostServiceInitiator -Address 100008F1EABFE61C -name Host1InitA -protocol FC
-
-    {   "message": "Successfully submitted",
-        "status": "SUBMITTED",
-        "taskUri": "/rest/vega/v1/tasks/4969a568-6fed-4915-bcd5-e4566a75e00c"
-    }
+    PS:> New-DSCCHost -Address 100008F1EABFE61C -name Host1InitA -protocol FC
 #>   
 [CmdletBinding()]
 param(                              [string]    $comment,
@@ -304,9 +296,9 @@ Function Set-DSCCHost
 {
 <#
 .SYNOPSIS
-    Updates a HPE DSSC DOM Host Initiator Record.    
+    Updates a HPE DSSC Host Initiator Record.    
 .DESCRIPTION
-    Updates a HPE Data Services Cloud Console Data Operations Manager Host Initiator Record;
+    Updates a HPE Data Services Cloud Console Host Initiator Record;
 .PARAMETER hostId
     The host initiator record to be modified.
 .PARAMETER InitiatorsToCreate
@@ -319,12 +311,7 @@ Function Set-DSCCHost
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 .EXAMPLE
-    PS:> New-DSCCHostServiceInitiator -Address 100008F1EABFE61C -name Host1InitA -protocol FC
-
-    {   "message": "Successfully submitted",
-        "status": "SUBMITTED",
-        "taskUri": "/rest/vega/v1/tasks/4969a568-6fed-4915-bcd5-e4566a75e00c"
-    }
+    PS:> New-DSCCHost -Address 100008F1EABFE61C -name Host1InitA -protocol FC
 #>   
 [CmdletBinding()]
 param(  [Parameter(Mandatory)]  [string]    $hostID,
