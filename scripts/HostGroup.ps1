@@ -129,17 +129,20 @@ function Remove-DSCCHostGroup
 .PARAMETER HostGroupID
     A single Host Group ID must be specified.
 .PARAMETER force
-    Will implement an API forcefull remove option instead of the default normal removal mechanism.
+    Only Valid for Device-Type1 Host Groups. Will implement an API forcefull remove option instead of the default normal removal mechanism.
+.PARAMETER systemID
+    Only Valid for Device-Type2 Host Groups. Must specify which system to remove the Host Group from.
 .PARAMETER WhatIf
     The WhatIf directive will show you the RAW RestAPI call that would be made to DSCC instead of actually sending the request.
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 .EXAMPLE
-    PS:> Remove-DSCCHostServiceHostGroup -HostGroupId e987ef683c27403e96caa51816ddc72c
+    PS:> Remove-DSCCHostServiceHostGroup -HostGroupId e987ef683c27403e96caa51816ddc72c -force
 
-    {   "message": "Successfully submitted",
-        "status": "SUBMITTED",
-        "taskUri": "/rest/vega/v1/tasks/4969a568-6fed-4915-bcd5-e4566a75e00c"
-    }
+    This sample is how to delete a host group from DSCC for a Device-Type1 device. 
+.EXAMPLE
+    PS:> Remove-DSCCHostServiceHostGroup -HostGroupId e987ef683c27403e96caa51816ddc72c -systemId 003a78e8778c204dc2000000000000000000000001
+    
+    This sample is how to delete a host group from DSCC for a Device-Type1 device.
 .EXAMPLE
     PS:> Remove-DSCCHostServiceHostGroup -HostGroupID dafd3078fceb43f0bb5c3b8119e70cd6 -whatif
 
@@ -157,16 +160,27 @@ function Remove-DSCCHostGroup
 .LINK
 #>   
 [CmdletBinding()]
-param(  [Parameter(Mandatory)]  [string]    $HostGroupID,
-                                [switch]    $Force,
-                                [boolean]   $WhatIf=$false
+param(  [Parameter(ParameterSetName='DeviceType1', Mandatory)]
+        [Parameter(ParameterSetName='DeviceType2', Mandatory)]  [string]    $HostGroupID,
+        [Parameter(ParameterSetName='DeviceType2', Mandatory)]  [string]    $systemID,
+        [Parameter(ParameterSetName='DeviceType1', Mandatory)]  [switch]    $Force,
+                                                                [switch]    $WhatIf
     )
 process
-    {   $MyAdd = 'host-initiator-groups/' + $HostGroupID
-        $MyBody = ''
-        if ( $Force )
-                {   $MyBody += ( @{ force = $true } | convertTo-json )
-                }
+    {   $MyBody = ''
+        switch(Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId)
+        {   'device-type1'  {     
+                            }    
+            'device-type2'  {   $MyAdd = 'storage-systems/device-type2/'+$SystemId+'/host-groups/'+$HostGroupID
+                                write-verbose "Detected a Device-Type2, "
+                            }    
+            default         {   $MyAdd = 'host-initiator-groups/' + $HostGroupID
+                                write-verbose "Detected no Device Type, so no system ID must have been passed device, only using HostGroupID"
+                                if ( $Force )
+                                    {   $MyBody += ( @{ force = $true } | convertTo-json )
+                                    } 
+                            }                
+        }
         return ( Invoke-DSCCRestMethod -UriAdd $MyAdd -Method 'Delete' -body ( $MyBody | convertto-json ) -WhatIfBoolean $WhatIf )
     }       
 }   
@@ -198,31 +212,11 @@ Function New-DSCCHostGroup
     This option is very helpful when trying to understand the inner workings of the native RestAPI calls that DSCC uses.
 
 .EXAMPLE
-    PS:> New-DSCCHostInitiator -Address 100008F1EABFE61C -name Host1InitA -protocol FC
+    PS:> New-DSCCHostGroup -DeviceType2 -SystemId 003a78e8778c204dc2000000000000000000000001 -name test2 -access_protocol_iscsi -iscsi_initiator_id 527468f9e76c4f38acd1b3c050f49bf4
 
-    {   "associatedLinks":  [   {   "resourceUri": "string",
-                                    "type": "string"
-                                }
-                            ],
-        "associatedSystems":[   "string"
-                            ],
-        "comment": "host-group-comment",
-        "consoleUri": "/data-ops-manager/host-initiator-groups/a8c087fa6e95dd22cdf402c64e4bbe61",
-        "customerId": "string",
-        "editStatus": "Delete_Failed",
-        "generation": 0,
-        "host":     [   {   "id": "6848ef683c27403e96caa51816ddc72c",
-                            "ipAddress": "15.212.100.100",
-                            "name": "host1"
-                        }
-                    ],
-        "id": "d548ef683c27403e96caa51816ddc72c",
-        "name": "host-group1",
-        "systems":  [   "string"
-                    ],
-        "type": "string",
-        "userCreated": true
-    }
+    This will create a new Host Group for a Alletra 6K or Nimble Storage type device, specified by the system ID, called Test2. 
+    The command requires that you both name the Initiator Group, as well as supply the Initiator ID that you want to be a member of the group.
+
 #>   
 [CmdletBinding()]
 param(  [Parameter(ParameterSetName='Type1')]                                                                       [switch]    $DeviceType1,
@@ -277,10 +271,10 @@ param(  [Parameter(ParameterSetName='Type1')]                                   
         [Parameter(ParameterSetName='Type2fc_useExisting')]
         [Parameter(ParameterSetName='Type2fc_createNew')]                                                                       $fc_tdz_ports,
 
-        [Parameter(ParameterSetName='Type2iscsi_useExisting')]
-        [Parameter(ParameterSetName='Type2iscsi_createNew')]
-        [Parameter(ParameterSetName='Type2fc_useExisting')]
-        [Parameter(ParameterSetName='Type2fc_createNew')]                                                           [string]    $host_type,
+        [Parameter(ParameterSetName='Type2iscsi_useExisting', Mandatory)]
+        [Parameter(ParameterSetName='Type2iscsi_createNew', Mandatory)]
+        [Parameter(ParameterSetName='Type2fc_useExisting', Mandatory)]
+        [Parameter(ParameterSetName='Type2fc_createNew', Mandatory)]                                                [string]    $host_type,
 
         [Parameter(ParameterSetName='Type2iscsi_useExisting')]
         [Parameter(ParameterSetName='Type2iscsi_createNew')]                                                                    $target_subnets,

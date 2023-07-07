@@ -17,7 +17,7 @@ function Get-DSCCFolder
 param(  [parameter(mandatory,ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
                                                                             [string]    $systemId,
                                                                             [switch]    $WhatIf
-     )
+    )
 process
     {   if ( -not $PSBoundParameters.ContainsKey('SystemId' ) )
                 {   write-verbose "No SystemID Given, running all SystemIDs"

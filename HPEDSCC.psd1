@@ -69,24 +69,22 @@ FormatsToProcess = 'HPEDSCC.Format.ps1xml'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'Connect-Dscc', 'Get-DSCCAuditEvent', 'Get-DSCCAccessControl', 
-               'Get-DSCCResourceType', 'Get-DsccController', 
-               'Invoke-DSCCControllerLocatePCBM', 'Get-DSCCAccessControlRecord', 
-               'Remove-DSCCAccessControlRecord', 'New-DSCCAccessControlRecord', 
-               'Get-DSCCVolumeSet', 'Remove-DSCCVolumeSet', 'Set-DSCCVolumeSet', 
-               'New-DSCCVolumeSet', 'Get-DSCCHostVolume', 'Get-DSCCHostGroup', 
-               'Remove-DSCCHostGroup', 'Set-DSCCHostGroup', 'New-DSCCHostGroup', 
-               'Get-DSCCHost', 'Remove-DSCCHost', 'Set-DSCCHost', 'New-DSCCHost', 
-               'Get-DSCCInitiator', 'Remove-DSCCInitiator', 'New-DSCCInitiator', 
-               'Get-DsccStorageSystem', 'Enable-DsccStorageSystemLocate', 
-               'Disable-DsccStorageSystemLocate', 'Get-DSCCPool', 'Get-DSCCFolder', 
-               'Get-DSCCPoolVolume', 'Get-DSCCVolume', 'Remove-DSCCVolume', 
-               'Set-DSCCVolume', 'New-DSCCVolume', 'Get-DSCCVolumePerf', 
-               'Get-DSCCSnapshot', 'Remove-DSCCSnapshot', 'New-DSCCSnapshot', 
-               'Get-DSCCComponentPerfStats', 'Get-DSCCPort', 'Get-DsccDisk', 
-               'Get-DsccEnclosure', 'Invoke-DSCCShelfLocate', 'Get-DSCCCertificate', 
-               'Find-DSCCDeviceTypeFromStorageSystemID', 
-               'Invoke-RepackageObjectWithType', 'Invoke-DSCCAutoReconnect'
+FunctionsToExport = 'Connect-Dscc', 'Get-DSCCAuditEvent', 'Get-DSCCAccessControl', 'Get-DSCCResourceType', 
+    'Get-DsccController',   'Invoke-DSCCControllerLocatePCBM', 
+    'Get-DSCCAccessControlRecord', 'Remove-DSCCAccessControlRecord',  'New-DSCCAccessControlRecord', 
+    'Get-DSCCVolumeSet', 'Remove-DSCCVolumeSet', 'Set-DSCCVolumeSet', 'New-DSCCVolumeSet', 
+    'Get-DSCCHostVolume', 
+    'Get-DSCCHostGroup', 'Remove-DSCCHostGroup',    'Set-DSCCHostGroup',    'New-DSCCHostGroup', 
+    'Get-DSCCHost',      'Remove-DSCCHost',         'Set-DSCCHost',         'New-DSCCHost', 
+    'Get-DSCCInitiator', 'Remove-DSCCInitiator',                            'New-DSCCInitiator', 
+    'Get-DSCCVolume',    'Remove-DSCCVolume',       'Set-DSCCVolumeDeviceType1',       'New-DSCCVolumeDeviceType1', 
+                                                    'Set-DSCCVolumeDeviceType2',       'New-DSCCVolumeDeviceType2', 
+    'Get-DSCCSnapshot',  'Remove-DSCCSnapshot',                       'New-DSCCSnapshot', 
+    'Get-DsccStorageSystem', 'Enable-DsccStorageSystemLocate',  'Disable-DsccStorageSystemLocate', 
+    'Get-DSCCPool', 'Get-DSCCFolder', 'Get-DSCCPoolVolume', 
+    'Get-DSCCVolumePerf', 'Get-DSCCComponentPerfStats', 
+    'Get-DSCCPort', 'Get-DsccDisk',  'Get-DsccEnclosure', 'Invoke-DSCCShelfLocate', 
+    'Get-DSCCCertificate', 'Find-DSCCDeviceTypeFromStorageSystemID',     'Invoke-RepackageObjectWithType',     'Invoke-DSCCAutoReconnect'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()

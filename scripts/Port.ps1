@@ -35,11 +35,11 @@ function Get-DSCCPort
     @{default=iSCSI; key=pcicard_type-3}    f2e5dc4a5ec76a42f08d1e417ce276a6                                        Host                      Port 0:4:3  None
     @{default=Ethernet; key=pcicard_type-2} bfd70ee8e54b4885b99
 .LINK
-#>   
+#>
 [CmdletBinding()]
 param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('id')][string]    $SystemId,
                                                                                     [switch]    $WhatIf
-     )
+    )
 process
     {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
         if ( $DeviceType )
@@ -51,8 +51,13 @@ process
                         $SysColOnly  = @( $SysColOnly1, $SysColOnly2 )
                     }
                 $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Port.$DeviceType"
-                return $ReturnData
-            }
+                if ( ($ReturnData).items ) 
+                    {   return ($ReturnData).items   
+                    }
+                else {  return $ReturnData
+                    }
+
+                }
         else
             {   Write-Warning "No Valid Storage Systemd Detected using System ID $SystemId"
                 return
