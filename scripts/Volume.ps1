@@ -398,7 +398,7 @@ process
                                 if ( $block_size   )        {   $MyBody = $MyBody + @{ 'block_size'           = $block_size }           }
                                 if ( $cache_pinned   )      {   $MyBody = $MyBody + @{ 'cache_pinned'         = $cache_pinned }         }
                                 if ( $clone   )             {   $MyBody = $MyBody + @{ 'clone'                = $clone }                }
-                                if ( $dedupe_enabled   )    {   $MyBody = $MyBody + @{ 'dedupe_enabled'       = $dedupe_enabled }       }
+                                if ( $dedupe_enabled   )    {   $MyBody = $MyBody + @{ 'dedupe_enabled'       = [boolean]$dedupe_enabled}}
                                 if ( $description   )       {   $MyBody = $MyBody + @{ 'description'          = $description }          }
                                 if ( $dest_pool_id   )      {   $MyBody = $MyBody + @{ 'dest_pool_id'         = $dest_pool_id }         }
                                 if ( $encryption_cipher )   {   $MyBody = $MyBody + @{ 'encryption_cipher'    = $encryption_cipher }    }
@@ -406,21 +406,21 @@ process
                                 if ( $limit   )             {   $MyBody = $MyBody + @{ 'limit'                = [int]$limit }           }
                                 if ( $limit_iops   )        {   $MyBody = $MyBody + @{ 'limit_iops'           = [int]$limit_iops }      }
                                 if ( $multi_initiator   )   {   $MyBody = $MyBody + @{ 'multi_initiator'      = $multi_initiator }      }
-                                if ( $online   )            {   $MyBody = $MyBody + @{ 'online'               = $online }               }
+                                if ( $online   )            {   $MyBody = $MyBody + @{ 'online'               = [boolean]$online }      }
                                 if ( $owned_by_group_id   ) {   $MyBody = $MyBody + @{ 'owned_by_group_id'    = $owned_by_group_id }    }
                                 if ( $perfpolicy_id   )     {   $MyBody = $MyBody + @{ 'perfpolicy_id'        = $perfpolicy_id }        }
-                                if ( $read_only   )         {   $MyBody = $MyBody + @{ 'read_only'            = $read_only }            }
+                                if ( $read_only   )         {   $MyBody = $MyBody + @{ 'read_only'            = [boolean]$read_only }   }
                                 if ( $reserve   )           {   $MyBody = $MyBody + @{ 'reserve'              = [int]$reserve }         }
                                 if ( $snap_reserve   )      {   $MyBody = $MyBody + @{ 'snap_reserve'         = [int]$snap_reserve }    }
                                 if ( $snap_warn_level   )   {   $MyBody = $MyBody + @{ 'snap_warn_level'      = [int]$snap_warn_level } }
                                 if ( $warn_level   )        {   $MyBody = $MyBody + @{ 'warn_level'           = [int]$warn_level }      }
+                                $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes'
+                                return ( invoke-DSCCrestmethod -uri $MyAdd -method 'POST' -body ($MyBody | convertto-json) -whatifBoolean $WhatIf ) 
                             }
                 default     {   write-warning "The given SystemID does not return as a Device-Type2. Please use this command only with Device-Type2 type storage systems."
                                 Return
                             }
             }
-        $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes'
-        return ( invoke-DSCCrestmethod -uri $MyAdd -method 'POST' -body ($MyBody | convertto-json) -whatifBoolean $WhatIf ) 
     }       
 } 
 
@@ -484,13 +484,13 @@ process
                                     if ( $sizeMib   )           {   $MyBody = $MyBody + @{ 'sizeMib'              = $sizeMib }              }  
                                     if ( $snapCpg   )           {   $MyBody = $MyBody + @{ 'snapCpg'              = $snapCpg }              }
                                     if ( $userCpg   )           {   $MyBody = $MyBody + @{ 'userCpg'              = $userCpg }              }
+                                    $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes'
+                                    return ( invoke-DSCCrestmethod -uri $MyAdd -method 'POST' -body ($MyBody | convertto-json) -whatifBoolean $WhatIf ) 
                                 }
                 default         {   write-warning "The given SystemID does not return as a Device-Type1. Please use this command only with Device-Type1 type storage systems."
                                     Return
                                 }
             }
-        $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/volumes'
-        return ( invoke-DSCCrestmethod -uri $MyAdd -method 'POST' -body ($MyBody | convertto-json) -whatifBoolean $WhatIf ) 
     }       
 } 
 
@@ -612,14 +612,14 @@ param(  [Parameter(Mandatory)]          [string]    $SystemId,
                                         [string]    $userCpgName,
                                         [string]    $app_uid,
                                         [boolean]   $caching_enabled,
-                                        [switch]    $dedupe_enabled,
+                                        [boolean]    $dedupe_enabled,
                                         [string]    $description,
                                         [string]    $folder_id,
                                         [boolean]    $force,
         [ValidateRange(0,100)]          [int]       $limit,
         [ValidateRange(256,4294967294)] [int]       $limit_iops,
         [ValidateRange(256,4294967294)] [int]       $limit_mbps,
-                                        [switch]    $online,
+                                        [boolean]    $online,
                                         [string]    $perfpolicy_id,
                                         [int]       $size,
                                         [int]       $count,
@@ -645,12 +645,12 @@ process
                                     if ( $online   )            {   $MyBody = $MyBody + @{ 'online'               = $online }               }
                                     if ( $perfpolicy_id   )     {   $MyBody = $MyBody + @{ 'perfpolicy_id'        = $perfpolicy_id }        }
                                     if ( $size   )              {   $MyBody = $MyBody + @{ 'size'                 = $size }                 }
+                                    return invoke-DSCCrestmethod -UriAdd $MyAdd -method PUT -body $MyBody -whatifBoolean $WhatIf 
                                 }
                 default         {   write-warning "The given SystemID does not return as a Device-Type1. Please use this command only with Device-Type1 type storage systems."
                                     Return
                                 }
             }
-        return invoke-DSCCrestmethod -UriAdd $MyAdd -method PUT -body $MyBody -whatifBoolean $WhatIf 
     }       
 } 
 
