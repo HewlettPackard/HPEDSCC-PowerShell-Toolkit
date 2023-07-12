@@ -5,6 +5,7 @@ $ModuleVersion = '1.0.2'
 $ExportingFunctions = @(
     'Connect-Dscc',
     'Get-DSCCAuditEvent',
+    'Get-DSCCAuditEventDeviceType2'
     'Get-DSCCAccessControl',
     'Get-DSCCResourceType',
     'Get-DsccController',

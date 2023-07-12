@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Configuration>
     <ViewDefinitions>
-        <View>
-			<Name>DSCC.StorageSystem.Combined.Typename</Name>
+        <View><Name>DSCC.StorageSystem.Combined.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.StorageSystem.Combined.Typename</TypeName>
             </ViewSelectedBy>
@@ -61,8 +60,7 @@
                 </TableRowEntries>
             </TableControl>
 		</View>
-      	<View>
-			<Name>DSCC.StorageSystem.device-type1.Typename</Name>
+      	<View><Name>DSCC.StorageSystem.device-type1.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.StorageSystem.device-type1.Typename</TypeName>
             </ViewSelectedBy>
@@ -121,8 +119,7 @@
                 </TableRowEntries>
             </TableControl>
 		</View>
-        <View>
-			<Name>DSCC.StorageSystem.device-type2.Typename</Name>
+        <View><Name>DSCC.StorageSystem.device-type2.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.StorageSystem.device-type2.Typename</TypeName>
             </ViewSelectedBy>
@@ -175,8 +172,7 @@
                 </TableRowEntries>
             </TableControl>
 		</View>
-        <View>
-			<Name>DSCC.Pool.Combined.Typename</Name>
+        <View><Name>DSCC.Pool.Combined.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.Pool.Combined.Typename</TypeName>
             </ViewSelectedBy>
@@ -229,8 +225,7 @@
                 </TableRowEntries>
             </TableControl>
 		</View>
-        <View>
-			<Name>DSCC.Folder.Typename</Name>
+        <View><Name>DSCC.Folder.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.Folder.Typename</TypeName>
             </ViewSelectedBy>
@@ -283,8 +278,7 @@
                 </TableRowEntries>
             </TableControl>
 		</View>
-        <View>
-			<Name>DSCC.Volume.Combined.Typename</Name>
+        <View><Name>DSCC.Volume.Combined.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.Volume.Combined.Typename</TypeName>
             </ViewSelectedBy>
@@ -355,8 +349,7 @@
                 </TableRowEntries>
             </TableControl>
 		</View>
-        <View>
-			<Name>DSCC.AccessControlRecord.Typename</Name>
+        <View><Name>DSCC.AccessControlRecord.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.AccessControlRecord.Typename</TypeName>
             </ViewSelectedBy>
@@ -403,8 +396,7 @@
                 </TableRowEntries>
             </TableControl>
 		</View>
-        <View>
-			<Name>DSCC.VolumePerf.Combined.Typename</Name>
+        <View><Name>DSCC.VolumePerf.Combined.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.VolumePerf.Combined.Typename</TypeName>
             </ViewSelectedBy>
@@ -445,8 +437,7 @@
                 </TableRowEntries>
             </TableControl>
 		</View>
-        <View>
-			<Name>DSCC.Shelf.Combined.Typename</Name>
+        <View><Name>DSCC.Shelf.Combined.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.Shelf.Combined.Typename</TypeName>
             </ViewSelectedBy>
@@ -505,8 +496,7 @@
                 </TableRowEntries>
             </TableControl>
 		</View>      
-        <View>
-			<Name>DSCC.Port.device-type1.Typename</Name>
+        <View><Name>DSCC.Port.device-type1.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.Port.device-type1.Typename</TypeName>
             </ViewSelectedBy>
@@ -583,8 +573,7 @@
                 </TableRowEntries>
             </TableControl>
 		</View> 
-        <View>
-			<Name>DSCC.Port.device-type2.Typename</Name>
+        <View><Name>DSCC.Port.device-type2.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.Port.device-type2.Typename</TypeName>
             </ViewSelectedBy>
@@ -661,8 +650,7 @@
                 </TableRowEntries>
             </TableControl>
 		</View> 
-        <View>
-			<Name>DSCC.Disk.combined.Typename</Name>
+        <View><Name>DSCC.Disk.combined.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.Disk.combined.Typename</TypeName>
             </ViewSelectedBy>
@@ -709,8 +697,7 @@
                 </TableRowEntries>
             </TableControl>
 		</View> 
-        <View>
-			<Name>DSCC.Controller.device-type1.Typename</Name>
+        <View><Name>DSCC.Controller.device-type1.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.Controller.device-type1.Typename</TypeName>
             </ViewSelectedBy>
@@ -763,8 +750,7 @@
                 </TableRowEntries>
             </TableControl>
 		</View>
-        <View>
-			<Name>DSCC.Controller.device-type2.Typename</Name>
+        <View><Name>DSCC.Controller.device-type2.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.Controller.device-type2.Typename</TypeName>
             </ViewSelectedBy>
@@ -823,8 +809,7 @@
                 </TableRowEntries>
             </TableControl>
 		</View>
-        <View>
-			<Name>DSCC.Certificate.device-type1.Typename</Name>
+        <View><Name>DSCC.Certificate.device-type1.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.Certificate.device-type1.Typename</TypeName>
             </ViewSelectedBy>
@@ -871,8 +856,7 @@
                 </TableRowEntries>
             </TableControl>
 		</View>
-        <View>
-			<Name>DSCC.Host.Typename</Name>
+        <View><Name>DSCC.Host.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.Host.Typename</TypeName>
             </ViewSelectedBy>
@@ -919,8 +903,7 @@
                 </TableRowEntries>
             </TableControl>
 		</View>
-        <View>
-			<Name>DSCC.Initiator.Device-Type1.Typename</Name>
+        <View><Name>DSCC.Initiator.Device-Type1.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.Initiator.Device-Type1.Typename</TypeName>
             </ViewSelectedBy>
@@ -973,8 +956,7 @@
                 </TableRowEntries>
             </TableControl>
 		</View>
-        <View>
-			<Name>DSCC.Initiator.Device-Type2.Typename</Name>
+        <View><Name>DSCC.Initiator.Device-Type2.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.Initiator.Device-Type2.Typename</TypeName>
             </ViewSelectedBy>
@@ -1027,8 +1009,7 @@
                 </TableRowEntries>
             </TableControl>
 		</View>        
-        <View>
-			<Name>DSCC.Initiator.Typename</Name>
+        <View><Name>DSCC.Initiator.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.Initiator.Typename</TypeName>
             </ViewSelectedBy>
@@ -1075,8 +1056,7 @@
                 </TableRowEntries>
             </TableControl>
 		</View>        
-        <View>
-			<Name>DSCC.Audit.Typename</Name>
+        <View><Name>DSCC.Audit.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.Audit.Typename</TypeName>
             </ViewSelectedBy>
@@ -1123,8 +1103,60 @@
                 </TableRowEntries>
             </TableControl>
 		</View>
-        <View>
-			<Name>DSCC.HostGroup.Typename</Name>
+        <View><Name>DSCC.AuditEvent.Typename</Name>
+		    <ViewSelectedBy>
+                <TypeName>DSCC.AuditEvent.Typename</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <AutoSize />
+                <TableHeaders>
+                    <TableColumnHeader>
+                        <Label>id</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>timestamp</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>category</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>severity</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>summary</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>activity</Label>
+                    </TableColumnHeader>
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <Wrap />
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <PropertyName>id</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>timestamp</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>category</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>severity</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>summary</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>activity</PropertyName>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+		</View>
+        <View><Name>DSCC.HostGroup.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.HostGroup.Typename</TypeName>
             </ViewSelectedBy>
@@ -1171,8 +1203,7 @@
                 </TableRowEntries>
             </TableControl>
 		</View>
-        <View>
-			<Name>DSCC.Snapshot.device-type1.Typename</Name>
+        <View><Name>DSCC.Snapshot.device-type1.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.Snapshot.device-type1.Typename</TypeName>
             </ViewSelectedBy>
@@ -1231,8 +1262,7 @@
                 </TableRowEntries>
             </TableControl>
 		</View>
-        <View>
-			<Name>DSCC.Snapshot.device-type2.Typename</Name>
+        <View><Name>DSCC.Snapshot.device-type2.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.Snapshot.device-type2.Typename</TypeName>
             </ViewSelectedBy>
@@ -1279,8 +1309,7 @@
                 </TableRowEntries>
             </TableControl>
 		</View>
-        <View>
-			<Name>DSCC.AccessToken.Typename</Name>
+        <View><Name>DSCC.AccessToken.Typename</Name>
 		    <ViewSelectedBy>
                 <TypeName>DSCC.AccessToken.Typename</TypeName>
             </ViewSelectedBy>

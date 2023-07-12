@@ -1,3 +1,5 @@
+# The Functions below represent 100% coverage of the Folders Object in the RestAPI. This file is complete
+
 function Get-DSCCFolder
 {
 <#
@@ -46,7 +48,8 @@ process
                         }       
                 }
     }       
-}   
+} 
+
 function Remove-DSCC
 {
 <#

@@ -69,7 +69,7 @@ FormatsToProcess = 'HPEDSCC.Format.ps1xml'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'Connect-Dscc', 'Get-DSCCAuditEvent', 'Get-DSCCAccessControl', 'Get-DSCCResourceType', 
+FunctionsToExport = 'Connect-Dscc', 'Get-DSCCAuditEvent', 'Get-DSCCAuditEventDeviceType2', 'Get-DSCCAccessControl', 'Get-DSCCResourceType', 
     'Get-DsccController',   'Invoke-DSCCControllerLocatePCBM', 
     'Get-DSCCAccessControlRecord', 'Remove-DSCCAccessControlRecord',  'New-DSCCAccessControlRecord', 
     'Get-DSCCVolumeSet', 'Remove-DSCCVolumeSet', 'Set-DSCCVolumeSet', 'New-DSCCVolumeSet', 
