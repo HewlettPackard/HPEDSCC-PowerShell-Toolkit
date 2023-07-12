@@ -330,9 +330,13 @@ function Invoke-RepackageObjectWithType {
             foreach ( $RawElementObject in $RawObject ) {
                 $Z = $RawElementObject
                 $DataSetType = "DSCC.$ObjectName"
-                $Z.PSTypeNames.Insert(0, $DataSetType)
+                # The try/catch block was added to suppress a 'unable to modify a null value type error'
+                try { $Z.PSTypeNames.Insert(0, $DataSetType) }
+                catch {}
                 $DataSetType = $DataSetType + '.Typename'
-                $Z.PSObject.TypeNames.Insert(0, $DataSetType)
+                # The try/catch block was added to suppress a 'unable to modify a null value type error'
+                try { $Z.PSObject.TypeNames.Insert(0, $DataSetType) }
+                catch {}
                 $OutputObject += $Z
             }
             return $OutputObject

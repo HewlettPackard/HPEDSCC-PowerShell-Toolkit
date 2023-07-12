@@ -172,7 +172,7 @@ process
                                 $ReturnCol += Get-DSCCVolume -SystemId ($Sys).Id -WhatIf $WhatIf
                             }
                     }
-                write-verbose "Returning the Multiple System Id Access Controll Groups."
+                write-verbose "Returning the Multiple System Id Volumes."
                 return $ReturnCol
             }
         else 

@@ -86,18 +86,34 @@ function Get-DSCCPool
 .LINK
 #>   
 [CmdletBinding()]
-param(  [parameter(mandatory,ValueFromPipeLineByPropertyName=$true )][Alias('id')]                                              
-                                                                            [string]    $SystemId, 
+param(  [parameter(ValueFromPipeLineByPropertyName=$true )][Alias('id')]    [string]    $SystemId, 
                                                                             [switch]    $WhatIf
     )
 process
-    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-        if ( $DeviceType )
-            {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/storage-pools'
-                $SysColOnly = Invoke-DSCCRestMethod -UriAdd $MyAdd -method Get -whatifBoolean $WhatIf
-                return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Pool.combined" )
-            }
-    }       
+{   if ( -not $PSBoundParameters.ContainsKey('SystemId' ) )
+        {   # This is the recursive part where we will run against ALL systemIDs if none given.
+            write-warning "No SystemID Given, running all SystemIDs"
+            $ReturnCol=@()
+            foreach( $Sys in Get-DSCCStorageSystem )
+                {   write-verbose "Walking Through Multiple Systems"
+                    If ( ($Sys).Id )
+                            {   write-verbose "Found a system with a System.id"
+                                IF ( $WhatIf )  { $ReturnCol += Get-DSCCPool -SystemId ($Sys).Id -WhatIf    }
+                                else            { $ReturnCol += Get-DSCCPool -SystemId ($Sys).Id            }      
+                            }
+                }
+            write-verbose "Returning the Multiple System Id Pools."
+            return $ReturnCol
+        }
+    else 
+        {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+            if ( $DeviceType )
+                {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/storage-pools'
+                    $SysColOnly = Invoke-DSCCRestMethod -UriAdd $MyAdd -method Get -whatifBoolean $WhatIf
+                    return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Pool.combined" )
+                }
+        } 
+}      
 }   
 function Get-DSCCPoolVolume
 {

@@ -37,30 +37,46 @@ function Get-DSCCPort
 .LINK
 #>
 [CmdletBinding()]
-param(  [parameter( mandatory, ValueFromPipeLineByPropertyName=$true )][Alias('id')][string]    $SystemId,
-                                                                                    [switch]    $WhatIf
+param(  [parameter( ValueFromPipeLineByPropertyName=$true )][Alias('id')]   [string]    $SystemId,
+                                                                            [switch]    $WhatIf
     )
 process
-    {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
-        if ( $DeviceType )
-            {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/ports'
-                $SysColOnly = invoke-DSCCRestMethod -UriAdd $MyAdd -Method Get -WhatIfBoolean $WhatIf
-                if ( $DeviceType -eq 'device-type2')
-                    {   $SysColOnly1 = (( $SysColOnly ).network_interfaces )
-                        $SysColOnly2 = (( $SysColOnly ).fibre_channel_interfaces )
-                        $SysColOnly  = @( $SysColOnly1, $SysColOnly2 )
-                    }
-                $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Port.$DeviceType"
-                if ( ($ReturnData).items ) 
-                    {   return ($ReturnData).items   
-                    }
-                else {  return $ReturnData
-                    }
-
+{   if ( -not $PSBoundParameters.ContainsKey('SystemId' ) )
+        {   # This is the recursive part where we will run against ALL systemIDs if none given.
+            write-warning "No SystemID Given, running all SystemIDs"
+            $ReturnCol=@()
+            foreach( $Sys in Get-DSCCStorageSystem )
+                {   write-verbose "Walking Through Multiple Systems"
+                    If ( ($Sys).Id )
+                            {   write-verbose "Found a system with a System.id"
+                                if ( $whatIf )  {   $ReturnCol += Get-DSCCPort -SystemId ($Sys).Id -WhatIf  }
+                                else            {   $ReturnCol += Get-DSCCPort -SystemId ($Sys).Id          }
+                            }
                 }
-        else
-            {   Write-Warning "No Valid Storage Systemd Detected using System ID $SystemId"
-                return
-            }
-    }       
+            write-verbose "Returning the Multiple System Id Ports."
+            return $ReturnCol
+        }
+    else 
+        {   $DeviceType = ( Find-DSCCDeviceTypeFromStorageSystemID -SystemId $SystemId )
+            if ( $DeviceType )
+                {   $MyAdd = 'storage-systems/' + $DeviceType + '/' + $SystemId + '/ports'
+                    $SysColOnly = invoke-DSCCRestMethod -UriAdd $MyAdd -Method Get -WhatIfBoolean $WhatIf
+                    if ( $DeviceType -eq 'device-type2')
+                        {   $SysColOnly1 = (( $SysColOnly ).network_interfaces )
+                            $SysColOnly2 = (( $SysColOnly ).fibre_channel_interfaces )
+                            $SysColOnly  = @( $SysColOnly1, $SysColOnly2 )
+                        }
+                    $ReturnData = Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Port.$DeviceType"
+                    if ( ($ReturnData).items ) 
+                        {   return ($ReturnData).items   
+                        }
+                    else {  return $ReturnData
+                        }
+                }
+            else
+                {   Write-Warning "No Valid Storage Systemd Detected using System ID $SystemId"
+                    return
+                }
+        }
+}       
 }

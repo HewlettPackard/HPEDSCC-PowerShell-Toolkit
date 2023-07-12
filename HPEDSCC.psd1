@@ -81,7 +81,8 @@ FunctionsToExport = 'Connect-Dscc', 'Get-DSCCAuditEvent', 'Get-DSCCAccessControl
                                                     'Set-DSCCVolumeDeviceType2',       'New-DSCCVolumeDeviceType2', 
     'Get-DSCCSnapshot',  'Remove-DSCCSnapshot',                       'New-DSCCSnapshot', 
     'Get-DsccStorageSystem', 'Enable-DsccStorageSystemLocate',  'Disable-DsccStorageSystemLocate', 
-    'Get-DSCCPool', 'Get-DSCCFolder', 'Get-DSCCPoolVolume', 
+    'Get-DSCCPool', 'Get-DSCCPoolVolume',
+    'Get-DSCCFolder',  'New-DSCCFolder', 'Set-DSCCFolder', 'Remove-DSCCFolder',
     'Get-DSCCVolumePerf', 'Get-DSCCComponentPerfStats', 
     'Get-DSCCPort', 'Get-DsccDisk',  'Get-DsccEnclosure', 'Invoke-DSCCShelfLocate', 
     'Get-DSCCCertificate', 'Find-DSCCDeviceTypeFromStorageSystemID',     'Invoke-RepackageObjectWithType',     'Invoke-DSCCAutoReconnect'
@@ -110,8 +111,8 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = 'Hewlett', 'Packard', 'Enterprise', 'HPE', 'DSCC', 'Storage', 'Cloud', 'REST', 
-               'RESTAPI', 'Data Storage', 'Cloud Console'
+        Tags =  'Hewlett', 'Packard', 'Enterprise', 'HPE', 'DSCC', 'Storage', 'Cloud', 'REST', 
+                'RESTAPI', 'Data Storage', 'Cloud Console'
 
         # A URL to the license for this module.
         # LicenseUri = ''
