@@ -60,8 +60,62 @@
                 </TableRowEntries>
             </TableControl>
 		</View>
-      	<View><Name>DSCC.StorageSystem.device-type1.Typename</Name>
+        <View><Name>DSCC.Issue.Typename</Name>
 		    <ViewSelectedBy>
+                <TypeName>DSCC.Issue.Typename</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <AutoSize />
+                <TableHeaders>
+                    <TableColumnHeader>
+                        <Label>id</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>severity</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Width>15</Width>
+                        <Label>title</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>body</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>category</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>ruleId</Label>
+                    </TableColumnHeader>
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <Wrap />
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <PropertyName>id</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>severity</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>title</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>body</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>category</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>ruleId</PropertyName>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+		</View>
+        <View><Name>DSCC.StorageSystem.device-type1.Typename</Name>
+            <ViewSelectedBy>
                 <TypeName>DSCC.StorageSystem.device-type1.Typename</TypeName>
             </ViewSelectedBy>
             <TableControl>

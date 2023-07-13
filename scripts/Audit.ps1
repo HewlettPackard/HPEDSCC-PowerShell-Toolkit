@@ -144,3 +144,36 @@ else
     } 
 }      
 }  
+function Get-DSCCIssue
+{
+<#
+.SYNOPSIS
+    Returns the DSCC issues information.    
+.DESCRIPTION
+    Returns a list of active issues associated with the account, scoped by the user's permissions.
+    Returns the active (state="CREATED") issues for the account, which are associated with the resource-types for which the user has access. 
+    The user should also have the permission to view issues. Eg: if there are issues associated with 50 resources (of different resource-types) 
+    for a customer (obtained from the request header), and the user (obtained from the request headers), who has correct permissions to view 
+    the issues but has acceess to only 20 of those resources (ie access to their resource types), this API will return only the issues 
+    associated with those 20 resources. The grouped issues are places next to each other. The client will have to process them for any desired grouping
+
+.PARAMETER limit
+    Restricts the number of issues to be returned.
+.PARAMETER WhatIf
+    This option shows you the command that will be sent to the DSCC, will include the URI being sent to, the Header, Method, and the Body of the message.
+.EXAMPLE
+    PS:> Get-DSCCIssue
+
+.LINK
+    More details about the operation of this API can be found at https://console-us1.data.cloud.hpe.com/doc/api/v1/ under issues.
+#>   
+[CmdletBinding()]
+param(  [switch]    $whatIf
+    )
+process
+    {   $MyUri = 'issues'
+        $SysColOnly = Invoke-DSCCRestMethod -uriadd $MyUri -method 'Get' -whatifBoolean $WhatIf        
+        if ( $EventId )  { $SysColOnly = ( $SysColOnly | where-object { $_.id -eq $EventId }) }
+        return ( Invoke-RepackageObjectWithType -RawObject $SysColOnly -ObjectName "Issue" )
+    }       
+}  
