@@ -33,7 +33,7 @@ Copyright = '(C) Copyright 2023 Hewlett Packard Enterprise Development L.P. Perm
 Description = 'The HPE GreenLake Data Storage Cloud Console (DSCC) PowerShell Module provides the ability to monitor and manage your on-premise HPE GreenLake storage infrastructure via the HPE DSCC REST API.'
 
 # Minimum version of the PowerShell engine required by this module
-PowerShellVersion = '5.1'
+PowerShellVersion = '7.0'
 
 # Name of the PowerShell host required by this module
 # PowerShellHostName = ''

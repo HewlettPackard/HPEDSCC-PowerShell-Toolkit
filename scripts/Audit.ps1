@@ -156,14 +156,29 @@ function Get-DSCCIssue
     for a customer (obtained from the request header), and the user (obtained from the request headers), who has correct permissions to view 
     the issues but has acceess to only 20 of those resources (ie access to their resource types), this API will return only the issues 
     associated with those 20 resources. The grouped issues are places next to each other. The client will have to process them for any desired grouping
-
-.PARAMETER limit
-    Restricts the number of issues to be returned.
 .PARAMETER WhatIf
     This option shows you the command that will be sent to the DSCC, will include the URI being sent to, the Header, Method, and the Body of the message.
 .EXAMPLE
     PS:> Get-DSCCIssue
 
+    id                                   severity title                                     body
+    --                                   -------- -----                                     ----
+    66ee2717-386e-48ab-90f2-ed79a5f44dbd CRITICAL Device with serial# MXN5442108 is blocked Description: Device with serial# MXN5442108 is blocked for the next 24h0m0s as too many requests to the device failed in quick succession.
+.EXAMPLE
+    PS:> get-dsccissue -whatIf
+    WARNING: You have selected the What-IF option, so the call will not be made to the array,
+    instead you will see a preview of the RestAPI call
+    The URI for this call will be
+        https://scint-app.qa.cds.hpe.com/api/v1/issues
+    The Method of this call will be
+        Get
+    The Header for this call will be :
+        {   "Authorization": "Bearer eyJhE..censored...OMMVB_g"
+        }
+    The Content-Type is set to
+        application/json
+    The Body of this call will be:
+    No Body
 .LINK
     More details about the operation of this API can be found at https://console-us1.data.cloud.hpe.com/doc/api/v1/ under issues.
 #>   
